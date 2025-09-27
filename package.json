@@ -1,0 +1,23 @@
+{
+  "name": "wasm-playground",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "npm test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/henrythasler/wasm-playground.git"
+  },
+  "keywords": [
+    "wasm"
+  ],
+  "author": "Henry Thasler",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/henrythasler/wasm-playground/issues"
+  },
+  "homepage": "https://github.com/henrythasler/wasm-playground#readme"
+}
