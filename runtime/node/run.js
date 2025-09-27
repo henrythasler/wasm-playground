@@ -6,7 +6,6 @@ const wasmBuffer = await fs.readFile('wasm/n_sum.wasm');
 
 function log(msg) {
     console.log(msg);
-    return 42;
 }
 
 const imports = { env: { log } };
@@ -17,6 +16,6 @@ const wasmModule = await WebAssembly.instantiate(wasmBuffer, imports);
 // Exported function lives under instance.exports object
 const { run } = wasmModule.instance.exports;
 
-const sum = run(4);
+const sum = run(10);
 
-console.log(sum); // Outputs: 10
+// console.log(sum); // Outputs: 10
