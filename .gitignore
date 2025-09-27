@@ -1,2 +1,2 @@
 arm64v8/*
-!arm64v8/*[s,c]
+!arm64v8/*[s,c,md]
