@@ -138,10 +138,24 @@ Start the executable in the emulator using `-g <port>` to wait for a debugger to
 
 Run the debugger and connect to the emulator:
 
-`gdb-multiarch -q --nh -ex 'set architecture arm64' -ex 'file asm64' -ex 'target remote localhost:1234' -ex 'layout split' -ex 'layout regs'`
+`gdb-multiarch -q --nh -ex 'set architecture aarch64' -ex 'file asm64' -ex 'target remote localhost:1234' -ex 'layout split' -ex 'layout regs'`
 
 Set breakpoint at the beginning (`b _start`) and start the program (`c`):
 
 ![](../docs/img/gdb-arm64v8.png)
 
-## Use arm64 inline assembly
+## Use Debugger in Visual Studio Code
+
+1. Install the [Native Debug](https://marketplace.visualstudio.com/items?itemName=webfreak.debug) extension.
+
+2. Adapt `.vscode/launch.json` to match your environment and executable. 
+
+3. Compile with debug-symbols (`-ggdb3`) and run the executable in a terminal: 
+
+```bash
+$ aarch64-linux-gnu-as n_sum.s -ggdb3 -o n_sum.o && aarch64-linux-gnu-ld n_sum.o -o n_sum && qemu-aarch64 -L /usr/aarch64-linux-gnu/ -g 1234 ./n_sum
+```
+
+4. Set a breakpoint in the source-file and start the debugger
+
+![](../docs/img/gdb-vscode.png)
