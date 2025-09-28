@@ -6,13 +6,13 @@
             "type": "gdb",
             "request": "attach",
             "gdbpath": "/usr/bin/gdb-multiarch",
-            "executable": "${workspaceRoot}/arm64/n_sum",            
+            "executable": "${workspaceRoot}/arm64/n_sum",
             "target": "localhost:1234",
             "remote": true,
             "stopAtConnect": true,
             "printCalls": true,
             "cwd": "${workspaceRoot}",
             "valuesFormatting": "parseText",
-        }
+        }     
     ]
 }

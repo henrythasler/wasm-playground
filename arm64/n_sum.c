@@ -20,10 +20,15 @@ uint32_t add_one(uint32_t value) {
     return result;
 }
 
+/** Declaration of the external assembly function defined in n_sum_extern.s */
+extern int n_sum_extern(int a);
+extern int fib_extern(int a);
 
 int main() {
     int32_t n = 4;
     printf("ARM: n_sum(%d) = %d\n", n, n_sum(n));
+    printf("ARM: n_sum_extern(%d) = %d\n", n, n_sum_extern(n));
+    printf("ARM: fib_extern(%d) = %d\n", n, fib_extern(n));
     printf("ARM: add_one(%d) = %d\n", n, add_one(n));
     return 0;
 }

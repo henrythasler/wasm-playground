@@ -144,7 +144,7 @@ Set breakpoint at the beginning (`b _start`) and start the program (`c`):
 
 ![](../docs/img/gdb-arm64v8.png)
 
-## Use Debugger in Visual Studio Code
+### With Visual Studio Code
 
 1. Install the [Native Debug](https://marketplace.visualstudio.com/items?itemName=webfreak.debug) extension.
 
@@ -159,3 +159,22 @@ $ aarch64-linux-gnu-as n_sum.s -ggdb3 -o n_sum.o && aarch64-linux-gnu-ld n_sum.o
 4. Set a breakpoint in the source-file and start the debugger
 
 ![](../docs/img/gdb-vscode.png)
+
+## Use External Assembly Function in C Source
+
+Compile both source files together including debug symbols:
+
+`aarch64-linux-gnu-gcc -ggdb3 -static -o n_sum n_sum.c n_sum_extern.s`
+
+Start the executable in the emulator using `-g <port>` to wait for a debugger to connect:
+
+`qemu-aarch64 -L /usr/aarch64-linux-gnu/ -g 1234 ./n_sum`
+
+Start the debugger and connect to the emulator:
+
+`gdb-multiarch -q --nh -ex 'set architecture aarch64' -ex 'file n_sum' -ex 'target remote localhost:1234' -ex 'layout split' -ex 'layout regs'`
+
+1. Set first breakpoint in `main()` with `b main`. Start execution with `c`. 
+2. Set next breakpoint at the beginning of the external function with `b n_sum_extern`. Continue execution with `c`.
+
+Debugging with Visual Studio Code works exactly the same as described above.
