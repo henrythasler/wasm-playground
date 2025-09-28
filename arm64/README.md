@@ -143,3 +143,5 @@ Run the debugger and connect to the emulator:
 Set breakpoint at the beginning (`b _start`) and start the program (`c`):
 
 ![](../docs/img/gdb-arm64v8.png)
+
+## Use arm64 inline assembly

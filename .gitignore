@@ -1,2 +1,7 @@
-arm64v8/*
-!arm64v8/*[s,c,md]
+# Ignore all files in the arm64 directory
+arm64/*
+# Except for the following file types
+!arm64/*.s
+!arm64/*.c
+!arm64/*.cpp
+!arm64/*.md
