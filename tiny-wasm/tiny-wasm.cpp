@@ -1,15 +1,14 @@
+#include <iomanip>
 #include <iostream>
 #include <vector>
-#include <iomanip>
+
 #include "modules/tiny-loader.hpp"
 #include "version.hpp"
 
-int main(int argc, char const *argv[])
-{
+int main(int argc, char const *argv[]) {
   std::cerr << "Tiny WebAssembly Runtime for ARM64 (v" << PROJECT_VERSION << ")" << std::endl;
 
-  if (argc < 2)
-  {
+  if (argc < 2) {
     std::cerr << "Usage: " << argv[0] << " <wasm_file>" << std::endl;
     return EXIT_FAILURE;
   }
@@ -20,8 +19,7 @@ int main(int argc, char const *argv[])
 
   std::cout << "Loaded bytecode size: " << bytecode.size() << " bytes" << std::endl;
   std::cout << "Bytecode (hex): ";
-  for (uint8_t byte : bytecode)
-  {
+  for (uint8_t byte : bytecode) {
     std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(byte) << " ";
   }
   std::cout << std::dec << std::endl;
