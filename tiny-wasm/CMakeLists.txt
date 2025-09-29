@@ -1,13 +1,12 @@
 cmake_minimum_required(VERSION 3.20)
-project(tiny-wasm)
+project(tiny-wasm
+    VERSION 0.1.0
+    DESCRIPTION "Tiny WebAssembly Runtime for ARM64"
+    LANGUAGES CXX
+    HOMEPAGE_URL "https://github.com/henrythasler/wasm-playground"
+    )
 
-# set version
-set(VERSION_MAJOR 0)
-set(VERSION_MINOR 1)
-set(VERSION_PATCH 0)
-set(VERSION "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}")
-set(PROJECT_VERSION ${VERSION})
-
+# Generate version.hpp from version.hpp.in containing the project version
 configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/version.hpp.in
   ${CMAKE_CURRENT_BINARY_DIR}/version.hpp

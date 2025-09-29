@@ -6,7 +6,7 @@
 
 int main(int argc, char const *argv[])
 {
-  std::cerr << "Tiny WebAssembly Runtime for ARM64 (v" << VERSION << ")" << std::endl;
+  std::cerr << "Tiny WebAssembly Runtime for ARM64 (v" << PROJECT_VERSION << ")" << std::endl;
 
   if (argc < 2)
   {

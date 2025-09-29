@@ -15,3 +15,7 @@
 ### Programming
 
 - [Linux System Calls](https://syscall.sh/)
+
+### Build Pipeline
+
+- [Getting Started With CMake](https://earthly.dev/blog/using-cmake/)

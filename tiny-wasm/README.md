@@ -25,3 +25,13 @@ Start the executable:
 `qemu-aarch64 -L /usr/aarch64-linux-gnu/ -g 1234 ./tiny-wasm ../wasm/nop-fn.wasm`
 
 Set breakpoint in source code. Start Debugging (F5).
+
+## Code Quality Tools
+
+### Setup
+
+`sudo apt install clang-format`
+
+### Visual Studio Code Integration
+
+1. `Clang-Format` Extension
