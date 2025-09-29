@@ -2,6 +2,18 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Debug tiny-wasm",
+            "type": "gdb",
+            "request": "attach",
+            "gdbpath": "/usr/bin/gdb-multiarch",
+            "executable": "${workspaceRoot}/tiny-wasm/build/tiny-wasm",
+            "target": "localhost:1234",
+            "remote": true,
+            "printCalls": true,
+            "cwd": "${workspaceRoot}",
+            "valuesFormatting": "parseText",
+        },
+        {
             "name": "Debug arm64",
             "type": "gdb",
             "request": "attach",
@@ -13,6 +25,6 @@
             "printCalls": true,
             "cwd": "${workspaceRoot}",
             "valuesFormatting": "parseText",
-        }     
+        }
     ]
 }

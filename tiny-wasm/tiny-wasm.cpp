@@ -2,9 +2,12 @@
 #include <vector>
 #include <iomanip>
 #include "modules/tiny-loader.hpp"
+#include "version.hpp"
 
 int main(int argc, char const *argv[])
 {
+  std::cerr << "Tiny WebAssembly Runtime for ARM64 (v" << VERSION << ")" << std::endl;
+
   if (argc < 2)
   {
     std::cerr << "Usage: " << argv[0] << " <wasm_file>" << std::endl;
