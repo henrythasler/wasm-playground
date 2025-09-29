@@ -1,0 +1,5 @@
+cmake_minimum_required(VERSION 3.20)
+project(tiny-wasm)
+add_subdirectory(modules)
+add_executable(tiny-wasm tiny-wasm.cpp)
+target_link_libraries(tiny-wasm tiny-modules)
