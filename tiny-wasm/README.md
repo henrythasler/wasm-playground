@@ -31,3 +31,7 @@ Set breakpoint in source code. Start Debugging (F5).
 ### Visual Studio Code Integration
 
 1. `Clang-Format` Extension
+
+## Kaitai Struct
+
+`kaitai-struct-compiler --target cpp_stl --outdir kaitai-struct webassembly.ksy`

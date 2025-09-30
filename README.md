@@ -12,6 +12,10 @@
 - [Procedure Call Standard for the Arm® 64-bit Architecture (AArch64) - Parameter passing](https://github.com/ARM-software/abi-aa/blob/main/aapcs64/aapcs64.rst#68parameter-passing)
 - [arm64-book - A Book that explains in Detail ARM64 Assembly](https://github.com/maxvdec/arm64-book)
 
+### WebAssembly
+
+- [WebAssembly parser for Kaitai.io](https://github.com/evacchi/kaitai-webassembly)
+
 ### Programming
 
 - [Linux System Calls](https://syscall.sh/)
