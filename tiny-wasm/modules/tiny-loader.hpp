@@ -1,19 +1,23 @@
 #include <iostream>
 #include <vector>
+#include <fstream>
+#include <array>
 
 namespace tiny {
-uint8_t const nop_fn[] = {
+std::array<u_int8_t, 34> const nop_fn = {
     0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00, 0x01, 0x04, 0x01, 0x60, 0x00, 0x00, 0x03, 0x02, 0x01,
     0x00, 0x07, 0x07, 0x01, 0x03, 0x66, 0x6f, 0x6f, 0x00, 0x00, 0x0a, 0x05, 0x01, 0x03, 0x00, 0x0f, 0x0b,
 };
 
 class Loader {
 private:
+  std::string path;
+  std::vector<uint8_t> bytecode = {};
   /* data */
 public:
-  Loader(std::string path = "");
-  ~Loader();
+  Loader() = default;
 
+  bool loadFromFile(std::string path);
   std::vector<uint8_t> getBytecode();
 };
 } // namespace tiny

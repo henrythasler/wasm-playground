@@ -6,6 +6,9 @@ project(tiny-wasm
     HOMEPAGE_URL "https://github.com/henrythasler/wasm-playground"
     )
 
+# set C++ standard to C++14
+set (CMAKE_CXX_STANDARD 14)
+
 # Generate version.hpp from version.hpp.in containing the project version
 configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/version.hpp.in
@@ -21,7 +24,21 @@ set(CMAKE_SYSTEM_PROCESSOR aarch64)
 set(CMAKE_CXX_COMPILER /usr/bin/aarch64-linux-gnu-g++)
 
 # set compiler options to statically link the binary and include debug info
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static -ggdb3")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ggdb3")
+
+# enable clang-tidy
+set(CMAKE_CXX_CLANG_TIDY
+    clang-tidy
+    --config-file ${CMAKE_CURRENT_LIST_DIR}/.clang-tidy
+    "--header-filter=${CMAKE_CURRENT_LIST_DIR}/(modules|tests)/.*"
+    --extra-arg=-isystem/usr/aarch64-linux-gnu/include/c++/11
+    --extra-arg=-isystem/usr/aarch64-linux-gnu/include/c++/11/aarch64-linux-gnu
+    --extra-arg=-isystem/usr/aarch64-linux-gnu/include
+    --extra-arg=-isystem/usr/lib/gcc-cross/aarch64-linux-gnu/11/include
+)
+
+# enable address sanitizer
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address")
 
 add_subdirectory(modules)
 add_executable(tiny-wasm tiny-wasm.cpp)
