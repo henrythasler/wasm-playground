@@ -12,8 +12,8 @@ on:
     types: [ published ]
 
 jobs:
-  clang-format-check:
-    name: Clang-Format-Check
+  code-quality-checks:
+    name: Code Quality Checks
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -27,6 +27,7 @@ jobs:
   build-and-test:
     name: Build and Test
     runs-on: ubuntu-24.04-arm
+    needs: code-quality-checks
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -38,3 +39,5 @@ jobs:
         run: cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=cmake/aarch64-toolchain.cmake
       - name: Build the project
         run: cmake --build build --parallel
+      - name: Run executable
+        run: ./build/src/tiny-wasm ./wasm/nop-fn.wasm
