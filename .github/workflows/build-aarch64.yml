@@ -21,9 +21,9 @@ jobs:
       - name: Install clang-format
         run: sudo apt-get install -y clang-format
       - name: Run clang-format
-        # Check all .cpp and .hpp files in the src directory; omit files in the kaitai subdirectory (which are auto-generated)
+        # Check all .cpp and .hpp files in the src directory; omit the kaitai subdirectory content (which is auto-generated)
         run: |
-          find src -path src/kaitai -prune -o -name '*.cpp' -o -name '*.hpp' | xargs clang-format -style=file:.clang-format --Werror --dry-run
+          find src -regex ".*\\.\\(cpp\\|hpp\\|c\\|h\\)" -not -path "**/kaitai/**" | xargs clang-format -style=file:.clang-format --Werror --dry-run
   build-and-test:
     name: Build and Test
     runs-on: ubuntu-24.04-arm
@@ -35,7 +35,7 @@ jobs:
       - name: Install dependencies
         run: sudo apt-get install -y build-essential cmake
       - name: Create build directory
-        run: mkdir build && cd build
+        run: pwd && ls -la && mkdir build && cd build
       - name: Configure CMake
         run: cmake -DCMAKE_TOOLCHAIN_FILE=../cmake/aarch64-toolchain.cmake ..
       - name: Build the project
