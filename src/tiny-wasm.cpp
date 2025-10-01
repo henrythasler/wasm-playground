@@ -7,7 +7,7 @@
 #include "tiny-loader.hpp"
 #include "version.hpp"
 
-#include "generated/webassembly.h"
+#include "webassembly.h"
 
 int main(int argc, char const *argv[]) {
   std::cerr << "Tiny WebAssembly Runtime for ARM64 (v" << PROJECT_VERSION << ")" << std::endl << std::endl;

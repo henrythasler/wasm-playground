@@ -1,4 +1,4 @@
 
-[submodule "tiny-wasm/kaitai_struct_cpp_stl_runtime"]
-	path = tiny-wasm/kaitai_struct_cpp_stl_runtime
+[submodule "extern/kaitai_struct_cpp_stl_runtime"]
+	path = extern/kaitai_struct_cpp_stl_runtime
 	url = https://github.com/kaitai-io/kaitai_struct_cpp_stl_runtime.git
