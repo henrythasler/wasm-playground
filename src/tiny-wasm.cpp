@@ -1,12 +1,15 @@
+#include <cstring>
 #include <iomanip>
 #include <iostream>
+#include <sys/mman.h>
+#include <unistd.h>
 #include <vector>
 
 #include "colors.hpp"
 #include "tiny-assembler.hpp"
 #include "tiny-loader.hpp"
 #include "version.hpp"
-#include "webassembly.h"
+#include "wasm-dissector.hpp"
 
 int main(int argc, char const *argv[]) {
   std::cerr << "Tiny WebAssembly Runtime for ARM64 (v" << PROJECT_VERSION << ")" << std::endl << std::endl;
@@ -36,64 +39,26 @@ int main(int argc, char const *argv[]) {
   }
   std::cout << std::dec << std::endl << std::endl;
 
-  kaitai::kstream ks(std::string(bytecode.begin(), bytecode.end()));
-  webassembly_t wasm(&ks);
-
-  std::cout << "Magic : " << wasm.magic() << std::endl;
-  std::cout << "WASM version: " << wasm.version() << std::endl;
-
-  // iterate over sections
-  auto sections = wasm.sections();
-  const auto &section_items = *(sections->sections());
-  for (size_t i = 0; i < section_items.size(); ++i) {
-    const auto &section = section_items.at(i);
-    std::cout << "  Section " << i << ": id=" << section->header()->id() << " size=" << section->header()->payload_len()->value() << " bytes";
-    if (section->header()->id() == 0x0a) {
-      // Section 0x0a is the code section; payload_data should be cast to webassembly_t::code_section_t
-      auto code_section = dynamic_cast<webassembly_t::code_section_t *>(section->payload_data());
-      if (code_section && code_section->bodies()) {
-        std::cout << " (code section with " << code_section->bodies()->size() << " function bodies)";
-        for (size_t j = 0; j < code_section->bodies()->size(); ++j) {
-          const auto &body = code_section->bodies()->at(j);
-          std::cout << std::endl << "    Function body " << j << " (" << body->body_size()->value() << " bytes)" << std::endl;
-          std::cout << "      locals: " << body->data()->local_count()->value();
-          if (body->data()->local_count()->value() > 0) {
-            std::cout << " [ ";
-            for (size_t k = 0; k < body->data()->local_count()->value(); ++k) {
-              if (k > 0)
-                std::cout << ", ";
-              std::cout << static_cast<int>(body->data()->locals()->at(k)->count()->value()) << " x "
-                        << static_cast<int>(body->data()->locals()->at(k)->type());
-            }
-            std::cout << " ]";
-          }
-          std::cout << std::endl;
-
-          std::cout << "      instructions: " << body->data()->code().size();
-          if (body->data()->code().size() > 0) {
-            std::cout << " [ ";
-            for (size_t k = 0; k < body->data()->code().size(); ++k) {
-              if (k > 0)
-                std::cout << " ";
-              std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(body->data()->code().at(k));
-            }
-            std::cout << " ]" << std::dec;
-          }
-        }
-      } else {
-        std::cout << " (code section, but failed to parse function bodies)";
-      }
-    }
-    std::cout << std::endl;
-  }
-  std::cout << std::endl;
+  try {
+    Dissector::dissect(bytecode);
+  } catch (const std::exception &e) {
+    std::cerr << RED << "Error: Dissection failed: " << e.what() << RESET << std::endl;
+    return EXIT_FAILURE;
+  }  
 
   // Assemble bytecode to machine code
-  std::vector<uint8_t> machinecode = assembler.assemble(bytecode);
+  std::vector<uint8_t> machinecode;
+
+  try {
+    machinecode = assembler.assemble(bytecode);
+  } catch (const std::exception &e) {
+    std::cerr << RED << "Error: Assembly failed: " << e.what() << RESET << std::endl;
+    return EXIT_FAILURE;
+  }
   std::cout << "Machinecode size: " << machinecode.size() << " bytes" << std::endl;
 
   if (machinecode.size() == 0) {
-    std::cout << YELLOW << "WARNING: Assembler not implemented, machinecode is empty!" << RESET << std::endl;
+    std::cout << YELLOW << "WARNING: Machinecode is empty!" << RESET << std::endl;
     return EXIT_FAILURE;
   }
 
@@ -103,5 +68,25 @@ int main(int argc, char const *argv[]) {
   }
   std::cout << std::dec << std::endl;
 
+  // execute machine code
+  std::cout << "Executing machine code... ";
+
+  size_t page_size = sysconf(_SC_PAGESIZE);
+  // Allocate page-aligned memory for executable code; this is required for mprotect as it works on page granularity
+  void *exec_mem = aligned_alloc(page_size, ((machinecode.size() + page_size - 1) / page_size) * page_size);
+
+  // Copy code to executable memory region
+  memcpy(exec_mem, machinecode.data(), machinecode.size());
+  // Make executable
+  mprotect(exec_mem, machinecode.size(), PROT_READ | PROT_EXEC);
+
+  // Execute
+  auto wasm_module = reinterpret_cast<void (*)()>(exec_mem);
+  wasm_module();
+
+  // Cleanup
+  free(exec_mem);
+
+  std::cout << GREEN "done" << RESET << std::endl;
   return EXIT_SUCCESS;
 }

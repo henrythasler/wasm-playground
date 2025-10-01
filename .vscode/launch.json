@@ -6,7 +6,7 @@
             "type": "gdb",
             "request": "attach",
             "gdbpath": "/usr/bin/gdb-multiarch",
-            "executable": "${workspaceRoot}/tiny-wasm/build/tiny-wasm",
+            "executable": "${workspaceRoot}/build/src/tiny-wasm",
             "target": "localhost:1234",
             "remote": true,
             "printCalls": true,
