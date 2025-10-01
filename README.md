@@ -4,7 +4,7 @@ Following [Tiny Wasm Compiler Tutorial](https://github.com/Schleifner/Tiny-Wasm-
 
 ## Prerequisites
 
-`sudo apt install g++-aarch64-linux-gnu clang-format clang-tidy`
+`sudo apt install g++-aarch64-linux-gnu clang-format clang-tidy wabt`
 
 ## Build Instructions
 
