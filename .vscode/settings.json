@@ -47,7 +47,13 @@
         "ctime": "cpp",
         "iomanip": "cpp",
         "sstream": "cpp",
-        "fstream": "cpp"
+        "fstream": "cpp",
+        "any": "cpp",
+        "map": "cpp",
+        "set": "cpp",
+        "optional": "cpp",
+        "cinttypes": "cpp",
+        "variant": "cpp"
     },
-    "cmake.sourceDirectory": "/home/henry/dev/wasm-playground/tiny-wasm"
+    "cmake.sourceDirectory": "/home/henry/dev/wasm-playground"
 }

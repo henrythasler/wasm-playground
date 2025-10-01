@@ -9,11 +9,10 @@ Following [Tiny Wasm Compiler Tutorial](https://github.com/Schleifner/Tiny-Wasm-
 ## Build Instructions
 
 ```
-$ cd tiny-wasm
-$ mkdir build
-$ cd build
+$ mkdir build && cd build
 $ cmake -DCMAKE_TOOLCHAIN_FILE=../cmake/aarch64-toolchain.cmake ..
 $ cmake --build . --parallel
+$ qemu-aarch64 -L /usr/aarch64-linux-gnu/ ./src/tiny-wasm ../wasm/nop-fn.wasm
 ```
 
 ## Debug 
