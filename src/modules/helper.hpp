@@ -1,4 +1,4 @@
-// Use (void) to silence unused warnings.
+#pragma once
 #define assertm(exp, msg) assert((void(msg), exp))
 #define asserte(exp, msg)                                                                                                                            \
   if (!(exp))                                                                                                                                        \

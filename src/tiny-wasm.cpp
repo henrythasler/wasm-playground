@@ -72,7 +72,6 @@ int main(int argc, char const *argv[]) {
   // execute machine code
   std::cout << "Executing machine code... ";
 
-  size_t page_size = sysconf(_SC_PAGESIZE);
   size_t alloc_size = machinecode.size(); // not required to be page-aligned as mmap will round up internally
   void *exec_mem = mmap(NULL, alloc_size, PROT_READ | PROT_WRITE | PROT_EXEC, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
   if (exec_mem == MAP_FAILED) {
@@ -85,10 +84,14 @@ int main(int argc, char const *argv[]) {
 
   // Execute
   auto wasm_module = reinterpret_cast<void (*)()>(exec_mem);
+  __builtin___clear_cache(exec_mem, static_cast<size_t *>(exec_mem) + alloc_size);
   wasm_module();
 
   // Cleanup
-  munmap(exec_mem, alloc_size);
+  if (munmap(exec_mem, alloc_size) != 0) {
+    std::cerr << RED << "munmap failed: " << strerror(errno) << RESET << std::endl;
+    return EXIT_FAILURE;
+  }
 
   std::cout << GREEN "done" << RESET << std::endl;
   return EXIT_SUCCESS;
