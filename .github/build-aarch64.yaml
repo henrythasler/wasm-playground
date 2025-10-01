@@ -1,0 +1,42 @@
+name: build aarch64
+
+permissions:
+  contents: read # This is required to allow the workflow to read the repository contents
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+  release:
+    types: [ published ]
+
+jobs:
+  clang-format-check:
+    name: Clang-Format-Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Install clang-format
+        run: sudo apt-get install -y clang-format
+      - name: Run clang-format
+        # Check all .cpp and .hpp files in the src directory; omit files in the kaitai subdirectory (which are auto-generated)
+        run: |
+          find src -path src/kaitai -prune -o -name '*.cpp' -o -name '*.hpp' | xargs clang-format -style=file:.clang-format --Werror --dry-run
+  build-and-test:
+    name: Build and Test
+    runs-on: ubuntu-latest-aarch64
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: checkout submodules
+        run: git submodule update --init --recursive
+      - name: Install dependencies
+        run: sudo apt-get install -y build-essential cmake
+      - name: Create build directory
+        run: mkdir build && cd build
+      - name: Configure CMake
+        run: cmake -DCMAKE_TOOLCHAIN_FILE=../cmake/aarch64-toolchain.cmake ..
+      - name: Build the project
+        run: cmake --build . --parallel
