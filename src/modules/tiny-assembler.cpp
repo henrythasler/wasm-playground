@@ -15,11 +15,11 @@ u_int32_t Assembler::mapOpcodeToArm64(uint8_t opcode) {
   }
 }
 
-void Assembler::serializeUint32LE(std::vector<uint8_t>& vec, uint32_t value) {
-    vec.push_back(value & 0xFF);
-    vec.push_back((value >> 8) & 0xFF);
-    vec.push_back((value >> 16) & 0xFF);
-    vec.push_back((value >> 24) & 0xFF);
+void Assembler::serializeUint32LE(std::vector<uint8_t> &vec, uint32_t value) {
+  vec.push_back(value & 0xFF);
+  vec.push_back((value >> 8) & 0xFF);
+  vec.push_back((value >> 16) & 0xFF);
+  vec.push_back((value >> 24) & 0xFF);
 }
 
 std::vector<uint8_t> Assembler::assembleCodeSection(webassembly_t::code_section_t *code_section) {
@@ -37,7 +37,6 @@ std::vector<uint8_t> Assembler::assembleCodeSection(webassembly_t::code_section_
         }
       }
     }
-
 
     // serializeUint32LE(machinecode, 0xD2800540); // mov x0, 42
 

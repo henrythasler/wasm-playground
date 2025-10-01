@@ -44,7 +44,7 @@ int main(int argc, char const *argv[]) {
   } catch (const std::exception &e) {
     std::cerr << RED << "Error: Dissection failed: " << e.what() << RESET << std::endl;
     return EXIT_FAILURE;
-  }  
+  }
 
   // Assemble bytecode to machine code
   std::vector<uint8_t> machinecode;

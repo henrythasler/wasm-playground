@@ -1,7 +1,7 @@
+#include <array>
+#include <fstream>
 #include <iostream>
 #include <vector>
-#include <fstream>
-#include <array>
 
 namespace tiny {
 

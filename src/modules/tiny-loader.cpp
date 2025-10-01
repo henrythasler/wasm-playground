@@ -12,10 +12,10 @@ bool Loader::loadFromFile(std::string path) {
     }
     bytecode = std::vector<uint8_t>(std::istreambuf_iterator<char>(file), {});
     file.close();
-    return true;  // Return true if loading was successful
+    return true; // Return true if loading was successful
   } else {
     return false; // Return false if no path is provided
-  }  
+  }
 }
 
 std::vector<uint8_t> Loader::getBytecode() {
