@@ -73,20 +73,22 @@ int main(int argc, char const *argv[]) {
   std::cout << "Executing machine code... ";
 
   size_t page_size = sysconf(_SC_PAGESIZE);
-  // Allocate page-aligned memory for executable code; this is required for mprotect as it works on page granularity
-  void *exec_mem = aligned_alloc(page_size, ((machinecode.size() + page_size - 1) / page_size) * page_size);
+  size_t alloc_size = machinecode.size(); // not required to be page-aligned as mmap will round up internally
+  void *exec_mem = mmap(NULL, alloc_size, PROT_READ | PROT_WRITE | PROT_EXEC, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+  if (exec_mem == MAP_FAILED) {
+    std::cerr << RED << "mmap failed: " << strerror(errno) << RESET << std::endl;
+    return EXIT_FAILURE;
+  }
 
   // Copy code to executable memory region
   memcpy(exec_mem, machinecode.data(), machinecode.size());
-  // Make executable
-  mprotect(exec_mem, machinecode.size(), PROT_READ | PROT_EXEC);
 
   // Execute
   auto wasm_module = reinterpret_cast<void (*)()>(exec_mem);
   wasm_module();
 
   // Cleanup
-  free(exec_mem);
+  munmap(exec_mem, alloc_size);
 
   std::cout << GREEN "done" << RESET << std::endl;
   return EXIT_SUCCESS;

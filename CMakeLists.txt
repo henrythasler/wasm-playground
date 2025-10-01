@@ -12,7 +12,7 @@ function(CLANG_TIDY ENABLED)
     set(CMAKE_CXX_CLANG_TIDY
         clang-tidy
         --config-file ${CMAKE_CURRENT_LIST_DIR}/.clang-tidy
-        "--header-filter=${CMAKE_CURRENT_LIST_DIR}/(modules|tests)/.*"
+        "--header-filter=${CMAKE_CURRENT_LIST_DIR}/(src|tests)/.*"
         --extra-arg=-isystem/usr/aarch64-linux-gnu/include/c++/11
         --extra-arg=-isystem/usr/aarch64-linux-gnu/include/c++/11/aarch64-linux-gnu
         --extra-arg=-isystem/usr/aarch64-linux-gnu/include
@@ -62,6 +62,9 @@ set (CMAKE_CXX_STANDARD 14)
 
 # set compiler options to include debug info
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ggdb3")
+
+# enable address sanitizer
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address")
 
 # Add Kaitai runtime dependency
 CLANG_TIDY(OFF)  # disable clang-tidy
