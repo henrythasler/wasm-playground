@@ -1,3 +1,5 @@
+[![build aarch64](https://github.com/henrythasler/wasm-playground/actions/workflows/build-aarch64.yml/badge.svg)](https://github.com/henrythasler/wasm-playground/actions/workflows/build-aarch64.yml)
+
 # Tiny-Wasm
 
 Following [Tiny Wasm Compiler Tutorial](https://github.com/Schleifner/Tiny-Wasm-Compiler-Learn) to build a compiler and runtime for WebAssembly modules.
