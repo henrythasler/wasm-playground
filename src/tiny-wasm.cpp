@@ -2,13 +2,12 @@
 #include <cstring>
 #include <iomanip>
 #include <iostream>
-#include <sys/mman.h>
-#include <unistd.h>
 #include <vector>
 
 #include "colors.hpp"
 #include "tiny-assembler.hpp"
 #include "tiny-loader.hpp"
+#include "tiny-runtime.hpp"
 #include "version.hpp"
 #include "wasm-dissector.hpp"
 
@@ -69,27 +68,13 @@ int main(int argc, char const *argv[]) {
   }
   std::cout << std::dec << std::endl;
 
-  // execute machine code
+  /* execute machine code */
   std::cout << "Executing machine code... ";
-
-  size_t alloc_size = machinecode.size(); // not required to be page-aligned as mmap will round up internally
-  void *exec_mem = mmap(NULL, alloc_size, PROT_READ | PROT_WRITE | PROT_EXEC, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-  if (exec_mem == MAP_FAILED) {
-    std::cerr << RED << "mmap failed: " << strerror(errno) << RESET << std::endl;
-    return EXIT_FAILURE;
-  }
-
-  // Copy code to executable memory region
-  memcpy(exec_mem, machinecode.data(), machinecode.size());
-
-  // Execute
-  auto wasm_module = reinterpret_cast<void (*)()>(exec_mem);
-  __builtin___clear_cache(exec_mem, static_cast<size_t *>(exec_mem) + alloc_size);
-  wasm_module();
-
-  // Cleanup
-  if (munmap(exec_mem, alloc_size) != 0) {
-    std::cerr << RED << "munmap failed: " << strerror(errno) << RESET << std::endl;
+  tiny::Runtime runtime = tiny::Runtime();
+  try {
+    runtime.execute(machinecode);
+  } catch (const std::exception &e) {
+    std::cerr << RED << "Execution failed: " << e.what() << RESET << std::endl;
     return EXIT_FAILURE;
   }
 

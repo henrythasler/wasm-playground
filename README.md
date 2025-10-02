@@ -1,27 +1,43 @@
 # Tiny-Wasm
 
-Following [Tiny Wasm Compiler Tutorial](https://github.com/Schleifner/Tiny-Wasm-Compiler-Learn).
+Following [Tiny Wasm Compiler Tutorial](https://github.com/Schleifner/Tiny-Wasm-Compiler-Learn) to build a compiler and runtime for WebAssembly modules.
 
 ## Prerequisites
 
+### Install Dependencies
+
 `sudo apt install g++-aarch64-linux-gnu clang-format clang-tidy wabt`
+
+### Checkout Submodules
+
+`git submodule update --init --recursive`
 
 ## Build Instructions
 
 ```
-$ mkdir build && cd build
-$ cmake -DCMAKE_TOOLCHAIN_FILE=../cmake/aarch64-toolchain.cmake ..
-$ cmake --build . --parallel
-$ qemu-aarch64 -L /usr/aarch64-linux-gnu/ ./src/tiny-wasm ../wasm/nop-fn.wasm
+$ cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=cmake/aarch64-toolchain.cmake
+$ cmake --build build --parallel
 ```
+
+This will build the project in the `build` folder.
+
+## Execution
+
+### On x86 Machine using Qemu 
+
+LeakSanitizer is incompatible with emulator/debugging/tracing tools. Setting `detect_leaks=0` disables leak detection during execution.
+
+`ASAN_OPTIONS=detect_leaks=0 qemu-aarch64 -L /usr/aarch64-linux-gnu/ build/src/tiny-wasm wasm/nop-fn.wasm`
+
+### On arm64 Machine
+
+`./build/src/tiny-wasm wasm/nop-fn.wasm`
 
 ## Debug 
 
 Start the executable:
 
 `ASAN_OPTIONS=detect_leaks=0 qemu-aarch64 -L /usr/aarch64-linux-gnu/ -g 1234 ./tiny-wasm ../wasm/nop-fn.wasm`
-
-> LeakSanitizer is incompatible with debugging/tracing tools. Setting `detect_leaks=0` disables leak detection while debugging.
 
 Set breakpoint in source code. Start Debugging (F5).
 
