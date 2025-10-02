@@ -5,7 +5,8 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "test": "npm test"
+    "test": "npm test",
+    "linter": "find src -regex '.*\\.\\(cpp\\|hpp\\|c\\|h\\)' -not -path '**/kaitai/**' | xargs clang-format -style=file:.clang-format --Werror --dry-run"
   },
   "repository": {
     "type": "git",

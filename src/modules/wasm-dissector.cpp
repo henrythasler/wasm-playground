@@ -9,7 +9,7 @@ void Dissector::dissectCodeSection(webassembly_t::code_section_t *code_section) 
       std::cout << "      locals: " << body->data()->local_count()->value();
       if (body->data()->local_count()->value() > 0) {
         std::cout << " [ ";
-        for (size_t k = 0; k < body->data()->local_count()->value(); ++k) {
+        for (size_t k = 0; k < static_cast<size_t>(body->data()->local_count()->value()); ++k) {
           if (k > 0)
             std::cout << ", ";
           std::cout << static_cast<int>(body->data()->locals()->at(k)->count()->value()) << " x "

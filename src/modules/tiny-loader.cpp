@@ -5,12 +5,11 @@ namespace tiny {
 bool Loader::loadFromFile(std::string path) {
   // Load bytecode from file if path is provided
   if (!path.empty()) {
-    this->path = path;
     std::ifstream file(path, std::ios::binary);
     if (!file) {
       return false;
     }
-    bytecode = std::vector<uint8_t>(std::istreambuf_iterator<char>(file), {});
+    this->bytecode = std::vector<uint8_t>(std::istreambuf_iterator<char>(file), {});
     file.close();
     return true; // Return true if loading was successful
   } else {
@@ -19,6 +18,6 @@ bool Loader::loadFromFile(std::string path) {
 }
 
 std::vector<uint8_t> Loader::getBytecode() {
-  return bytecode;
+  return this->bytecode;
 }
 } // namespace tiny

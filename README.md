@@ -4,6 +4,24 @@
 
 Following [Tiny Wasm Compiler Tutorial](https://github.com/Schleifner/Tiny-Wasm-Compiler-Learn) to build a compiler and runtime for WebAssembly modules.
 
+Progress:
+
+- Chapter00: ✅
+- Chapter01: 95%
+- Chapter02: 5%
+- Chapter03: 0%
+- Chapter04: 0%
+- Chapter05: 0%
+- Chapter06: 0%
+- Chapter07: 0%
+- Chapter08: 0%
+- Chapter09: 0%
+- Chapter10: 0%
+- Chapter11: 0%
+- Chapter12: 0%
+- Chapter13: 0%
+
+
 ## Prerequisites
 
 ### Install Dependencies
@@ -65,8 +83,15 @@ Set breakpoint in source code. Start Debugging (F5).
 - [Procedure Call Standard for the Arm® 64-bit Architecture (AArch64) - Parameter passing](https://github.com/ARM-software/abi-aa/blob/main/aapcs64/aapcs64.rst#68parameter-passing)
 - [arm64-book - A Book that explains in Detail ARM64 Assembly](https://github.com/maxvdec/arm64-book)
 
+### ARM64 Online Tools
+
+- [ARMConverter.com - Online ARM to HEX Converter](https://armconverter.com/?lock=arm64)
+- [Online Assembler and Disassembler](https://shell-storm.org/online/Online-Assembler-and-Disassembler/)
+
 ### WebAssembly
 
+- [WebAssembly 1.0 Core Specification](https://www.w3.org/TR/wasm-core-1/)
+- [WebAssembly on developer.mozilla.org](https://developer.mozilla.org/en-US/docs/WebAssembly)
 - [WebAssembly parser for Kaitai.io](https://github.com/evacchi/kaitai-webassembly)
 
 ### Programming

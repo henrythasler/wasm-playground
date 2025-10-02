@@ -16,10 +16,10 @@ u_int32_t Assembler::mapOpcodeToArm64(uint8_t opcode) {
 }
 
 void Assembler::serializeUint32LE(std::vector<uint8_t> &vec, uint32_t value) {
-  vec.push_back(value & 0xFF);
-  vec.push_back((value >> 8) & 0xFF);
-  vec.push_back((value >> 16) & 0xFF);
-  vec.push_back((value >> 24) & 0xFF);
+  vec.push_back(uint8_t(value & 0xFF));
+  vec.push_back(uint8_t((value >> 8) & 0xFF));
+  vec.push_back(uint8_t((value >> 16) & 0xFF));
+  vec.push_back(uint8_t((value >> 24) & 0xFF));
 }
 
 std::vector<uint8_t> Assembler::assembleCodeSection(webassembly_t::code_section_t *code_section) {
@@ -31,7 +31,7 @@ std::vector<uint8_t> Assembler::assembleCodeSection(webassembly_t::code_section_
   for (size_t j = 0; j < code_section->bodies()->size(); ++j) {
     const auto &body = code_section->bodies()->at(j);
     if (body->data()->local_count()->value() > 0) {
-      for (size_t k = 0; k < body->data()->local_count()->value(); ++k) {
+      for (size_t k = 0; k < static_cast<size_t>(body->data()->local_count()->value()); ++k) {
         if (k > 0) {
           // FIXME: handle local variables
         }

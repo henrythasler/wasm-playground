@@ -8,7 +8,6 @@ namespace tiny {
 
 class Loader {
 private:
-  std::string path;
   std::vector<uint8_t> bytecode = {};
   /* data */
 public:
