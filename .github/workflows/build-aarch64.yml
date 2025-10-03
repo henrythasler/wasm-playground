@@ -39,5 +39,7 @@ jobs:
         run: cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=cmake/aarch64-toolchain.cmake
       - name: Build the project
         run: cmake --build build --parallel
+      - name: Run unit tests
+        run: ctest --test-dir build --output-on-failure
       - name: Run executable
         run: ./build/src/tiny-wasm ./wasm/nop-fn.wasm

@@ -54,8 +54,8 @@ if(GENERATED_WASM_FILES)
   message(STATUS "Added custom target to generate wasm files: ${GENERATED_WASM_FILES}")
 endif()
 
-# define option for clang-tody
 option(ENABLE_CLANG_TIDY "Enable clang-tidy static analysis" ON)
+option(ENABLE_UNITTEST "Enable unit tests" ON)
 
 # set C++ standard to C++14
 set (CMAKE_CXX_STANDARD 14)
@@ -81,3 +81,12 @@ configure_file(
   ${CMAKE_CURRENT_BINARY_DIR}/src/version.hpp
   @ONLY
 )
+
+if(ENABLE_UNITTEST)
+  # Add the tests directory
+  set(CMAKE_CROSSCOMPILING TRUE)
+  enable_testing()
+  add_subdirectory(tests)
+else()
+  message(STATUS "Unit tests are disabled!")
+endif()

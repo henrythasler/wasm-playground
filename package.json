@@ -5,7 +5,7 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "test": "npm test",
+    "test": "ctest --test-dir build --output-on-failure",
     "linter": "find src -regex '.*\\.\\(cpp\\|hpp\\|c\\|h\\)' -not -path '**/kaitai/**' | xargs clang-format -style=file:.clang-format --Werror --dry-run"
   },
   "repository": {
