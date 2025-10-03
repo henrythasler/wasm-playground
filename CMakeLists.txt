@@ -84,10 +84,6 @@ configure_file(
 )
 
 if(ENABLE_UNITTEST)
-  if(ENABLE_ARM64_CROSSCOMPILE)
-    message(STATUS "Enabling ARM64 (aarch64) cross-compilation for unit tests")
-    set(CMAKE_CROSSCOMPILING TRUE)
-  endif()
   # Add the tests directory
   enable_testing()
   add_subdirectory(tests)

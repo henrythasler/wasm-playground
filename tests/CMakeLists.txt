@@ -5,11 +5,16 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # disable address sanitizer for tests
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-sanitize=address")
 
-if(CMAKE_CROSSCOMPILING)
-    set(CMAKE_CROSSCOMPILING_EMULATOR 
-        /usr/bin/qemu-aarch64-static
-        -L /usr/aarch64-linux-gnu
-    )
+if(ENABLE_ARM64_CROSSCOMPILE)
+  message(STATUS "Enabling ARM64 (aarch64) cross-compilation for unit tests")
+  set(CMAKE_CROSSCOMPILING TRUE)
+
+  # Use qemu-aarch64-static for cross-platform execution
+  message(STATUS "Using emulator for aarch64")
+  set(CMAKE_CROSSCOMPILING_EMULATOR 
+      /usr/bin/qemu-aarch64-static
+      -L /usr/aarch64-linux-gnu
+  )
 endif()
 
 include(FetchContent)
