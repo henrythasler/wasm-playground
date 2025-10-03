@@ -56,6 +56,7 @@ endif()
 
 option(ENABLE_CLANG_TIDY "Enable clang-tidy static analysis" ON)
 option(ENABLE_UNITTEST "Enable unit tests" ON)
+option(ENABLE_ARM64_CROSSCOMPILE "Enable arm64 (aarch64) cross-compilation" ON)
 
 # set C++ standard to C++14
 set (CMAKE_CXX_STANDARD 14)
@@ -83,8 +84,11 @@ configure_file(
 )
 
 if(ENABLE_UNITTEST)
+  if(ENABLE_ARM64_CROSSCOMPILE)
+    message(STATUS "Enabling ARM64 (aarch64) cross-compilation for unit tests")
+    set(CMAKE_CROSSCOMPILING TRUE)
+  endif()
   # Add the tests directory
-  set(CMAKE_CROSSCOMPILING TRUE)
   enable_testing()
   add_subdirectory(tests)
 else()
