@@ -21,6 +21,10 @@ Progress:
 - Chapter12: 0%
 - Chapter13: 0%
 
+## Feature Highlights
+
+- Uses Kaitai Struct to parse wasm-files
+- gtest is fetched on demand by cmake (no local installation required)
 
 ## Prerequisites
 

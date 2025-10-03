@@ -55,5 +55,6 @@
         "cinttypes": "cpp",
         "variant": "cpp"
     },
-    "cmake.sourceDirectory": "/home/henry/dev/wasm-playground"
+    "cmake.sourceDirectory": "/home/henry/dev/wasm-playground",
+    "cmake.generator": "Unix Makefiles"
 }

@@ -1,10 +1,3 @@
-# GoogleTest requires at least C++17
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
-# disable address sanitizer for tests
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-sanitize=address")
-
 if(ENABLE_ARM64_CROSSCOMPILE)
   message(STATUS "Enabling ARM64 (aarch64) cross-compilation for unit tests")
   set(CMAKE_CROSSCOMPILING TRUE)
@@ -30,7 +23,23 @@ add_executable(loader_test
   loader_test.cpp
 )
 
-target_link_libraries(loader_test
+# GoogleTest requires at least C++17
+set_target_properties(loader_test PROPERTIES
+  CXX_STANDARD 17
+  CXX_STANDARD_REQUIRED YES
+  CXX_EXTENSIONS NO
+)
+
+# Remove sanitizer flags from test target
+target_compile_options(loader_test PRIVATE -fno-sanitize=all)
+# target_link_options(loader_test PRIVATE -fno-sanitize=all)  # project is compiled with -fsanitize=address so linking without it will cause issues
+
+target_include_directories(loader_test PRIVATE 
+  ${CMAKE_ROOT_DIR}/src
+)
+
+target_link_libraries(loader_test PRIVATE
+  tiny_modules
   GTest::gtest_main
 )
 

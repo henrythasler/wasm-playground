@@ -2,4 +2,4 @@
 .type foo, "function"
 
 foo:
-    ret    
+    ret
