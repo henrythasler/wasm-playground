@@ -1,4 +1,6 @@
 #include <gtest/gtest.h>
+#include <gmock/gmock.h>  // This is the key include for EXPECT_THAT
+
 #include <filesystem>
 #include <fstream>
 
@@ -15,12 +17,18 @@ TEST(loader, success) {
   tiny::Loader loader = tiny::Loader();
   auto path = std::filesystem::path(__FILE__).parent_path() / "assets";
   auto res = loader.loadFromFile(path / "nop-fn.wasm");
-  EXPECT_TRUE(res);
-  auto bytecode = loader.getBytecode();
-  EXPECT_GT(bytecode.size(), 0);
+
+  // Check that loading succeeded
+  ASSERT_TRUE(res); // assertion stops the test if it fails
+
+  std::vector<uint8_t> bytecode = loader.getBytecode();
+  
+  // Check that some data was loaded
+  const size_t magic_size = 4;
+  ASSERT_GE(bytecode.size(), magic_size); // At least 4 bytes for the magic number
+
   // Check that the bytecode starts with the WebAssembly magic number
-  EXPECT_EQ(bytecode[0], 0x00);
-  EXPECT_EQ(bytecode[1], 0x61);
-  EXPECT_EQ(bytecode[2], 0x73);
-  EXPECT_EQ(bytecode[3], 0x6d);
+  std::vector<uint8_t> magic(bytecode.begin(), bytecode.begin() + magic_size);
+  EXPECT_THAT(magic, testing::ElementsAreArray({0x00, 0x61, 0x73, 0x6D})); // "\0asm"
+
 }

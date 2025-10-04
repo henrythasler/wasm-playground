@@ -39,8 +39,9 @@ target_include_directories(loader_test PRIVATE
 )
 
 target_link_libraries(loader_test PRIVATE
-  tiny_modules
+  tiny_modules  
   GTest::gtest_main
+  GTest::gmock
 )
 
 add_test(NAME loader_test COMMAND loader_test)
