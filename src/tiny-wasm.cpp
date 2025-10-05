@@ -94,8 +94,7 @@ int main(int argc, char const *argv[]) {
       std::cerr << RED << "Execution failed: " << e.what() << RESET << std::endl;
       return EXIT_FAILURE;
     }
-  }
-  else {
+  } else {
     std::cout << "Dry run mode, skipping execution... ";
   }
 

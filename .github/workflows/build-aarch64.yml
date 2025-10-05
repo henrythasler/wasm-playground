@@ -27,7 +27,7 @@ jobs:
   build-and-test:
     name: Build and Test
     runs-on: ubuntu-24.04-arm
-    needs: code-quality-checks
+    # needs: code-quality-checks
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
