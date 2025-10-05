@@ -26,12 +26,12 @@ std::vector<uint8_t> Assembler::assembleCodeSection(webassembly_t::code_section_
   std::vector<uint8_t> machinecode;
 
   asserte(code_section != nullptr, "Code section is null");
-  asserte(code_section->bodies() != nullptr, "Code section bodies are null");
+  asserte(code_section->entries() != nullptr, "Code section entries are null");
 
-  for (size_t j = 0; j < code_section->bodies()->size(); ++j) {
-    const auto &body = code_section->bodies()->at(j);
-    if (body->data()->local_count()->value() > 0) {
-      for (size_t k = 0; k < static_cast<size_t>(body->data()->local_count()->value()); ++k) {
+  for (size_t j = 0; j < code_section->entries()->size(); ++j) {
+    const auto &entry = code_section->entries()->at(j);
+    if (entry->func()->num_locals()->value() > 0) {
+      for (size_t k = 0; k < static_cast<size_t>(entry->func()->num_locals()->value()); ++k) {
         if (k > 0) {
           // FIXME: handle local variables
         }
@@ -40,10 +40,10 @@ std::vector<uint8_t> Assembler::assembleCodeSection(webassembly_t::code_section_
 
     // serializeUint32LE(machinecode, 0xD2800540); // mov x0, 42
 
-    if (body->data()->code().size() > 0) {
-      for (size_t k = 0; k < body->data()->code().size(); ++k) {
+    if (entry->func()->expr().size() > 0) {
+      for (size_t k = 0; k < entry->func()->expr().size(); ++k) {
         if (k > 0) {
-          serializeUint32LE(machinecode, mapOpcodeToArm64(body->data()->code().at(k)));
+          serializeUint32LE(machinecode, mapOpcodeToArm64(entry->func()->expr().at(k)));
         }
       }
     }
@@ -63,11 +63,11 @@ std::vector<uint8_t> Assembler::assemble(std::vector<uint8_t> bytecode) {
 
   // iterate over sections
   auto sections = wasm.sections();
-  const auto &section_items = *(sections->sections());
+  const auto &section_items = *(sections);
   for (size_t i = 0; i < section_items.size(); ++i) {
     const auto &section = section_items.at(i);
-    if (section->header()->id() == 0x0a) {
-      auto code_section = dynamic_cast<webassembly_t::code_section_t *>(section->payload_data());
+    if (section->id() == 0x0a) {
+      auto code_section = dynamic_cast<webassembly_t::code_section_t *>(section->content());
       machinecode = assembleCodeSection(code_section);
     }
   }

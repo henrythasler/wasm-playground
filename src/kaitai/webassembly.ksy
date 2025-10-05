@@ -19,6 +19,7 @@ doc: |
   * All integers are encoded using the LEB128 variable-length integer encoding (see vlq_base128_le.ksy).
   * The schema follows the KSY Style Guide
   * Requires ks-version 0.9+ because of attribute value validation
+  * types appear in the order in which they are required
 
 doc-ref: |
   * https://www.w3.org/TR/wasm-core-1/
@@ -27,27 +28,24 @@ doc-ref: |
 seq:
   - id: magic
     contents: [0x00, "asm"]
-    doc: | 
-      Magic number identifying the file as a WebAssembly module
-      REF: https://www.w3.org/TR/wasm-core-1/#binary-magic
+    doc: Magic number identifying the file as a WebAssembly module
+    doc-ref: https://www.w3.org/TR/wasm-core-1/#binary-magic
   - id: version
     type: u4
-    doc: | 
-      Version of the WebAssembly binary format
-      REF: https://www.w3.org/TR/wasm-core-1/#binary-version
+    doc: Version of the WebAssembly binary format
+    doc-ref: https://www.w3.org/TR/wasm-core-1/#binary-version
   - id: sections
     type: section
     repeat: eos
-    doc: | 
-      Sequence of sections in the module
-      REF: https://www.w3.org/TR/wasm-core-1/#binary-module
+    doc: A WebAssembly module is a set of sections
+    doc-ref: https://www.w3.org/TR/wasm-core-1/#binary-module
 
 types:
   section:
-    doc: |
-      REF: https://www.w3.org/TR/wasm-core-1/#sections%E2%91%A0
+    doc: A specific section
+    doc-ref: https://www.w3.org/TR/wasm-core-1/#binary-section
     seq:
-      - id: section_id
+      - id: id
         type: u1
         enum: section_id
         doc: Section identifier
@@ -57,7 +55,7 @@ types:
       - id: content
         size: len_content.value
         type: 
-          switch-on: section_id
+          switch-on: id
           cases:
             'section_id::custom': custom_section
             'section_id::type': type_section
@@ -84,12 +82,13 @@ types:
         doc: Custom section data
 
   name:
-    doc: https://www.w3.org/TR/wasm-core-1/#binary-name
+    doc: UTF-8 encoded character sequence
+    doc-ref: https://www.w3.org/TR/wasm-core-1/#binary-name
     seq:
-      - id: len_name
+      - id: length
         type: vlq_base128_le
-      - id: name
-        size: len_name.value
+      - id: value
+        size: length.value
         type: str
         encoding: UTF-8
 
@@ -126,7 +125,9 @@ types:
         type: u1
         enum: valtype
         repeat: expr
-        repeat-expr: num_types.value        
+        repeat-expr: num_types.value
+        doc: Value Types
+        doc-ref: https://www.w3.org/TR/wasm-core-1/#binary-valtype
   
   function_section:
     doc: (id 3) - Vector of type indices (see `Type Section`) for all functions in the `Code Section`
@@ -140,7 +141,7 @@ types:
         repeat-expr: num_typeidx.value     
 
   export_section:
-    doc: (id 7) -
+    doc: (id 7) - Exported entities
     doc-ref: https://www.w3.org/TR/wasm-core-1/#binary-exportsec
     seq:
       - id: num_exports
@@ -163,9 +164,9 @@ types:
     doc: (id 10) A vector of code entries
     doc-ref: https://www.w3.org/TR/wasm-core-1/#binary-codesec
     seq:
-      - id: num_codes
+      - id: num_entries
         type: vlq_base128_le
-      - id: codes
+      - id: entries
         type: code
         repeat: eos
 
@@ -173,25 +174,20 @@ types:
     seq:
       - id: len_func
         type: vlq_base128_le
-      - id: data
+      - id: func
         size: len_func.value
         type: func
 
   func:
     seq:
-      - id: locals
-        type: locals
-      - id: expr
-        size-eos: true
-
-  locals:
-    seq:
       - id: num_locals
         type: vlq_base128_le
-      - id: local
+      - id: locals
         type: local
         repeat: expr
-        repeat-expr: num_locals.value        
+        repeat-expr: num_locals.value
+      - id: expr
+        size-eos: true
 
   local:
     seq:

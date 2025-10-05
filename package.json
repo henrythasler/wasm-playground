@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "test": "ASAN_OPTIONS=detect_leaks=0 ctest --test-dir build --output-on-failure",
-    "linter": "find src -regex '.*\\.\\(cpp\\|hpp\\|c\\|h\\)' -not -path '**/kaitai/**' | xargs clang-format -style=file:.clang-format --Werror --dry-run"
+    "linter": "find src -regex '.*\\.\\(cpp\\|hpp\\|c\\|h\\)' -not -path '**/kaitai/**' | xargs clang-format -style=file:.clang-format --Werror --dry-run",
+    "kaitai": "kaitai-struct-compiler --target cpp_stl --outdir src/kaitai src/kaitai/webassembly.ksy"
   },
   "repository": {
     "type": "git",
