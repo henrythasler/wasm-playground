@@ -6,6 +6,7 @@ meta:
     - webassembly
     - schema
   license: MIT
+  ks-version: 0.9
   imports:
     - vlq_base128_le
   endian: le
@@ -17,6 +18,7 @@ doc: |
   * Naming of entities follows the official specification.
   * All integers are encoded using the LEB128 variable-length integer encoding (see vlq_base128_le.ksy).
   * The schema follows the KSY Style Guide
+  * Requires ks-version 0.9+ because of attribute value validation
 
 doc-ref: |
   * https://www.w3.org/TR/wasm-core-1/
@@ -58,13 +60,13 @@ types:
           switch-on: section_id
           cases:
             'section_id::custom': custom_section
-            'section_id::type': dummy
+            'section_id::type': type_section
             'section_id::import': dummy
-            'section_id::function': dummy
+            'section_id::function': function_section
             'section_id::table': dummy
             'section_id::memory': dummy
             'section_id::global': dummy
-            'section_id::export': dummy
+            'section_id::export': export_section
             'section_id::start': dummy
             'section_id::element': dummy
             'section_id::code': code_section
@@ -72,22 +74,94 @@ types:
         doc: Section content
 
   custom_section:
-    doc: |
-      id: 0
-      Custom section whose content is application-specific and not defined by the WebAssembly specification.
-      REF: https://www.w3.org/TR/wasm-core-1/#custom-section%E2%91%A0
+    doc: (id 0) - Custom section whose content is application-specific and not defined by the WebAssembly specification.
+    doc-ref: https://www.w3.org/TR/wasm-core-1/#binary-customsec
     seq:
       - id: name
         type: name
       - id: data
         size-eos: true
         doc: Custom section data
+
+  name:
+    doc: https://www.w3.org/TR/wasm-core-1/#binary-name
+    seq:
+      - id: len_name
+        type: vlq_base128_le
+      - id: name
+        size: len_name.value
+        type: str
+        encoding: UTF-8
+
+  type_section:
+    doc: (id 1) - A vector of function types
+    doc-ref: https://www.w3.org/TR/wasm-core-1/#binary-typesec
+    seq:
+      - id: num_functypes
+        type: vlq_base128_le
+      - id: functypes
+        type: functype
+        repeat: expr
+        repeat-expr: num_functypes.value
+
+  functype:
+    doc: Byte `0x60` followed by a vector of parameters and results
+    doc-ref: https://www.w3.org/TR/wasm-core-1/#binary-functype
+    seq:
+      - id: functype
+        type: u1
+        enum: types
+        valid:
+          eq: types::function
+      - id: parameters
+        type: vec_valtype
+      - id: results
+        type: vec_valtype
+
+  vec_valtype:
+    seq:
+      - id: num_types
+        type: vlq_base128_le
+      - id: valtype
+        type: u1
+        enum: valtype
+        repeat: expr
+        repeat-expr: num_types.value        
   
+  function_section:
+    doc: (id 3) - Vector of type indices (see `Type Section`) for all functions in the `Code Section`
+    doc-ref: https://www.w3.org/TR/wasm-core-1/#binary-funcsec
+    seq:
+      - id: num_typeidx
+        type: vlq_base128_le
+      - id: typeidx
+        type: vlq_base128_le
+        repeat: expr
+        repeat-expr: num_typeidx.value     
+
+  export_section:
+    doc: (id 7) -
+    doc-ref: https://www.w3.org/TR/wasm-core-1/#binary-exportsec
+    seq:
+      - id: num_exports
+        type: vlq_base128_le
+      - id: exports
+        type: export
+        repeat: eos
+
+  export:
+    seq:
+      - id: name
+        type: name
+      - id: exportdesc
+        type: u1
+        enum: indices
+      - id: idx
+        type: vlq_base128_le    
+
   code_section:
-    doc: |
-      id: 10
-      A vector of code entries
-      REF: https://www.w3.org/TR/wasm-core-1/#binary-codesec
+    doc: (id 10) A vector of code entries
+    doc-ref: https://www.w3.org/TR/wasm-core-1/#binary-codesec
     seq:
       - id: num_codes
         type: vlq_base128_le
@@ -127,16 +201,6 @@ types:
         type: u1
         enum: valtype
 
-  name:
-    doc: https://www.w3.org/TR/wasm-core-1/#binary-name
-    seq:
-      - id: len_name
-        type: vlq_base128_le
-      - id: name
-        size: len_name.value
-        type: str
-        encoding: UTF-8
-
   dummy: {}
 
 enums:
@@ -159,3 +223,12 @@ enums:
     0x7E: i64
     0x7D: f32
     0x7C: f64
+
+  types:
+    0x60: function
+
+  indices:
+    0x00: func
+    0x01: table
+    0x02: mem
+    0x03: global
