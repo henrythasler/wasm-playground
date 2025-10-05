@@ -15,6 +15,8 @@ doc: |
   This document describes the binary format of a WebAssembly module 
   following the version 1.0 of the core WebAssembly standard.
 
+  Author: Henry Thasler
+
   * Naming of entities follows the official specification.
   * All integers are encoded using the LEB128 variable-length integer encoding (see vlq_base128_le.ksy).
   * The schema follows the KSY Style Guide
@@ -59,7 +61,7 @@ types:
           cases:
             'section_id::custom': custom_section
             'section_id::type': type_section
-            'section_id::import': dummy
+            'section_id::import': import_section
             'section_id::function': function_section
             'section_id::table': dummy
             'section_id::memory': dummy
@@ -129,6 +131,71 @@ types:
         doc: Value Types
         doc-ref: https://www.w3.org/TR/wasm-core-1/#binary-valtype
   
+  import_section:
+    doc: (id 2) - Imported components
+    doc-ref: https://www.w3.org/TR/wasm-core-1/#binary-importsec
+    seq:
+      - id: num_imports
+        type: vlq_base128_le
+      - id: imports
+        type: import
+        repeat: expr
+        repeat-expr: num_imports.value
+  
+  import:
+    doc: An element of the import section
+    seq:
+      - id: module
+        type: name
+      - id: name
+        type: name
+      - id: import_type
+        type: u1
+        enum: import_types
+      - id: importdesc
+        type: 
+          switch-on: import_type
+          cases:
+            'import_types::func': vlq_base128_le
+            'import_types::table': table_type
+            'import_types::mem': memory_type
+            'import_types::global': global_type
+  
+  table_type:
+    seq:
+      - id: elemtype
+        type: u1
+        enum: types
+        valid:
+          eq: types::element
+      - id: limits
+        type: limits
+
+  limits:
+    seq:
+      - id: flags
+        type: u1
+        valid:
+          any-of: [0x00, 0x01]
+      - id: min
+        type: vlq_base128_le
+      - id: max
+        type: vlq_base128_le
+        if: flags == 0x01
+
+  memory_type:
+    seq:
+      - id: limits
+        type: limits
+
+  global_type:
+    seq:
+      - id: valtype
+        type: u1
+        enum: valtype
+      - id: mutable
+        type: u1
+
   function_section:
     doc: (id 3) - Vector of type indices (see `Type Section`) for all functions in the `Code Section`
     doc-ref: https://www.w3.org/TR/wasm-core-1/#binary-funcsec
@@ -156,7 +223,7 @@ types:
         type: name
       - id: exportdesc
         type: u1
-        enum: indices
+        enum: export_types
       - id: idx
         type: vlq_base128_le    
 
@@ -222,8 +289,15 @@ enums:
 
   types:
     0x60: function
+    0x70: element
 
-  indices:
+  export_types:
+    0x00: func
+    0x01: table
+    0x02: mem
+    0x03: global
+
+  import_types:
     0x00: func
     0x01: table
     0x02: mem
