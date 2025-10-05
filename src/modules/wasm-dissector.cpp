@@ -76,8 +76,8 @@ void Dissector::dissect(std::vector<uint8_t> bytecode) {
   for (size_t i = 0; i < section_items.size(); ++i) {
     const auto &section = section_items.at(i);
     auto section_id = section->id();
-    std::cout << "  Section " << i << ": " << section_names[section_id] << " (" << section_id << ")"
-              << " size=" << section->len_content()->value() << " bytes";
+    std::cout << "  Section " << i << ": " << section_names[section_id] << " (" << section_id << ")";
+    std::cout << " size=" << section->len_content()->value() << " bytes";
     if (SectionID(section_id) == SectionID::Code) {
       // Section 0x0a is the code section; payload_data should be cast to webassembly_t::code_section_t
       auto code_section = dynamic_cast<webassembly_t::code_section_t *>(section->content());

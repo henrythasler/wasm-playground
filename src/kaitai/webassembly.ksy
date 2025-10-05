@@ -63,12 +63,12 @@ types:
             'section_id::type': type_section
             'section_id::import': import_section
             'section_id::function': function_section
-            'section_id::table': dummy
-            'section_id::memory': dummy
-            'section_id::global': dummy
+            'section_id::table': table_section
+            'section_id::memory': memory_section
+            'section_id::global': global_section
             'section_id::export': export_section
-            'section_id::start': dummy
-            'section_id::element': dummy
+            'section_id::start': start_section
+            'section_id::element': element_section
             'section_id::code': code_section
             'section_id::data': dummy
         doc: Section content
@@ -102,8 +102,7 @@ types:
         type: vlq_base128_le
       - id: functypes
         type: functype
-        repeat: expr
-        repeat-expr: num_functypes.value
+        repeat: eos
 
   functype:
     doc: Byte `0x60` followed by a vector of parameters and results
@@ -139,8 +138,7 @@ types:
         type: vlq_base128_le
       - id: imports
         type: import
-        repeat: expr
-        repeat-expr: num_imports.value
+        repeat: eos
   
   import:
     doc: An element of the import section
@@ -157,11 +155,11 @@ types:
           switch-on: import_type
           cases:
             'import_types::func': vlq_base128_le
-            'import_types::table': table_type
-            'import_types::mem': memory_type
-            'import_types::global': global_type
+            'import_types::table': table
+            'import_types::mem': memory
+            'import_types::global': global
   
-  table_type:
+  table:
     seq:
       - id: elemtype
         type: u1
@@ -183,18 +181,19 @@ types:
         type: vlq_base128_le
         if: flags == 0x01
 
-  memory_type:
+  memory:
     seq:
       - id: limits
         type: limits
 
-  global_type:
+  global:
     seq:
       - id: valtype
         type: u1
         enum: valtype
-      - id: mutable
+      - id: is_mutable
         type: u1
+        doc: the `is_` prefix avoids conflict with C++ keyword `mutable` in generated code
 
   function_section:
     doc: (id 3) - Vector of type indices (see `Type Section`) for all functions in the `Code Section`
@@ -204,8 +203,37 @@ types:
         type: vlq_base128_le
       - id: typeidx
         type: vlq_base128_le
-        repeat: expr
-        repeat-expr: num_typeidx.value     
+        repeat: eos
+
+  table_section:
+    doc: (id 4) Vector of tables
+    doc-ref: https://www.w3.org/TR/wasm-core-1/#binary-tablesec
+    seq:
+      - id: num_tables
+        type: vlq_base128_le
+      - id: tables
+        type: table
+        repeat: eos
+
+  memory_section:
+    doc: (id 5) Vector of memories
+    doc-ref: https://www.w3.org/TR/wasm-core-1/#binary-memsec
+    seq:
+      - id: num_memories
+        type: vlq_base128_le
+      - id: memories
+        type: memory
+        repeat: eos
+
+  global_section:
+    doc: (id 6) Vector of globals
+    doc-ref: https://www.w3.org/TR/wasm-core-1/#binary-memsec
+    seq:
+      - id: num_globals
+        type: vlq_base128_le
+      - id: globals
+        type: global
+        repeat: eos
 
   export_section:
     doc: (id 7) - Exported entities
@@ -226,6 +254,36 @@ types:
         enum: export_types
       - id: idx
         type: vlq_base128_le    
+
+  start_section:
+    doc: (id 8) - Start-function or -component of the module
+    doc-ref: https://www.w3.org/TR/wasm-core-1/#binary-startsec
+    seq:
+      - id: start
+        type: vlq_base128_le
+        doc: function index of the start-function
+
+  element_section:
+    doc: (id 9) - Vector of element sections
+    doc-ref: https://www.w3.org/TR/wasm-core-1/#binary-elemsec
+    seq:
+      - id: num_elements
+        type: vlq_base128_le
+      - id: elements
+        type: element
+        repeat: eos
+
+  element:
+    seq:
+      - id: tableidx
+        type: vlq_base128_le
+      - id: offset
+        terminator: 0x0b
+      - id: num_init
+        type: vlq_base128_le
+      - id: init
+        type: vlq_base128_le
+        repeat: eos
 
   code_section:
     doc: (id 10) A vector of code entries
@@ -254,7 +312,7 @@ types:
         repeat: expr
         repeat-expr: num_locals.value
       - id: expr
-        size-eos: true
+        terminator: 0x0b
 
   local:
     seq:

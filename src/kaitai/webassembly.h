@@ -19,10 +19,13 @@ class webassembly_t;
  * This document describes the binary format of a WebAssembly module 
  * following the version 1.0 of the core WebAssembly standard.
  * 
+ * Author: Henry Thasler
+ * 
  * * Naming of entities follows the official specification.
  * * All integers are encoded using the LEB128 variable-length integer encoding (see vlq_base128_le.ksy).
  * * The schema follows the KSY Style Guide
  * * Requires ks-version 0.9+ because of attribute value validation
+ * * types appear in the order in which they are required
  * \sa * https://www.w3.org/TR/wasm-core-1/
  * * https://doc.kaitai.io/ksy_style_guide.html
  */
@@ -34,28 +37,54 @@ public:
     class code_section_t;
     class custom_section_t;
     class dummy_t;
+    class element_t;
+    class element_section_t;
     class export_t;
     class export_section_t;
     class func_t;
     class function_section_t;
     class functype_t;
+    class global_t;
+    class global_section_t;
+    class import_t;
+    class import_section_t;
+    class limits_t;
     class local_t;
+    class memory_t;
+    class memory_section_t;
     class name_t;
     class section_t;
+    class start_section_t;
+    class table_t;
+    class table_section_t;
     class type_section_t;
     class vec_valtype_t;
 
-    enum indices_t {
-        INDICES_FUNC = 0,
-        INDICES_TABLE = 1,
-        INDICES_MEM = 2,
-        INDICES_GLOBAL = 3
+    enum export_types_t {
+        EXPORT_TYPES_FUNC = 0,
+        EXPORT_TYPES_TABLE = 1,
+        EXPORT_TYPES_MEM = 2,
+        EXPORT_TYPES_GLOBAL = 3
     };
-    static bool _is_defined_indices_t(indices_t v);
+    static bool _is_defined_export_types_t(export_types_t v);
 
 private:
-    static const std::set<indices_t> _values_indices_t;
-    static std::set<indices_t> _build_values_indices_t();
+    static const std::set<export_types_t> _values_export_types_t;
+    static std::set<export_types_t> _build_values_export_types_t();
+
+public:
+
+    enum import_types_t {
+        IMPORT_TYPES_FUNC = 0,
+        IMPORT_TYPES_TABLE = 1,
+        IMPORT_TYPES_MEM = 2,
+        IMPORT_TYPES_GLOBAL = 3
+    };
+    static bool _is_defined_import_types_t(import_types_t v);
+
+private:
+    static const std::set<import_types_t> _values_import_types_t;
+    static std::set<import_types_t> _build_values_import_types_t();
 
 public:
 
@@ -82,7 +111,8 @@ private:
 public:
 
     enum types_t {
-        TYPES_FUNCTION = 96
+        TYPES_FUNCTION = 96,
+        TYPES_ELEMENT = 112
     };
     static bool _is_defined_types_t(types_t v);
 
@@ -233,6 +263,67 @@ public:
         webassembly_t::section_t* _parent() const { return m__parent; }
     };
 
+    class element_t : public kaitai::kstruct {
+
+    public:
+
+        element_t(kaitai::kstream* p__io, webassembly_t::element_section_t* p__parent = 0, webassembly_t* p__root = 0);
+
+    private:
+        void _read();
+        void _clean_up();
+
+    public:
+        ~element_t();
+
+    private:
+        vlq_base128_le_t* m_tableidx;
+        std::string m_offset;
+        vlq_base128_le_t* m_num_init;
+        std::vector<vlq_base128_le_t*>* m_init;
+        webassembly_t* m__root;
+        webassembly_t::element_section_t* m__parent;
+
+    public:
+        vlq_base128_le_t* tableidx() const { return m_tableidx; }
+        std::string offset() const { return m_offset; }
+        vlq_base128_le_t* num_init() const { return m_num_init; }
+        std::vector<vlq_base128_le_t*>* init() const { return m_init; }
+        webassembly_t* _root() const { return m__root; }
+        webassembly_t::element_section_t* _parent() const { return m__parent; }
+    };
+
+    /**
+     * (id 9) - Vector of element sections
+     * \sa https://www.w3.org/TR/wasm-core-1/#binary-elemsec Source
+     */
+
+    class element_section_t : public kaitai::kstruct {
+
+    public:
+
+        element_section_t(kaitai::kstream* p__io, webassembly_t::section_t* p__parent = 0, webassembly_t* p__root = 0);
+
+    private:
+        void _read();
+        void _clean_up();
+
+    public:
+        ~element_section_t();
+
+    private:
+        vlq_base128_le_t* m_num_elements;
+        std::vector<element_t*>* m_elements;
+        webassembly_t* m__root;
+        webassembly_t::section_t* m__parent;
+
+    public:
+        vlq_base128_le_t* num_elements() const { return m_num_elements; }
+        std::vector<element_t*>* elements() const { return m_elements; }
+        webassembly_t* _root() const { return m__root; }
+        webassembly_t::section_t* _parent() const { return m__parent; }
+    };
+
     class export_t : public kaitai::kstruct {
 
     public:
@@ -248,21 +339,21 @@ public:
 
     private:
         name_t* m_name;
-        indices_t m_exportdesc;
+        export_types_t m_exportdesc;
         vlq_base128_le_t* m_idx;
         webassembly_t* m__root;
         webassembly_t::export_section_t* m__parent;
 
     public:
         name_t* name() const { return m_name; }
-        indices_t exportdesc() const { return m_exportdesc; }
+        export_types_t exportdesc() const { return m_exportdesc; }
         vlq_base128_le_t* idx() const { return m_idx; }
         webassembly_t* _root() const { return m__root; }
         webassembly_t::export_section_t* _parent() const { return m__parent; }
     };
 
     /**
-     * (id 7) -
+     * (id 7) - Exported entities
      * \sa https://www.w3.org/TR/wasm-core-1/#binary-exportsec Source
      */
 
@@ -384,6 +475,168 @@ public:
         webassembly_t::type_section_t* _parent() const { return m__parent; }
     };
 
+    class global_t : public kaitai::kstruct {
+
+    public:
+
+        global_t(kaitai::kstream* p__io, kaitai::kstruct* p__parent = 0, webassembly_t* p__root = 0);
+
+    private:
+        void _read();
+        void _clean_up();
+
+    public:
+        ~global_t();
+
+    private:
+        valtype_t m_valtype;
+        uint8_t m_is_mutable;
+        webassembly_t* m__root;
+        kaitai::kstruct* m__parent;
+
+    public:
+        valtype_t valtype() const { return m_valtype; }
+        uint8_t is_mutable() const { return m_is_mutable; }
+        webassembly_t* _root() const { return m__root; }
+        kaitai::kstruct* _parent() const { return m__parent; }
+    };
+
+    /**
+     * (id 6) Vector of globals
+     * \sa https://www.w3.org/TR/wasm-core-1/#binary-memsec Source
+     */
+
+    class global_section_t : public kaitai::kstruct {
+
+    public:
+
+        global_section_t(kaitai::kstream* p__io, webassembly_t::section_t* p__parent = 0, webassembly_t* p__root = 0);
+
+    private:
+        void _read();
+        void _clean_up();
+
+    public:
+        ~global_section_t();
+
+    private:
+        vlq_base128_le_t* m_num_globals;
+        std::vector<global_t*>* m_globals;
+        webassembly_t* m__root;
+        webassembly_t::section_t* m__parent;
+
+    public:
+        vlq_base128_le_t* num_globals() const { return m_num_globals; }
+        std::vector<global_t*>* globals() const { return m_globals; }
+        webassembly_t* _root() const { return m__root; }
+        webassembly_t::section_t* _parent() const { return m__parent; }
+    };
+
+    /**
+     * An element of the import section
+     */
+
+    class import_t : public kaitai::kstruct {
+
+    public:
+
+        import_t(kaitai::kstream* p__io, webassembly_t::import_section_t* p__parent = 0, webassembly_t* p__root = 0);
+
+    private:
+        void _read();
+        void _clean_up();
+
+    public:
+        ~import_t();
+
+    private:
+        name_t* m_module;
+        name_t* m_name;
+        import_types_t m_import_type;
+        kaitai::kstruct* m_importdesc;
+        bool n_importdesc;
+
+    public:
+        bool _is_null_importdesc() { importdesc(); return n_importdesc; };
+
+    private:
+        webassembly_t* m__root;
+        webassembly_t::import_section_t* m__parent;
+
+    public:
+        name_t* module() const { return m_module; }
+        name_t* name() const { return m_name; }
+        import_types_t import_type() const { return m_import_type; }
+        kaitai::kstruct* importdesc() const { return m_importdesc; }
+        webassembly_t* _root() const { return m__root; }
+        webassembly_t::import_section_t* _parent() const { return m__parent; }
+    };
+
+    /**
+     * (id 2) - Imported components
+     * \sa https://www.w3.org/TR/wasm-core-1/#binary-importsec Source
+     */
+
+    class import_section_t : public kaitai::kstruct {
+
+    public:
+
+        import_section_t(kaitai::kstream* p__io, webassembly_t::section_t* p__parent = 0, webassembly_t* p__root = 0);
+
+    private:
+        void _read();
+        void _clean_up();
+
+    public:
+        ~import_section_t();
+
+    private:
+        vlq_base128_le_t* m_num_imports;
+        std::vector<import_t*>* m_imports;
+        webassembly_t* m__root;
+        webassembly_t::section_t* m__parent;
+
+    public:
+        vlq_base128_le_t* num_imports() const { return m_num_imports; }
+        std::vector<import_t*>* imports() const { return m_imports; }
+        webassembly_t* _root() const { return m__root; }
+        webassembly_t::section_t* _parent() const { return m__parent; }
+    };
+
+    class limits_t : public kaitai::kstruct {
+
+    public:
+
+        limits_t(kaitai::kstream* p__io, kaitai::kstruct* p__parent = 0, webassembly_t* p__root = 0);
+
+    private:
+        void _read();
+        void _clean_up();
+
+    public:
+        ~limits_t();
+
+    private:
+        uint8_t m_flags;
+        vlq_base128_le_t* m_min;
+        vlq_base128_le_t* m_max;
+        bool n_max;
+
+    public:
+        bool _is_null_max() { max(); return n_max; };
+
+    private:
+        webassembly_t* m__root;
+        kaitai::kstruct* m__parent;
+
+    public:
+        uint8_t flags() const { return m_flags; }
+        vlq_base128_le_t* min() const { return m_min; }
+        vlq_base128_le_t* max() const { return m_max; }
+        webassembly_t* _root() const { return m__root; }
+        kaitai::kstruct* _parent() const { return m__parent; }
+    };
+
     class local_t : public kaitai::kstruct {
 
     public:
@@ -410,8 +663,64 @@ public:
         webassembly_t::func_t* _parent() const { return m__parent; }
     };
 
+    class memory_t : public kaitai::kstruct {
+
+    public:
+
+        memory_t(kaitai::kstream* p__io, kaitai::kstruct* p__parent = 0, webassembly_t* p__root = 0);
+
+    private:
+        void _read();
+        void _clean_up();
+
+    public:
+        ~memory_t();
+
+    private:
+        limits_t* m_limits;
+        webassembly_t* m__root;
+        kaitai::kstruct* m__parent;
+
+    public:
+        limits_t* limits() const { return m_limits; }
+        webassembly_t* _root() const { return m__root; }
+        kaitai::kstruct* _parent() const { return m__parent; }
+    };
+
     /**
-     * https://www.w3.org/TR/wasm-core-1/#binary-name
+     * (id 5) Vector of memories
+     * \sa https://www.w3.org/TR/wasm-core-1/#binary-memsec Source
+     */
+
+    class memory_section_t : public kaitai::kstruct {
+
+    public:
+
+        memory_section_t(kaitai::kstream* p__io, webassembly_t::section_t* p__parent = 0, webassembly_t* p__root = 0);
+
+    private:
+        void _read();
+        void _clean_up();
+
+    public:
+        ~memory_section_t();
+
+    private:
+        vlq_base128_le_t* m_num_memories;
+        std::vector<memory_t*>* m_memories;
+        webassembly_t* m__root;
+        webassembly_t::section_t* m__parent;
+
+    public:
+        vlq_base128_le_t* num_memories() const { return m_num_memories; }
+        std::vector<memory_t*>* memories() const { return m_memories; }
+        webassembly_t* _root() const { return m__root; }
+        webassembly_t::section_t* _parent() const { return m__parent; }
+    };
+
+    /**
+     * UTF-8 encoded character sequence
+     * \sa https://www.w3.org/TR/wasm-core-1/#binary-name Source
      */
 
     class name_t : public kaitai::kstruct {
@@ -441,7 +750,8 @@ public:
     };
 
     /**
-     * REF: https://www.w3.org/TR/wasm-core-1/#sections%E2%91%A0
+     * A specific section
+     * \sa https://www.w3.org/TR/wasm-core-1/#binary-section Source
      */
 
     class section_t : public kaitai::kstruct {
@@ -492,6 +802,96 @@ public:
         webassembly_t* _parent() const { return m__parent; }
         std::string _raw_content() const { return m__raw_content; }
         kaitai::kstream* _io__raw_content() const { return m__io__raw_content; }
+    };
+
+    /**
+     * (id 8) - Start-function or -component of the module
+     * \sa https://www.w3.org/TR/wasm-core-1/#binary-startsec Source
+     */
+
+    class start_section_t : public kaitai::kstruct {
+
+    public:
+
+        start_section_t(kaitai::kstream* p__io, webassembly_t::section_t* p__parent = 0, webassembly_t* p__root = 0);
+
+    private:
+        void _read();
+        void _clean_up();
+
+    public:
+        ~start_section_t();
+
+    private:
+        vlq_base128_le_t* m_start;
+        webassembly_t* m__root;
+        webassembly_t::section_t* m__parent;
+
+    public:
+
+        /**
+         * function index of the start-function
+         */
+        vlq_base128_le_t* start() const { return m_start; }
+        webassembly_t* _root() const { return m__root; }
+        webassembly_t::section_t* _parent() const { return m__parent; }
+    };
+
+    class table_t : public kaitai::kstruct {
+
+    public:
+
+        table_t(kaitai::kstream* p__io, kaitai::kstruct* p__parent = 0, webassembly_t* p__root = 0);
+
+    private:
+        void _read();
+        void _clean_up();
+
+    public:
+        ~table_t();
+
+    private:
+        types_t m_elemtype;
+        limits_t* m_limits;
+        webassembly_t* m__root;
+        kaitai::kstruct* m__parent;
+
+    public:
+        types_t elemtype() const { return m_elemtype; }
+        limits_t* limits() const { return m_limits; }
+        webassembly_t* _root() const { return m__root; }
+        kaitai::kstruct* _parent() const { return m__parent; }
+    };
+
+    /**
+     * (id 4) Vector of tables
+     * \sa https://www.w3.org/TR/wasm-core-1/#binary-tablesec Source
+     */
+
+    class table_section_t : public kaitai::kstruct {
+
+    public:
+
+        table_section_t(kaitai::kstream* p__io, webassembly_t::section_t* p__parent = 0, webassembly_t* p__root = 0);
+
+    private:
+        void _read();
+        void _clean_up();
+
+    public:
+        ~table_section_t();
+
+    private:
+        vlq_base128_le_t* m_num_tables;
+        std::vector<table_t*>* m_tables;
+        webassembly_t* m__root;
+        webassembly_t::section_t* m__parent;
+
+    public:
+        vlq_base128_le_t* num_tables() const { return m_num_tables; }
+        std::vector<table_t*>* tables() const { return m_tables; }
+        webassembly_t* _root() const { return m__root; }
+        webassembly_t::section_t* _parent() const { return m__parent; }
     };
 
     /**
@@ -546,6 +946,11 @@ public:
 
     public:
         vlq_base128_le_t* num_types() const { return m_num_types; }
+
+        /**
+         * Value Types
+         * \sa https://www.w3.org/TR/wasm-core-1/#binary-valtype Source
+         */
         std::vector<valtype_t>* valtype() const { return m_valtype; }
         webassembly_t* _root() const { return m__root; }
         webassembly_t::functype_t* _parent() const { return m__parent; }
@@ -562,19 +967,19 @@ public:
 
     /**
      * Magic number identifying the file as a WebAssembly module
-     * REF: https://www.w3.org/TR/wasm-core-1/#binary-magic
+     * \sa https://www.w3.org/TR/wasm-core-1/#binary-magic Source
      */
     std::string magic() const { return m_magic; }
 
     /**
      * Version of the WebAssembly binary format
-     * REF: https://www.w3.org/TR/wasm-core-1/#binary-version
+     * \sa https://www.w3.org/TR/wasm-core-1/#binary-version Source
      */
     uint32_t version() const { return m_version; }
 
     /**
-     * Sequence of sections in the module
-     * REF: https://www.w3.org/TR/wasm-core-1/#binary-module
+     * A WebAssembly module is a set of sections
+     * \sa https://www.w3.org/TR/wasm-core-1/#binary-module Source
      */
     std::vector<section_t*>* sections() const { return m_sections; }
     webassembly_t* _root() const { return m__root; }
