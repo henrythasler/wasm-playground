@@ -219,7 +219,97 @@ void webassembly_t::custom_section_t::_clean_up() {
     }
 }
 
-webassembly_t::dummy_t::dummy_t(kaitai::kstream* p__io, webassembly_t::section_t* p__parent, webassembly_t* p__root) : kaitai::kstruct(p__io) {
+webassembly_t::data_section_t::data_section_t(kaitai::kstream* p__io, webassembly_t::section_t* p__parent, webassembly_t* p__root) : kaitai::kstruct(p__io) {
+    m__parent = p__parent;
+    m__root = p__root;
+    m_num_data = 0;
+    m_data_segments = 0;
+
+    try {
+        _read();
+    } catch(...) {
+        _clean_up();
+        throw;
+    }
+}
+
+void webassembly_t::data_section_t::_read() {
+    m_num_data = new vlq_base128_le_t(m__io);
+    m_data_segments = new std::vector<data_segment_t*>();
+    {
+        int i = 0;
+        while (!m__io->is_eof()) {
+            m_data_segments->push_back(new data_segment_t(m__io, this, m__root));
+            i++;
+        }
+    }
+}
+
+webassembly_t::data_section_t::~data_section_t() {
+    _clean_up();
+}
+
+void webassembly_t::data_section_t::_clean_up() {
+    if (m_num_data) {
+        delete m_num_data; m_num_data = 0;
+    }
+    if (m_data_segments) {
+        for (std::vector<data_segment_t*>::iterator it = m_data_segments->begin(); it != m_data_segments->end(); ++it) {
+            delete *it;
+        }
+        delete m_data_segments; m_data_segments = 0;
+    }
+}
+
+webassembly_t::data_segment_t::data_segment_t(kaitai::kstream* p__io, webassembly_t::data_section_t* p__parent, webassembly_t* p__root) : kaitai::kstruct(p__io) {
+    m__parent = p__parent;
+    m__root = p__root;
+    m_memidx = 0;
+    m_num_init = 0;
+    m_init = 0;
+
+    try {
+        _read();
+    } catch(...) {
+        _clean_up();
+        throw;
+    }
+}
+
+void webassembly_t::data_segment_t::_read() {
+    m_memidx = new vlq_base128_le_t(m__io);
+    {
+        vlq_base128_le_t* _ = m_memidx;
+        if (!(memidx()->value() == 0)) {
+            throw kaitai::validation_expr_error<vlq_base128_le_t*>(m_memidx, m__io, std::string("/types/data_segment/seq/0"));
+        }
+    }
+    m_offset = m__io->read_bytes_term(11, false, true, true);
+    m_num_init = new vlq_base128_le_t(m__io);
+    m_init = new std::vector<uint8_t>();
+    const int l_init = num_init()->value();
+    for (int i = 0; i < l_init; i++) {
+        m_init->push_back(m__io->read_u1());
+    }
+}
+
+webassembly_t::data_segment_t::~data_segment_t() {
+    _clean_up();
+}
+
+void webassembly_t::data_segment_t::_clean_up() {
+    if (m_memidx) {
+        delete m_memidx; m_memidx = 0;
+    }
+    if (m_num_init) {
+        delete m_num_init; m_num_init = 0;
+    }
+    if (m_init) {
+        delete m_init; m_init = 0;
+    }
+}
+
+webassembly_t::dummy_t::dummy_t(kaitai::kstream* p__io, kaitai::kstruct* p__parent, webassembly_t* p__root) : kaitai::kstruct(p__io) {
     m__parent = p__parent;
     m__root = p__root;
 
@@ -427,7 +517,7 @@ void webassembly_t::func_t::_read() {
     for (int i = 0; i < l_locals; i++) {
         m_locals->push_back(new local_t(m__io, this, m__root));
     }
-    m_expr = m__io->read_bytes_term(11, false, true, true);
+    m_expr = m__io->read_bytes_full();
 }
 
 webassembly_t::func_t::~func_t() {
@@ -897,7 +987,7 @@ void webassembly_t::section_t::_read() {
         n_content = false;
         m__raw_content = m__io->read_bytes(len_content()->value());
         m__io__raw_content = new kaitai::kstream(m__raw_content);
-        m_content = new dummy_t(m__io__raw_content, this, m__root);
+        m_content = new data_section_t(m__io__raw_content, this, m__root);
         break;
     }
     case webassembly_t::SECTION_ID_ELEMENT: {

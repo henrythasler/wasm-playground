@@ -36,6 +36,8 @@ public:
     class code_t;
     class code_section_t;
     class custom_section_t;
+    class data_section_t;
+    class data_segment_t;
     class dummy_t;
     class element_t;
     class element_section_t;
@@ -241,11 +243,76 @@ public:
         webassembly_t::section_t* _parent() const { return m__parent; }
     };
 
+    /**
+     * (11) - Vector of data segments
+     * \sa https://www.w3.org/TR/wasm-core-1/#binary-datasec Source
+     */
+
+    class data_section_t : public kaitai::kstruct {
+
+    public:
+
+        data_section_t(kaitai::kstream* p__io, webassembly_t::section_t* p__parent = 0, webassembly_t* p__root = 0);
+
+    private:
+        void _read();
+        void _clean_up();
+
+    public:
+        ~data_section_t();
+
+    private:
+        vlq_base128_le_t* m_num_data;
+        std::vector<data_segment_t*>* m_data_segments;
+        webassembly_t* m__root;
+        webassembly_t::section_t* m__parent;
+
+    public:
+        vlq_base128_le_t* num_data() const { return m_num_data; }
+        std::vector<data_segment_t*>* data_segments() const { return m_data_segments; }
+        webassembly_t* _root() const { return m__root; }
+        webassembly_t::section_t* _parent() const { return m__parent; }
+    };
+
+    class data_segment_t : public kaitai::kstruct {
+
+    public:
+
+        data_segment_t(kaitai::kstream* p__io, webassembly_t::data_section_t* p__parent = 0, webassembly_t* p__root = 0);
+
+    private:
+        void _read();
+        void _clean_up();
+
+    public:
+        ~data_segment_t();
+
+    private:
+        vlq_base128_le_t* m_memidx;
+        std::string m_offset;
+        vlq_base128_le_t* m_num_init;
+        std::vector<uint8_t>* m_init;
+        webassembly_t* m__root;
+        webassembly_t::data_section_t* m__parent;
+
+    public:
+
+        /**
+         * At most one memory is allowed per module. => the only valid memidx is 0.
+         */
+        vlq_base128_le_t* memidx() const { return m_memidx; }
+        std::string offset() const { return m_offset; }
+        vlq_base128_le_t* num_init() const { return m_num_init; }
+        std::vector<uint8_t>* init() const { return m_init; }
+        webassembly_t* _root() const { return m__root; }
+        webassembly_t::data_section_t* _parent() const { return m__parent; }
+    };
+
     class dummy_t : public kaitai::kstruct {
 
     public:
 
-        dummy_t(kaitai::kstream* p__io, webassembly_t::section_t* p__parent = 0, webassembly_t* p__root = 0);
+        dummy_t(kaitai::kstream* p__io, kaitai::kstruct* p__parent = 0, webassembly_t* p__root = 0);
 
     private:
         void _read();
@@ -256,11 +323,11 @@ public:
 
     private:
         webassembly_t* m__root;
-        webassembly_t::section_t* m__parent;
+        kaitai::kstruct* m__parent;
 
     public:
         webassembly_t* _root() const { return m__root; }
-        webassembly_t::section_t* _parent() const { return m__parent; }
+        kaitai::kstruct* _parent() const { return m__parent; }
     };
 
     class element_t : public kaitai::kstruct {
@@ -496,6 +563,10 @@ public:
 
     public:
         valtype_t valtype() const { return m_valtype; }
+
+        /**
+         * the `is_` prefix avoids conflict with C++ keyword `mutable` in generated code
+         */
         uint8_t is_mutable() const { return m_is_mutable; }
         webassembly_t* _root() const { return m__root; }
         kaitai::kstruct* _parent() const { return m__parent; }

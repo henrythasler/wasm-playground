@@ -70,7 +70,7 @@ types:
             'section_id::start': start_section
             'section_id::element': element_section
             'section_id::code': code_section
-            'section_id::data': dummy
+            'section_id::data': data_section
         doc: Section content
 
   custom_section:
@@ -312,7 +312,7 @@ types:
         repeat: expr
         repeat-expr: num_locals.value
       - id: expr
-        terminator: 0x0b
+        size-eos: true
 
   local:
     seq:
@@ -321,6 +321,32 @@ types:
       - id: valtype
         type: u1
         enum: valtype
+
+  data_section:
+    doc: (11) - Vector of data segments
+    doc-ref: https://www.w3.org/TR/wasm-core-1/#binary-datasec
+    seq:
+      - id: num_data
+        type: vlq_base128_le
+      - id: data_segments
+        type: data_segment
+        repeat: eos
+
+  data_segment:
+    seq:
+      - id: memidx
+        type: vlq_base128_le
+        valid: 
+          expr: memidx.value == 0
+        doc: At most one memory is allowed per module. => the only valid memidx is 0.
+      - id: offset
+        terminator: 0x0b
+      - id: num_init
+        type: vlq_base128_le
+      - id: init
+        type: u1
+        repeat: expr
+        repeat-expr: num_init.value
 
   dummy: {}
 
