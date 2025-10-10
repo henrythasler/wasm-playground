@@ -1,5 +1,4 @@
-#ifndef WEBASSEMBLY_H_
-#define WEBASSEMBLY_H_
+#pragma once
 
 // This is a generated file! Please edit source .ksy file and use kaitai-struct-compiler to rebuild
 
@@ -7,6 +6,7 @@ class webassembly_t;
 
 #include "kaitai/kaitaistruct.h"
 #include <stdint.h>
+#include <memory>
 #include "vlq_base128_le.h"
 #include <set>
 #include <vector>
@@ -19,7 +19,7 @@ class webassembly_t;
  * This document describes the binary format of a WebAssembly module 
  * following the version 1.0 of the core WebAssembly standard.
  * 
- * Author: Henry Thasler
+ * Repository: https://github.com/henrythasler/wasm-kaitai-struct
  * 
  * * Naming of entities follows the official specification.
  * * All integers are encoded using the LEB128 variable-length integer encoding (see vlq_base128_le.ksy).
@@ -27,7 +27,6 @@ class webassembly_t;
  * * Requires ks-version 0.9+ because of attribute value validation
  * * types appear in the order in which they are required
  * \sa * https://www.w3.org/TR/wasm-core-1/
- * * https://doc.kaitai.io/ksy_style_guide.html
  */
 
 class webassembly_t : public kaitai::kstruct {
@@ -38,7 +37,6 @@ public:
     class custom_section_t;
     class data_section_t;
     class data_segment_t;
-    class dummy_t;
     class element_t;
     class element_section_t;
     class export_t;
@@ -63,52 +61,49 @@ public:
     class vec_valtype_t;
 
     enum export_types_t {
-        EXPORT_TYPES_FUNC = 0,
-        EXPORT_TYPES_TABLE = 1,
-        EXPORT_TYPES_MEM = 2,
-        EXPORT_TYPES_GLOBAL = 3
+        EXPORT_TYPES_FUNC_TYPE = 0,
+        EXPORT_TYPES_TABLE_TYPE = 1,
+        EXPORT_TYPES_MEM_TYPE = 2,
+        EXPORT_TYPES_GLOBAL_TYPE = 3
     };
     static bool _is_defined_export_types_t(export_types_t v);
 
 private:
     static const std::set<export_types_t> _values_export_types_t;
-    static std::set<export_types_t> _build_values_export_types_t();
 
 public:
 
     enum import_types_t {
-        IMPORT_TYPES_FUNC = 0,
-        IMPORT_TYPES_TABLE = 1,
-        IMPORT_TYPES_MEM = 2,
-        IMPORT_TYPES_GLOBAL = 3
+        IMPORT_TYPES_FUNC_TYPE = 0,
+        IMPORT_TYPES_TABLE_TYPE = 1,
+        IMPORT_TYPES_MEM_TYPE = 2,
+        IMPORT_TYPES_GLOBAL_TYPE = 3
     };
     static bool _is_defined_import_types_t(import_types_t v);
 
 private:
     static const std::set<import_types_t> _values_import_types_t;
-    static std::set<import_types_t> _build_values_import_types_t();
 
 public:
 
     enum section_id_t {
-        SECTION_ID_CUSTOM = 0,
-        SECTION_ID_TYPE = 1,
-        SECTION_ID_IMPORT = 2,
-        SECTION_ID_FUNCTION = 3,
-        SECTION_ID_TABLE = 4,
-        SECTION_ID_MEMORY = 5,
-        SECTION_ID_GLOBAL = 6,
-        SECTION_ID_EXPORT = 7,
-        SECTION_ID_START = 8,
-        SECTION_ID_ELEMENT = 9,
-        SECTION_ID_CODE = 10,
-        SECTION_ID_DATA = 11
+        SECTION_ID_CUSTOM_SECTION = 0,
+        SECTION_ID_TYPE_SECTION = 1,
+        SECTION_ID_IMPORT_SECTION = 2,
+        SECTION_ID_FUNCTION_SECTION = 3,
+        SECTION_ID_TABLE_SECTION = 4,
+        SECTION_ID_MEMORY_SECTION = 5,
+        SECTION_ID_GLOBAL_SECTION = 6,
+        SECTION_ID_EXPORT_SECTION = 7,
+        SECTION_ID_START_SECTION = 8,
+        SECTION_ID_ELEMENT_SECTION = 9,
+        SECTION_ID_CODE_SECTION = 10,
+        SECTION_ID_DATA_SECTION = 11
     };
     static bool _is_defined_section_id_t(section_id_t v);
 
 private:
     static const std::set<section_id_t> _values_section_id_t;
-    static std::set<section_id_t> _build_values_section_id_t();
 
 public:
 
@@ -120,25 +115,23 @@ public:
 
 private:
     static const std::set<types_t> _values_types_t;
-    static std::set<types_t> _build_values_types_t();
 
 public:
 
-    enum valtype_t {
-        VALTYPE_F64 = 124,
-        VALTYPE_F32 = 125,
-        VALTYPE_I64 = 126,
-        VALTYPE_I32 = 127
+    enum val_types_t {
+        VAL_TYPES_F64 = 124,
+        VAL_TYPES_F32 = 125,
+        VAL_TYPES_I64 = 126,
+        VAL_TYPES_I32 = 127
     };
-    static bool _is_defined_valtype_t(valtype_t v);
+    static bool _is_defined_val_types_t(val_types_t v);
 
 private:
-    static const std::set<valtype_t> _values_valtype_t;
-    static std::set<valtype_t> _build_values_valtype_t();
+    static const std::set<val_types_t> _values_val_types_t;
 
 public:
 
-    webassembly_t(kaitai::kstream* p__io, kaitai::kstruct* p__parent = 0, webassembly_t* p__root = 0);
+    webassembly_t(kaitai::kstream* p__io, kaitai::kstruct* p__parent = nullptr, webassembly_t* p__root = nullptr);
 
 private:
     void _read();
@@ -151,7 +144,7 @@ public:
 
     public:
 
-        code_t(kaitai::kstream* p__io, webassembly_t::code_section_t* p__parent = 0, webassembly_t* p__root = 0);
+        code_t(kaitai::kstream* p__io, webassembly_t::code_section_t* p__parent = nullptr, webassembly_t* p__root = nullptr);
 
     private:
         void _read();
@@ -161,20 +154,20 @@ public:
         ~code_t();
 
     private:
-        vlq_base128_le_t* m_len_func;
-        func_t* m_func;
+        std::unique_ptr<vlq_base128_le_t> m_len_func;
+        std::unique_ptr<func_t> m_func;
         webassembly_t* m__root;
         webassembly_t::code_section_t* m__parent;
         std::string m__raw_func;
-        kaitai::kstream* m__io__raw_func;
+        std::unique_ptr<kaitai::kstream> m__io__raw_func;
 
     public:
-        vlq_base128_le_t* len_func() const { return m_len_func; }
-        func_t* func() const { return m_func; }
+        vlq_base128_le_t* len_func() const { return m_len_func.get(); }
+        func_t* func() const { return m_func.get(); }
         webassembly_t* _root() const { return m__root; }
         webassembly_t::code_section_t* _parent() const { return m__parent; }
         std::string _raw_func() const { return m__raw_func; }
-        kaitai::kstream* _io__raw_func() const { return m__io__raw_func; }
+        kaitai::kstream* _io__raw_func() const { return m__io__raw_func.get(); }
     };
 
     /**
@@ -186,7 +179,7 @@ public:
 
     public:
 
-        code_section_t(kaitai::kstream* p__io, webassembly_t::section_t* p__parent = 0, webassembly_t* p__root = 0);
+        code_section_t(kaitai::kstream* p__io, webassembly_t::section_t* p__parent = nullptr, webassembly_t* p__root = nullptr);
 
     private:
         void _read();
@@ -196,14 +189,14 @@ public:
         ~code_section_t();
 
     private:
-        vlq_base128_le_t* m_num_entries;
-        std::vector<code_t*>* m_entries;
+        std::unique_ptr<vlq_base128_le_t> m_num_entries;
+        std::unique_ptr<std::vector<std::unique_ptr<code_t>>> m_entries;
         webassembly_t* m__root;
         webassembly_t::section_t* m__parent;
 
     public:
-        vlq_base128_le_t* num_entries() const { return m_num_entries; }
-        std::vector<code_t*>* entries() const { return m_entries; }
+        vlq_base128_le_t* num_entries() const { return m_num_entries.get(); }
+        std::vector<std::unique_ptr<code_t>>* entries() const { return m_entries.get(); }
         webassembly_t* _root() const { return m__root; }
         webassembly_t::section_t* _parent() const { return m__parent; }
     };
@@ -217,7 +210,7 @@ public:
 
     public:
 
-        custom_section_t(kaitai::kstream* p__io, webassembly_t::section_t* p__parent = 0, webassembly_t* p__root = 0);
+        custom_section_t(kaitai::kstream* p__io, webassembly_t::section_t* p__parent = nullptr, webassembly_t* p__root = nullptr);
 
     private:
         void _read();
@@ -227,16 +220,16 @@ public:
         ~custom_section_t();
 
     private:
-        name_t* m_name;
+        std::unique_ptr<name_t> m_name;
         std::string m_data;
         webassembly_t* m__root;
         webassembly_t::section_t* m__parent;
 
     public:
-        name_t* name() const { return m_name; }
+        name_t* name() const { return m_name.get(); }
 
         /**
-         * Custom section data
+         * Custom section data; out of scope for this schema
          */
         std::string data() const { return m_data; }
         webassembly_t* _root() const { return m__root; }
@@ -252,7 +245,7 @@ public:
 
     public:
 
-        data_section_t(kaitai::kstream* p__io, webassembly_t::section_t* p__parent = 0, webassembly_t* p__root = 0);
+        data_section_t(kaitai::kstream* p__io, webassembly_t::section_t* p__parent = nullptr, webassembly_t* p__root = nullptr);
 
     private:
         void _read();
@@ -262,14 +255,14 @@ public:
         ~data_section_t();
 
     private:
-        vlq_base128_le_t* m_num_data;
-        std::vector<data_segment_t*>* m_data_segments;
+        std::unique_ptr<vlq_base128_le_t> m_num_data;
+        std::unique_ptr<std::vector<std::unique_ptr<data_segment_t>>> m_data_segments;
         webassembly_t* m__root;
         webassembly_t::section_t* m__parent;
 
     public:
-        vlq_base128_le_t* num_data() const { return m_num_data; }
-        std::vector<data_segment_t*>* data_segments() const { return m_data_segments; }
+        vlq_base128_le_t* num_data() const { return m_num_data.get(); }
+        std::vector<std::unique_ptr<data_segment_t>>* data_segments() const { return m_data_segments.get(); }
         webassembly_t* _root() const { return m__root; }
         webassembly_t::section_t* _parent() const { return m__parent; }
     };
@@ -278,7 +271,7 @@ public:
 
     public:
 
-        data_segment_t(kaitai::kstream* p__io, webassembly_t::data_section_t* p__parent = 0, webassembly_t* p__root = 0);
+        data_segment_t(kaitai::kstream* p__io, webassembly_t::data_section_t* p__parent = nullptr, webassembly_t* p__root = nullptr);
 
     private:
         void _read();
@@ -288,53 +281,32 @@ public:
         ~data_segment_t();
 
     private:
-        vlq_base128_le_t* m_memidx;
-        std::string m_offset;
-        vlq_base128_le_t* m_num_init;
-        std::vector<uint8_t>* m_init;
+        std::unique_ptr<vlq_base128_le_t> m_data_memidx;
+        std::string m_offset_expr;
+        std::unique_ptr<vlq_base128_le_t> m_num_init;
+        std::string m_init_vec;
         webassembly_t* m__root;
         webassembly_t::data_section_t* m__parent;
 
     public:
+        vlq_base128_le_t* data_memidx() const { return m_data_memidx.get(); }
 
         /**
-         * At most one memory is allowed per module. => the only valid memidx is 0.
+         * The offset is given by a constant expression that DOES NOT include an end marker
+         * \sa https://www.w3.org/TR/wasm-core-1/#valid-constant Source
          */
-        vlq_base128_le_t* memidx() const { return m_memidx; }
-        std::string offset() const { return m_offset; }
-        vlq_base128_le_t* num_init() const { return m_num_init; }
-        std::vector<uint8_t>* init() const { return m_init; }
+        std::string offset_expr() const { return m_offset_expr; }
+        vlq_base128_le_t* num_init() const { return m_num_init.get(); }
+        std::string init_vec() const { return m_init_vec; }
         webassembly_t* _root() const { return m__root; }
         webassembly_t::data_section_t* _parent() const { return m__parent; }
-    };
-
-    class dummy_t : public kaitai::kstruct {
-
-    public:
-
-        dummy_t(kaitai::kstream* p__io, kaitai::kstruct* p__parent = 0, webassembly_t* p__root = 0);
-
-    private:
-        void _read();
-        void _clean_up();
-
-    public:
-        ~dummy_t();
-
-    private:
-        webassembly_t* m__root;
-        kaitai::kstruct* m__parent;
-
-    public:
-        webassembly_t* _root() const { return m__root; }
-        kaitai::kstruct* _parent() const { return m__parent; }
     };
 
     class element_t : public kaitai::kstruct {
 
     public:
 
-        element_t(kaitai::kstream* p__io, webassembly_t::element_section_t* p__parent = 0, webassembly_t* p__root = 0);
+        element_t(kaitai::kstream* p__io, webassembly_t::element_section_t* p__parent = nullptr, webassembly_t* p__root = nullptr);
 
     private:
         void _read();
@@ -344,18 +316,23 @@ public:
         ~element_t();
 
     private:
-        vlq_base128_le_t* m_tableidx;
-        std::string m_offset;
-        vlq_base128_le_t* m_num_init;
-        std::vector<vlq_base128_le_t*>* m_init;
+        std::unique_ptr<vlq_base128_le_t> m_tableidx;
+        std::string m_offset_expr;
+        std::unique_ptr<vlq_base128_le_t> m_num_init;
+        std::unique_ptr<std::vector<std::unique_ptr<vlq_base128_le_t>>> m_init_vec;
         webassembly_t* m__root;
         webassembly_t::element_section_t* m__parent;
 
     public:
-        vlq_base128_le_t* tableidx() const { return m_tableidx; }
-        std::string offset() const { return m_offset; }
-        vlq_base128_le_t* num_init() const { return m_num_init; }
-        std::vector<vlq_base128_le_t*>* init() const { return m_init; }
+        vlq_base128_le_t* tableidx() const { return m_tableidx.get(); }
+
+        /**
+         * The offset is given by a constant expression that DOES NOT include an end marker
+         * \sa https://www.w3.org/TR/wasm-core-1/#valid-constant Source
+         */
+        std::string offset_expr() const { return m_offset_expr; }
+        vlq_base128_le_t* num_init() const { return m_num_init.get(); }
+        std::vector<std::unique_ptr<vlq_base128_le_t>>* init_vec() const { return m_init_vec.get(); }
         webassembly_t* _root() const { return m__root; }
         webassembly_t::element_section_t* _parent() const { return m__parent; }
     };
@@ -369,7 +346,7 @@ public:
 
     public:
 
-        element_section_t(kaitai::kstream* p__io, webassembly_t::section_t* p__parent = 0, webassembly_t* p__root = 0);
+        element_section_t(kaitai::kstream* p__io, webassembly_t::section_t* p__parent = nullptr, webassembly_t* p__root = nullptr);
 
     private:
         void _read();
@@ -379,14 +356,14 @@ public:
         ~element_section_t();
 
     private:
-        vlq_base128_le_t* m_num_elements;
-        std::vector<element_t*>* m_elements;
+        std::unique_ptr<vlq_base128_le_t> m_num_elements;
+        std::unique_ptr<std::vector<std::unique_ptr<element_t>>> m_elements;
         webassembly_t* m__root;
         webassembly_t::section_t* m__parent;
 
     public:
-        vlq_base128_le_t* num_elements() const { return m_num_elements; }
-        std::vector<element_t*>* elements() const { return m_elements; }
+        vlq_base128_le_t* num_elements() const { return m_num_elements.get(); }
+        std::vector<std::unique_ptr<element_t>>* elements() const { return m_elements.get(); }
         webassembly_t* _root() const { return m__root; }
         webassembly_t::section_t* _parent() const { return m__parent; }
     };
@@ -395,7 +372,7 @@ public:
 
     public:
 
-        export_t(kaitai::kstream* p__io, webassembly_t::export_section_t* p__parent = 0, webassembly_t* p__root = 0);
+        export_t(kaitai::kstream* p__io, webassembly_t::export_section_t* p__parent = nullptr, webassembly_t* p__root = nullptr);
 
     private:
         void _read();
@@ -405,16 +382,16 @@ public:
         ~export_t();
 
     private:
-        name_t* m_name;
+        std::unique_ptr<name_t> m_name;
         export_types_t m_exportdesc;
-        vlq_base128_le_t* m_idx;
+        std::unique_ptr<vlq_base128_le_t> m_idx;
         webassembly_t* m__root;
         webassembly_t::export_section_t* m__parent;
 
     public:
-        name_t* name() const { return m_name; }
+        name_t* name() const { return m_name.get(); }
         export_types_t exportdesc() const { return m_exportdesc; }
-        vlq_base128_le_t* idx() const { return m_idx; }
+        vlq_base128_le_t* idx() const { return m_idx.get(); }
         webassembly_t* _root() const { return m__root; }
         webassembly_t::export_section_t* _parent() const { return m__parent; }
     };
@@ -428,7 +405,7 @@ public:
 
     public:
 
-        export_section_t(kaitai::kstream* p__io, webassembly_t::section_t* p__parent = 0, webassembly_t* p__root = 0);
+        export_section_t(kaitai::kstream* p__io, webassembly_t::section_t* p__parent = nullptr, webassembly_t* p__root = nullptr);
 
     private:
         void _read();
@@ -438,14 +415,14 @@ public:
         ~export_section_t();
 
     private:
-        vlq_base128_le_t* m_num_exports;
-        std::vector<export_t*>* m_exports;
+        std::unique_ptr<vlq_base128_le_t> m_num_exports;
+        std::unique_ptr<std::vector<std::unique_ptr<export_t>>> m_exports;
         webassembly_t* m__root;
         webassembly_t::section_t* m__parent;
 
     public:
-        vlq_base128_le_t* num_exports() const { return m_num_exports; }
-        std::vector<export_t*>* exports() const { return m_exports; }
+        vlq_base128_le_t* num_exports() const { return m_num_exports.get(); }
+        std::vector<std::unique_ptr<export_t>>* exports() const { return m_exports.get(); }
         webassembly_t* _root() const { return m__root; }
         webassembly_t::section_t* _parent() const { return m__parent; }
     };
@@ -454,7 +431,7 @@ public:
 
     public:
 
-        func_t(kaitai::kstream* p__io, webassembly_t::code_t* p__parent = 0, webassembly_t* p__root = 0);
+        func_t(kaitai::kstream* p__io, webassembly_t::code_t* p__parent = nullptr, webassembly_t* p__root = nullptr);
 
     private:
         void _read();
@@ -464,15 +441,15 @@ public:
         ~func_t();
 
     private:
-        vlq_base128_le_t* m_num_locals;
-        std::vector<local_t*>* m_locals;
+        std::unique_ptr<vlq_base128_le_t> m_num_locals;
+        std::unique_ptr<std::vector<std::unique_ptr<local_t>>> m_locals;
         std::string m_expr;
         webassembly_t* m__root;
         webassembly_t::code_t* m__parent;
 
     public:
-        vlq_base128_le_t* num_locals() const { return m_num_locals; }
-        std::vector<local_t*>* locals() const { return m_locals; }
+        vlq_base128_le_t* num_locals() const { return m_num_locals.get(); }
+        std::vector<std::unique_ptr<local_t>>* locals() const { return m_locals.get(); }
         std::string expr() const { return m_expr; }
         webassembly_t* _root() const { return m__root; }
         webassembly_t::code_t* _parent() const { return m__parent; }
@@ -487,7 +464,7 @@ public:
 
     public:
 
-        function_section_t(kaitai::kstream* p__io, webassembly_t::section_t* p__parent = 0, webassembly_t* p__root = 0);
+        function_section_t(kaitai::kstream* p__io, webassembly_t::section_t* p__parent = nullptr, webassembly_t* p__root = nullptr);
 
     private:
         void _read();
@@ -497,14 +474,14 @@ public:
         ~function_section_t();
 
     private:
-        vlq_base128_le_t* m_num_typeidx;
-        std::vector<vlq_base128_le_t*>* m_typeidx;
+        std::unique_ptr<vlq_base128_le_t> m_num_typeidx;
+        std::unique_ptr<std::vector<std::unique_ptr<vlq_base128_le_t>>> m_typeidx;
         webassembly_t* m__root;
         webassembly_t::section_t* m__parent;
 
     public:
-        vlq_base128_le_t* num_typeidx() const { return m_num_typeidx; }
-        std::vector<vlq_base128_le_t*>* typeidx() const { return m_typeidx; }
+        vlq_base128_le_t* num_typeidx() const { return m_num_typeidx.get(); }
+        std::vector<std::unique_ptr<vlq_base128_le_t>>* typeidx() const { return m_typeidx.get(); }
         webassembly_t* _root() const { return m__root; }
         webassembly_t::section_t* _parent() const { return m__parent; }
     };
@@ -518,7 +495,7 @@ public:
 
     public:
 
-        functype_t(kaitai::kstream* p__io, webassembly_t::type_section_t* p__parent = 0, webassembly_t* p__root = 0);
+        functype_t(kaitai::kstream* p__io, webassembly_t::type_section_t* p__parent = nullptr, webassembly_t* p__root = nullptr);
 
     private:
         void _read();
@@ -529,15 +506,15 @@ public:
 
     private:
         types_t m_functype;
-        vec_valtype_t* m_parameters;
-        vec_valtype_t* m_results;
+        std::unique_ptr<vec_valtype_t> m_parameters;
+        std::unique_ptr<vec_valtype_t> m_results;
         webassembly_t* m__root;
         webassembly_t::type_section_t* m__parent;
 
     public:
         types_t functype() const { return m_functype; }
-        vec_valtype_t* parameters() const { return m_parameters; }
-        vec_valtype_t* results() const { return m_results; }
+        vec_valtype_t* parameters() const { return m_parameters.get(); }
+        vec_valtype_t* results() const { return m_results.get(); }
         webassembly_t* _root() const { return m__root; }
         webassembly_t::type_section_t* _parent() const { return m__parent; }
     };
@@ -546,7 +523,7 @@ public:
 
     public:
 
-        global_t(kaitai::kstream* p__io, kaitai::kstruct* p__parent = 0, webassembly_t* p__root = 0);
+        global_t(kaitai::kstream* p__io, kaitai::kstruct* p__parent = nullptr, webassembly_t* p__root = nullptr);
 
     private:
         void _read();
@@ -556,16 +533,16 @@ public:
         ~global_t();
 
     private:
-        valtype_t m_valtype;
+        val_types_t m_valtype;
         uint8_t m_is_mutable;
         webassembly_t* m__root;
         kaitai::kstruct* m__parent;
 
     public:
-        valtype_t valtype() const { return m_valtype; }
+        val_types_t valtype() const { return m_valtype; }
 
         /**
-         * the `is_` prefix avoids conflict with C++ keyword `mutable` in generated code
+         * the `is_` prefix avoids conflicts with the C++ keyword `mutable` in generated code
          */
         uint8_t is_mutable() const { return m_is_mutable; }
         webassembly_t* _root() const { return m__root; }
@@ -581,7 +558,7 @@ public:
 
     public:
 
-        global_section_t(kaitai::kstream* p__io, webassembly_t::section_t* p__parent = 0, webassembly_t* p__root = 0);
+        global_section_t(kaitai::kstream* p__io, webassembly_t::section_t* p__parent = nullptr, webassembly_t* p__root = nullptr);
 
     private:
         void _read();
@@ -591,14 +568,14 @@ public:
         ~global_section_t();
 
     private:
-        vlq_base128_le_t* m_num_globals;
-        std::vector<global_t*>* m_globals;
+        std::unique_ptr<vlq_base128_le_t> m_num_globals;
+        std::unique_ptr<std::vector<std::unique_ptr<global_t>>> m_globals;
         webassembly_t* m__root;
         webassembly_t::section_t* m__parent;
 
     public:
-        vlq_base128_le_t* num_globals() const { return m_num_globals; }
-        std::vector<global_t*>* globals() const { return m_globals; }
+        vlq_base128_le_t* num_globals() const { return m_num_globals.get(); }
+        std::vector<std::unique_ptr<global_t>>* globals() const { return m_globals.get(); }
         webassembly_t* _root() const { return m__root; }
         webassembly_t::section_t* _parent() const { return m__parent; }
     };
@@ -611,7 +588,7 @@ public:
 
     public:
 
-        import_t(kaitai::kstream* p__io, webassembly_t::import_section_t* p__parent = 0, webassembly_t* p__root = 0);
+        import_t(kaitai::kstream* p__io, webassembly_t::import_section_t* p__parent = nullptr, webassembly_t* p__root = nullptr);
 
     private:
         void _read();
@@ -621,10 +598,10 @@ public:
         ~import_t();
 
     private:
-        name_t* m_module;
-        name_t* m_name;
+        std::unique_ptr<name_t> m_module;
+        std::unique_ptr<name_t> m_name;
         import_types_t m_import_type;
-        kaitai::kstruct* m_importdesc;
+        std::unique_ptr<kaitai::kstruct> m_importdesc;
         bool n_importdesc;
 
     public:
@@ -635,10 +612,10 @@ public:
         webassembly_t::import_section_t* m__parent;
 
     public:
-        name_t* module() const { return m_module; }
-        name_t* name() const { return m_name; }
+        name_t* module() const { return m_module.get(); }
+        name_t* name() const { return m_name.get(); }
         import_types_t import_type() const { return m_import_type; }
-        kaitai::kstruct* importdesc() const { return m_importdesc; }
+        kaitai::kstruct* importdesc() const { return m_importdesc.get(); }
         webassembly_t* _root() const { return m__root; }
         webassembly_t::import_section_t* _parent() const { return m__parent; }
     };
@@ -652,7 +629,7 @@ public:
 
     public:
 
-        import_section_t(kaitai::kstream* p__io, webassembly_t::section_t* p__parent = 0, webassembly_t* p__root = 0);
+        import_section_t(kaitai::kstream* p__io, webassembly_t::section_t* p__parent = nullptr, webassembly_t* p__root = nullptr);
 
     private:
         void _read();
@@ -662,14 +639,14 @@ public:
         ~import_section_t();
 
     private:
-        vlq_base128_le_t* m_num_imports;
-        std::vector<import_t*>* m_imports;
+        std::unique_ptr<vlq_base128_le_t> m_num_imports;
+        std::unique_ptr<std::vector<std::unique_ptr<import_t>>> m_imports;
         webassembly_t* m__root;
         webassembly_t::section_t* m__parent;
 
     public:
-        vlq_base128_le_t* num_imports() const { return m_num_imports; }
-        std::vector<import_t*>* imports() const { return m_imports; }
+        vlq_base128_le_t* num_imports() const { return m_num_imports.get(); }
+        std::vector<std::unique_ptr<import_t>>* imports() const { return m_imports.get(); }
         webassembly_t* _root() const { return m__root; }
         webassembly_t::section_t* _parent() const { return m__parent; }
     };
@@ -678,7 +655,7 @@ public:
 
     public:
 
-        limits_t(kaitai::kstream* p__io, kaitai::kstruct* p__parent = 0, webassembly_t* p__root = 0);
+        limits_t(kaitai::kstream* p__io, kaitai::kstruct* p__parent = nullptr, webassembly_t* p__root = nullptr);
 
     private:
         void _read();
@@ -689,8 +666,8 @@ public:
 
     private:
         uint8_t m_flags;
-        vlq_base128_le_t* m_min;
-        vlq_base128_le_t* m_max;
+        std::unique_ptr<vlq_base128_le_t> m_min;
+        std::unique_ptr<vlq_base128_le_t> m_max;
         bool n_max;
 
     public:
@@ -702,8 +679,8 @@ public:
 
     public:
         uint8_t flags() const { return m_flags; }
-        vlq_base128_le_t* min() const { return m_min; }
-        vlq_base128_le_t* max() const { return m_max; }
+        vlq_base128_le_t* min() const { return m_min.get(); }
+        vlq_base128_le_t* max() const { return m_max.get(); }
         webassembly_t* _root() const { return m__root; }
         kaitai::kstruct* _parent() const { return m__parent; }
     };
@@ -712,7 +689,7 @@ public:
 
     public:
 
-        local_t(kaitai::kstream* p__io, webassembly_t::func_t* p__parent = 0, webassembly_t* p__root = 0);
+        local_t(kaitai::kstream* p__io, webassembly_t::func_t* p__parent = nullptr, webassembly_t* p__root = nullptr);
 
     private:
         void _read();
@@ -722,14 +699,14 @@ public:
         ~local_t();
 
     private:
-        vlq_base128_le_t* m_num_valtype;
-        valtype_t m_valtype;
+        std::unique_ptr<vlq_base128_le_t> m_num_valtype;
+        val_types_t m_valtype;
         webassembly_t* m__root;
         webassembly_t::func_t* m__parent;
 
     public:
-        vlq_base128_le_t* num_valtype() const { return m_num_valtype; }
-        valtype_t valtype() const { return m_valtype; }
+        vlq_base128_le_t* num_valtype() const { return m_num_valtype.get(); }
+        val_types_t valtype() const { return m_valtype; }
         webassembly_t* _root() const { return m__root; }
         webassembly_t::func_t* _parent() const { return m__parent; }
     };
@@ -738,7 +715,7 @@ public:
 
     public:
 
-        memory_t(kaitai::kstream* p__io, kaitai::kstruct* p__parent = 0, webassembly_t* p__root = 0);
+        memory_t(kaitai::kstream* p__io, kaitai::kstruct* p__parent = nullptr, webassembly_t* p__root = nullptr);
 
     private:
         void _read();
@@ -748,12 +725,12 @@ public:
         ~memory_t();
 
     private:
-        limits_t* m_limits;
+        std::unique_ptr<limits_t> m_limits;
         webassembly_t* m__root;
         kaitai::kstruct* m__parent;
 
     public:
-        limits_t* limits() const { return m_limits; }
+        limits_t* limits() const { return m_limits.get(); }
         webassembly_t* _root() const { return m__root; }
         kaitai::kstruct* _parent() const { return m__parent; }
     };
@@ -767,7 +744,7 @@ public:
 
     public:
 
-        memory_section_t(kaitai::kstream* p__io, webassembly_t::section_t* p__parent = 0, webassembly_t* p__root = 0);
+        memory_section_t(kaitai::kstream* p__io, webassembly_t::section_t* p__parent = nullptr, webassembly_t* p__root = nullptr);
 
     private:
         void _read();
@@ -777,14 +754,14 @@ public:
         ~memory_section_t();
 
     private:
-        vlq_base128_le_t* m_num_memories;
-        std::vector<memory_t*>* m_memories;
+        std::unique_ptr<vlq_base128_le_t> m_num_memories;
+        std::unique_ptr<std::vector<std::unique_ptr<memory_t>>> m_memories;
         webassembly_t* m__root;
         webassembly_t::section_t* m__parent;
 
     public:
-        vlq_base128_le_t* num_memories() const { return m_num_memories; }
-        std::vector<memory_t*>* memories() const { return m_memories; }
+        vlq_base128_le_t* num_memories() const { return m_num_memories.get(); }
+        std::vector<std::unique_ptr<memory_t>>* memories() const { return m_memories.get(); }
         webassembly_t* _root() const { return m__root; }
         webassembly_t::section_t* _parent() const { return m__parent; }
     };
@@ -798,7 +775,7 @@ public:
 
     public:
 
-        name_t(kaitai::kstream* p__io, kaitai::kstruct* p__parent = 0, webassembly_t* p__root = 0);
+        name_t(kaitai::kstream* p__io, kaitai::kstruct* p__parent = nullptr, webassembly_t* p__root = nullptr);
 
     private:
         void _read();
@@ -808,20 +785,20 @@ public:
         ~name_t();
 
     private:
-        vlq_base128_le_t* m_length;
+        std::unique_ptr<vlq_base128_le_t> m_length;
         std::string m_value;
         webassembly_t* m__root;
         kaitai::kstruct* m__parent;
 
     public:
-        vlq_base128_le_t* length() const { return m_length; }
+        vlq_base128_le_t* length() const { return m_length.get(); }
         std::string value() const { return m_value; }
         webassembly_t* _root() const { return m__root; }
         kaitai::kstruct* _parent() const { return m__parent; }
     };
 
     /**
-     * A specific section
+     * A specific section as part of a module
      * \sa https://www.w3.org/TR/wasm-core-1/#binary-section Source
      */
 
@@ -829,7 +806,7 @@ public:
 
     public:
 
-        section_t(kaitai::kstream* p__io, webassembly_t* p__parent = 0, webassembly_t* p__root = 0);
+        section_t(kaitai::kstream* p__io, webassembly_t* p__parent = nullptr, webassembly_t* p__root = nullptr);
 
     private:
         void _read();
@@ -840,8 +817,8 @@ public:
 
     private:
         section_id_t m_id;
-        vlq_base128_le_t* m_len_content;
-        kaitai::kstruct* m_content;
+        std::unique_ptr<vlq_base128_le_t> m_len_content;
+        std::unique_ptr<kaitai::kstruct> m_content;
         bool n_content;
 
     public:
@@ -851,7 +828,7 @@ public:
         webassembly_t* m__root;
         webassembly_t* m__parent;
         std::string m__raw_content;
-        kaitai::kstream* m__io__raw_content;
+        std::unique_ptr<kaitai::kstream> m__io__raw_content;
 
     public:
 
@@ -863,16 +840,16 @@ public:
         /**
          * Length of the section content in bytes
          */
-        vlq_base128_le_t* len_content() const { return m_len_content; }
+        vlq_base128_le_t* len_content() const { return m_len_content.get(); }
 
         /**
          * Section content
          */
-        kaitai::kstruct* content() const { return m_content; }
+        kaitai::kstruct* content() const { return m_content.get(); }
         webassembly_t* _root() const { return m__root; }
         webassembly_t* _parent() const { return m__parent; }
         std::string _raw_content() const { return m__raw_content; }
-        kaitai::kstream* _io__raw_content() const { return m__io__raw_content; }
+        kaitai::kstream* _io__raw_content() const { return m__io__raw_content.get(); }
     };
 
     /**
@@ -884,7 +861,7 @@ public:
 
     public:
 
-        start_section_t(kaitai::kstream* p__io, webassembly_t::section_t* p__parent = 0, webassembly_t* p__root = 0);
+        start_section_t(kaitai::kstream* p__io, webassembly_t::section_t* p__parent = nullptr, webassembly_t* p__root = nullptr);
 
     private:
         void _read();
@@ -894,7 +871,7 @@ public:
         ~start_section_t();
 
     private:
-        vlq_base128_le_t* m_start;
+        std::unique_ptr<vlq_base128_le_t> m_start;
         webassembly_t* m__root;
         webassembly_t::section_t* m__parent;
 
@@ -903,7 +880,7 @@ public:
         /**
          * function index of the start-function
          */
-        vlq_base128_le_t* start() const { return m_start; }
+        vlq_base128_le_t* start() const { return m_start.get(); }
         webassembly_t* _root() const { return m__root; }
         webassembly_t::section_t* _parent() const { return m__parent; }
     };
@@ -912,7 +889,7 @@ public:
 
     public:
 
-        table_t(kaitai::kstream* p__io, kaitai::kstruct* p__parent = 0, webassembly_t* p__root = 0);
+        table_t(kaitai::kstream* p__io, kaitai::kstruct* p__parent = nullptr, webassembly_t* p__root = nullptr);
 
     private:
         void _read();
@@ -923,13 +900,13 @@ public:
 
     private:
         types_t m_elemtype;
-        limits_t* m_limits;
+        std::unique_ptr<limits_t> m_limits;
         webassembly_t* m__root;
         kaitai::kstruct* m__parent;
 
     public:
         types_t elemtype() const { return m_elemtype; }
-        limits_t* limits() const { return m_limits; }
+        limits_t* limits() const { return m_limits.get(); }
         webassembly_t* _root() const { return m__root; }
         kaitai::kstruct* _parent() const { return m__parent; }
     };
@@ -943,7 +920,7 @@ public:
 
     public:
 
-        table_section_t(kaitai::kstream* p__io, webassembly_t::section_t* p__parent = 0, webassembly_t* p__root = 0);
+        table_section_t(kaitai::kstream* p__io, webassembly_t::section_t* p__parent = nullptr, webassembly_t* p__root = nullptr);
 
     private:
         void _read();
@@ -953,14 +930,14 @@ public:
         ~table_section_t();
 
     private:
-        vlq_base128_le_t* m_num_tables;
-        std::vector<table_t*>* m_tables;
+        std::unique_ptr<vlq_base128_le_t> m_num_tables;
+        std::unique_ptr<std::vector<std::unique_ptr<table_t>>> m_tables;
         webassembly_t* m__root;
         webassembly_t::section_t* m__parent;
 
     public:
-        vlq_base128_le_t* num_tables() const { return m_num_tables; }
-        std::vector<table_t*>* tables() const { return m_tables; }
+        vlq_base128_le_t* num_tables() const { return m_num_tables.get(); }
+        std::vector<std::unique_ptr<table_t>>* tables() const { return m_tables.get(); }
         webassembly_t* _root() const { return m__root; }
         webassembly_t::section_t* _parent() const { return m__parent; }
     };
@@ -974,7 +951,7 @@ public:
 
     public:
 
-        type_section_t(kaitai::kstream* p__io, webassembly_t::section_t* p__parent = 0, webassembly_t* p__root = 0);
+        type_section_t(kaitai::kstream* p__io, webassembly_t::section_t* p__parent = nullptr, webassembly_t* p__root = nullptr);
 
     private:
         void _read();
@@ -984,14 +961,14 @@ public:
         ~type_section_t();
 
     private:
-        vlq_base128_le_t* m_num_functypes;
-        std::vector<functype_t*>* m_functypes;
+        std::unique_ptr<vlq_base128_le_t> m_num_functypes;
+        std::unique_ptr<std::vector<std::unique_ptr<functype_t>>> m_functypes;
         webassembly_t* m__root;
         webassembly_t::section_t* m__parent;
 
     public:
-        vlq_base128_le_t* num_functypes() const { return m_num_functypes; }
-        std::vector<functype_t*>* functypes() const { return m_functypes; }
+        vlq_base128_le_t* num_functypes() const { return m_num_functypes.get(); }
+        std::vector<std::unique_ptr<functype_t>>* functypes() const { return m_functypes.get(); }
         webassembly_t* _root() const { return m__root; }
         webassembly_t::section_t* _parent() const { return m__parent; }
     };
@@ -1000,7 +977,7 @@ public:
 
     public:
 
-        vec_valtype_t(kaitai::kstream* p__io, webassembly_t::functype_t* p__parent = 0, webassembly_t* p__root = 0);
+        vec_valtype_t(kaitai::kstream* p__io, webassembly_t::functype_t* p__parent = nullptr, webassembly_t* p__root = nullptr);
 
     private:
         void _read();
@@ -1010,19 +987,19 @@ public:
         ~vec_valtype_t();
 
     private:
-        vlq_base128_le_t* m_num_types;
-        std::vector<valtype_t>* m_valtype;
+        std::unique_ptr<vlq_base128_le_t> m_num_types;
+        std::unique_ptr<std::vector<val_types_t>> m_valtype;
         webassembly_t* m__root;
         webassembly_t::functype_t* m__parent;
 
     public:
-        vlq_base128_le_t* num_types() const { return m_num_types; }
+        vlq_base128_le_t* num_types() const { return m_num_types.get(); }
 
         /**
          * Value Types
          * \sa https://www.w3.org/TR/wasm-core-1/#binary-valtype Source
          */
-        std::vector<valtype_t>* valtype() const { return m_valtype; }
+        std::vector<val_types_t>* valtype() const { return m_valtype.get(); }
         webassembly_t* _root() const { return m__root; }
         webassembly_t::functype_t* _parent() const { return m__parent; }
     };
@@ -1030,7 +1007,7 @@ public:
 private:
     std::string m_magic;
     uint32_t m_version;
-    std::vector<section_t*>* m_sections;
+    std::unique_ptr<std::vector<std::unique_ptr<section_t>>> m_sections;
     webassembly_t* m__root;
     kaitai::kstruct* m__parent;
 
@@ -1052,9 +1029,7 @@ public:
      * A WebAssembly module is a set of sections
      * \sa https://www.w3.org/TR/wasm-core-1/#binary-module Source
      */
-    std::vector<section_t*>* sections() const { return m_sections; }
+    std::vector<std::unique_ptr<section_t>>* sections() const { return m_sections.get(); }
     webassembly_t* _root() const { return m__root; }
     kaitai::kstruct* _parent() const { return m__parent; }
 };
-
-#endif  // WEBASSEMBLY_H_

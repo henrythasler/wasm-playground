@@ -66,7 +66,8 @@ int main(int argc, char const *argv[]) {
   std::vector<uint8_t> machinecode;
 
   try {
-    machinecode = assembler.assemble(bytecode);
+    assembler.loadModule(bytecode);
+    machinecode = assembler.assemble();
   } catch (const std::exception &e) {
     std::cerr << RED << "Error: Assembly failed: " << e.what() << RESET << std::endl;
     return EXIT_FAILURE;

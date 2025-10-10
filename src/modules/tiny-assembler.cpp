@@ -51,26 +51,30 @@ std::vector<uint8_t> Assembler::assembleCodeSection(webassembly_t::code_section_
   return machinecode;
 }
 
-std::vector<uint8_t> Assembler::assemble(std::vector<uint8_t> bytecode) {
+void Assembler::loadModule(std::vector<uint8_t> bytecode) {
   kaitai::kstream ks(std::string(bytecode.begin(), bytecode.end()));
-  webassembly_t wasm(&ks);
+  wasm = new webassembly_t(&ks);
 
-  std::vector<uint8_t> machinecode;
-
-  auto magic = wasm.magic();
+  auto magic = wasm->magic();
   asserte(magic.at(0) == 0 && magic.at(1) == 'a' && magic.at(2) == 's' && magic.at(3) == 'm', "Invalid WASM magic number");
-  asserte(wasm.version() == 1, "Unsupported WASM version");
+  asserte(wasm->version() == 1, "Unsupported WASM version");
+}
 
-  // iterate over sections
-  auto sections = wasm.sections();
-  const auto &section_items = *(sections);
-  for (size_t i = 0; i < section_items.size(); ++i) {
-    const auto &section = section_items.at(i);
-    if (section->id() == 0x0a) {
-      auto code_section = dynamic_cast<webassembly_t::code_section_t *>(section->content());
-      machinecode = assembleCodeSection(code_section);
+webassembly_t::code_section_t* Assembler::getCodeSection() {
+  // auto sections = wasm->sections();
+  const auto &sections = *(wasm->sections());
+  for(const auto &section: sections) {
+    if(section->id() == webassembly_t::SECTION_ID_CODE_SECTION) {
+      return dynamic_cast<webassembly_t::code_section_t *>(section.get()->content());
     }
   }
+  return nullptr;
+}
+
+std::vector<uint8_t> Assembler::assemble() {
+  auto code_section = getCodeSection();
+  asserte(code_section != nullptr, "Invalid Code Section") ;
+  auto machinecode = assembleCodeSection(code_section);
   return machinecode;
 }
 } // namespace tiny
