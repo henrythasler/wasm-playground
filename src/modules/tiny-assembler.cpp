@@ -60,11 +60,11 @@ void Assembler::loadModule(std::vector<uint8_t> bytecode) {
   asserte(wasm->version() == 1, "Unsupported WASM version");
 }
 
-webassembly_t::code_section_t* Assembler::getCodeSection() {
+webassembly_t::code_section_t *Assembler::getCodeSection() {
   // auto sections = wasm->sections();
   const auto &sections = *(wasm->sections());
-  for(const auto &section: sections) {
-    if(section->id() == webassembly_t::SECTION_ID_CODE_SECTION) {
+  for (const auto &section : sections) {
+    if (section->id() == webassembly_t::SECTION_ID_CODE_SECTION) {
       return dynamic_cast<webassembly_t::code_section_t *>(section.get()->content());
     }
   }
@@ -73,8 +73,8 @@ webassembly_t::code_section_t* Assembler::getCodeSection() {
 
 std::vector<uint8_t> Assembler::assemble() {
   auto code_section = getCodeSection();
-  asserte(code_section != nullptr, "Invalid Code Section") ;
-  auto machinecode = assembleCodeSection(code_section);
-  return machinecode;
+  asserte(code_section != nullptr, "Invalid Code Section");
+  // auto machinecode = assembleCodeSection(code_section);
+  return std::vector<uint8_t>();
 }
 } // namespace tiny
