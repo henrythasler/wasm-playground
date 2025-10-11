@@ -13,7 +13,8 @@ class Assembler {
 private:
   webassembly_t *wasm = nullptr;
 
-  webassembly_t::code_section_t *getCodeSection();
+  template <typename Derived, typename Base>
+  Derived *getSectionContent(const std::vector<std::unique_ptr<Base>> &sections, webassembly_t::section_id_t section_type);
 
   std::vector<uint8_t> assembleCodeSection(webassembly_t::code_section_t *code_section);
   u_int32_t mapOpcodeToArm64(uint8_t opcode);

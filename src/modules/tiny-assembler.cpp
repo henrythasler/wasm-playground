@@ -3,7 +3,7 @@
 namespace tiny {
 
 Assembler::~Assembler() {
-  if(wasm != nullptr) {
+  if (wasm != nullptr) {
     delete wasm;
   }
 }
@@ -66,18 +66,18 @@ void Assembler::loadModule(std::vector<uint8_t> bytecode) {
   asserte(wasm->version() == 1, "Unsupported WASM version");
 }
 
-webassembly_t::code_section_t *Assembler::getCodeSection() {
-  const auto &sections = *(wasm->sections());
+template <typename Derived, typename Base>
+Derived *Assembler::getSectionContent(const std::vector<std::unique_ptr<Base>> &sections, webassembly_t::section_id_t section_id) {
   for (const auto &section : sections) {
-    if (section->id() == webassembly_t::SECTION_ID_CODE_SECTION) {
-      return dynamic_cast<webassembly_t::code_section_t *>(section.get()->content());
+    if (section->id() == section_id) {
+      return dynamic_cast<Derived *>(section.get()->content());
     }
   }
   return nullptr;
 }
 
 std::vector<uint8_t> Assembler::assemble() {
-  auto code_section = getCodeSection();
+  auto code_section = getSectionContent<webassembly_t::code_section_t>(*(wasm->sections()), webassembly_t::SECTION_ID_CODE_SECTION);
   asserte(code_section != nullptr, "Invalid Code Section");
   auto machinecode = assembleCodeSection(code_section);
   return machinecode;
