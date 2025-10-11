@@ -21,7 +21,7 @@ private:
 
 public:
   Assembler() = default;
-  ~Assembler() = default;
+  ~Assembler();
 
   void loadModule(std::vector<uint8_t> bytecode);
   std::vector<uint8_t> assemble();

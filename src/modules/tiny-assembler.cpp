@@ -2,6 +2,10 @@
 
 namespace tiny {
 
+Assembler::~Assembler() {
+  delete wasm;
+}
+
 u_int32_t Assembler::mapOpcodeToArm64(uint8_t opcode) {
   switch (opcode) {
   case 0x00:           // unreachable
