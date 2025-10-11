@@ -3,7 +3,9 @@
 namespace tiny {
 
 Assembler::~Assembler() {
-  delete wasm;
+  if(wasm != nullptr) {
+    delete wasm;
+  }
 }
 
 u_int32_t Assembler::mapOpcodeToArm64(uint8_t opcode) {
@@ -65,7 +67,6 @@ void Assembler::loadModule(std::vector<uint8_t> bytecode) {
 }
 
 webassembly_t::code_section_t *Assembler::getCodeSection() {
-  // auto sections = wasm->sections();
   const auto &sections = *(wasm->sections());
   for (const auto &section : sections) {
     if (section->id() == webassembly_t::SECTION_ID_CODE_SECTION) {
@@ -78,7 +79,7 @@ webassembly_t::code_section_t *Assembler::getCodeSection() {
 std::vector<uint8_t> Assembler::assemble() {
   auto code_section = getCodeSection();
   asserte(code_section != nullptr, "Invalid Code Section");
-  // auto machinecode = assembleCodeSection(code_section);
-  return std::vector<uint8_t>();
+  auto machinecode = assembleCodeSection(code_section);
+  return machinecode;
 }
 } // namespace tiny
