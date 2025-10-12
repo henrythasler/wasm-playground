@@ -76,9 +76,19 @@ Derived *Assembler::getSectionContent(const std::vector<std::unique_ptr<Base>> &
   return nullptr;
 }
 
+/**
+ * Assembling steps for each entry (function) in the code-section
+ * 1. allocate memory to hold all locals (64-bit) using the stack; init with 0x00
+ * 2. create a map where each local and it's memory address is kept
+ * 3. create a variable in memory to store the size of the wasm-stack; init with 0x00
+ * 4. create a stack structure in memory that can hold n*8 bytes; make sure that the stack size can not exceed n
+ * 5. create a memory region to hold all parameters; copy all of them from their registers to the memory region
+ * 6. read the first instruction
+ */
 std::vector<uint8_t> Assembler::assemble() {
   auto code_section = getSectionContent<webassembly_t::code_section_t>(*(wasm->sections()), webassembly_t::SECTION_ID_CODE_SECTION);
   asserte(code_section != nullptr, "Invalid Code Section");
+
   auto machinecode = assembleCodeSection(code_section);
   return machinecode;
 }
