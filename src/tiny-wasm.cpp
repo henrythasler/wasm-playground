@@ -63,42 +63,45 @@ int main(int argc, char const *argv[]) {
   }
 
   // Assemble bytecode to machine code
-  std::vector<uint8_t> machinecode;
+  std::vector<tiny::WasmFunction> wasmModule;
 
   try {
-    assembler.loadModule(bytecode);
-    machinecode = assembler.assemble();
+    wasmModule = assembler.compileModule(bytecode);
   } catch (const std::exception &e) {
     std::cerr << RED << "Error: Assembly failed: " << e.what() << RESET << std::endl;
     return EXIT_FAILURE;
   }
-  std::cout << "Machinecode size: " << machinecode.size() << " bytes" << std::endl;
+  std::cout << "Functions: " << wasmModule.size() << std::endl;
 
-  if (machinecode.size() == 0) {
-    std::cout << YELLOW << "WARNING: Machinecode is empty!" << RESET << std::endl;
-    return EXIT_FAILURE;
-  }
-
-  std::cout << "Machinecode (hex): ";
-  for (uint8_t byte : machinecode) {
-    std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(byte) << " ";
-  }
-  std::cout << std::dec << std::endl;
-
-  /* execute machine code */
-  if (!dry_run) {
-    std::cout << "Executing machine code... ";
-    tiny::Runtime runtime = tiny::Runtime();
-    try {
-      runtime.execute(machinecode);
-    } catch (const std::exception &e) {
-      std::cerr << RED << "Execution failed: " << e.what() << RESET << std::endl;
-      return EXIT_FAILURE;
+  for (tiny::WasmFunction function : wasmModule) {
+    std::cout << "  Name: " << function.getName() << std::endl;
+    auto machinecode = function.getBytecode();
+    if (machinecode.size() == 0) {
+      std::cout << YELLOW << "WARNING: Machinecode is empty!" << RESET << std::endl;
+    } else {
+      std::cout << "  Machinecode (hex): ";
+      for (uint8_t byte : machinecode) {
+        std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(byte) << " ";
+      }
+      std::cout << std::dec << std::endl;
     }
-  } else {
-    std::cout << "Dry run mode, skipping execution... ";
+
+    /* execute machine code */
+    if (!dry_run) {
+      std::cout << "  Executing machine code... ";
+      tiny::Runtime runtime = tiny::Runtime();
+      try {
+        runtime.execute(machinecode);
+      } catch (const std::exception &e) {
+        std::cerr << RED << "Execution failed: " << e.what() << RESET << std::endl;
+        return EXIT_FAILURE;
+      }
+    } else {
+      std::cout << "  Dry run mode, skipping execution... ";
+    }
+
+    std::cout << GREEN "done" << RESET << std::endl << std::endl;
   }
 
-  std::cout << GREEN "done" << RESET << std::endl;
   return EXIT_SUCCESS;
 }
