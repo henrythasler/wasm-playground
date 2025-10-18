@@ -77,7 +77,7 @@ Set breakpoint in source code. Start Debugging (F5).
 
 ## References
 
-### ARM64
+### ARM64 Introduction
 
 - [Running Arm Binaries on x86 with QEMU-User](https://azeria-labs.com/arm-on-x86-qemu-user/)
 - [ARM GCC Inline Assembler Cookbook](http://www.ethernut.de/en/documents/arm-inline-asm.html)
@@ -86,6 +86,10 @@ Set breakpoint in source code. Start Debugging (F5).
 - [Getting Started with Arm Assembly Language](https://developer.arm.com/documentation/107829/0201)
 - [Procedure Call Standard for the Arm® 64-bit Architecture (AArch64) - Parameter passing](https://github.com/ARM-software/abi-aa/blob/main/aapcs64/aapcs64.rst#68parameter-passing)
 - [arm64-book - A Book that explains in Detail ARM64 Assembly](https://github.com/maxvdec/arm64-book)
+
+### ARM64 Instructions
+
+- [Arm A-profile A64 Instruction Set Architecture](https://developer.arm.com/documentation/ddi0602/2025-09?lang=en)
 
 ### ARM64 Online Tools
 

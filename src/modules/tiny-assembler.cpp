@@ -21,7 +21,6 @@ Assembler::~Assembler() {
 //   }
 // }
 
-
 // std::vector<uint8_t> Assembler::assembleCodeSection(webassembly_t::code_section_t *code_section) {
 //   std::vector<uint8_t> machinecode;
 
@@ -85,6 +84,8 @@ std::vector<WasmFunction> Assembler::compileModule(const std::vector<uint8_t> &b
   asserte(wasm != nullptr, "Assembler: WebAssembly module is null");
 
   auto code_section = getSectionContent<webassembly_t::code_section_t>(*(wasm->sections()), webassembly_t::SECTION_ID_CODE_SECTION);
+  auto function_section = getSectionContent<webassembly_t::function_section_t>(*(wasm->sections()), webassembly_t::SECTION_ID_FUNCTION_SECTION);
+  auto type_section = getSectionContent<webassembly_t::type_section_t>(*(wasm->sections()), webassembly_t::SECTION_ID_TYPE_SECTION);
 
   asserte(code_section != nullptr, "Assembler: Invalid Code Section");
   asserte(code_section->entries() != nullptr, "Assembler: Code section is empty");
@@ -93,8 +94,11 @@ std::vector<WasmFunction> Assembler::compileModule(const std::vector<uint8_t> &b
 
   for (size_t j = 0; j < code_section->entries()->size(); ++j) {
     const auto &code = code_section->entries()->at(j);
+    const auto &func = function_section->typeidx()->at(j);
+    const auto &funcType = type_section->functypes()->at(static_cast<size_t>(func->value()));
+
     WasmFunction wasmFunction;
-    wasmFunction.compile(code);
+    wasmFunction.compile(code->func(), funcType);
     functions.push_back(wasmFunction);
   }
 
@@ -106,43 +110,6 @@ std::vector<WasmFunction> Assembler::compileModule(const std::vector<uint8_t> &b
   }
 
   return functions;
-}
-
-
-/**
- * As we are cross-compiling to arm64 the byteorder is litte endian anyways.
- */
-void WasmFunction::serializeUint32(uint32_t value) {
-  bytecode.push_back(uint8_t((value >> 24) & 0xFF));
-  bytecode.push_back(uint8_t((value >> 16) & 0xFF));
-  bytecode.push_back(uint8_t((value >> 8) & 0xFF));
-  bytecode.push_back(uint8_t(value & 0xFF));
-}
-
-size_t WasmFunction::compile(const std::unique_ptr<webassembly_t::code_t> &code) {
-  bytecode.clear();
-
-  // Prologue: create a new stack frame
-  serializeUint32(0xFD7BBFA9);
-  serializeUint32(0xFD030091);
-
-  // Allocate 64 bytes on stack
-  serializeUint32(0xFF0301D1);
-
-  // Business logic
-  if (code->func()->expr().size() > 0) {
-  }
-
-  // deallocate stack memory
-  serializeUint32(0xFF030191);
-
-  // Epilogue: destroy stack frame
-  serializeUint32(0xFD7BC1A8);
-
-  // return
-  serializeUint32(0xC0035FD6);
-
-  return bytecode.size();
 }
 
 } // namespace tiny

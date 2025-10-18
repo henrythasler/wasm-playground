@@ -5,34 +5,10 @@
 #include <vector>
 
 #include "helper.hpp"
+#include "tiny-module.hpp"
 #include "webassembly.h"
 
 namespace tiny {
-
-class WasmFunction {
-private:
-  std::vector<uint8_t> bytecode;
-  std::string name;
-  void serializeUint32(uint32_t value);
-
-public:
-  WasmFunction() = default;
-  ~WasmFunction() = default;
-
-  size_t compile(const std::unique_ptr<webassembly_t::code_t> &code);
-
-  std::string getName() const {
-    return name;
-  };
-
-  void setName(const std::string newName) {
-    name = newName;
-  };
-
-  const std::vector<uint8_t>& getBytecode() const {
-    return bytecode;
-  }
-};
 
 class Assembler {
 private:
@@ -45,7 +21,6 @@ private:
 
   // WasmFunction compileFunction(const std::unique_ptr<webassembly_t::code_t> &entry);
   // u_int32_t mapOpcodeToArm64(uint8_t opcode);
-  
 
 public:
   Assembler() = default;

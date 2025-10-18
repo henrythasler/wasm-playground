@@ -65,6 +65,9 @@ int main(int argc, char const *argv[]) {
   // Assemble bytecode to machine code
   std::vector<tiny::WasmFunction> wasmModule;
 
+  /**
+   * Compile the module
+   */
   try {
     wasmModule = assembler.compileModule(bytecode);
   } catch (const std::exception &e) {
@@ -73,8 +76,11 @@ int main(int argc, char const *argv[]) {
   }
   std::cout << "Functions: " << wasmModule.size() << std::endl;
 
+  /**
+   * print some infos about each function before executing it
+   */
   for (tiny::WasmFunction function : wasmModule) {
-    std::cout << "  Name: " << function.getName() << std::endl;
+    std::cout << "  " << function.getResultString() << " " << function.getName() << "(" << function.getParameterString() << ")" << std::endl;
     auto machinecode = function.getBytecode();
     if (machinecode.size() == 0) {
       std::cout << YELLOW << "WARNING: Machinecode is empty!" << RESET << std::endl;
