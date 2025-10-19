@@ -4,10 +4,10 @@
 #include <iostream>
 #include <vector>
 
+#include "assembler.hpp"
 #include "colors.hpp"
-#include "tiny-assembler.hpp"
-#include "tiny-loader.hpp"
-#include "tiny-runtime.hpp"
+#include "loader.hpp"
+#include "runtime.hpp"
 #include "version.hpp"
 #include "wasm-dissector.hpp"
 

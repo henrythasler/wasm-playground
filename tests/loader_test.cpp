@@ -4,7 +4,7 @@
 #include <filesystem>
 #include <fstream>
 
-#include "../src/modules/tiny-loader.hpp"
+#include "../src/modules/loader.hpp"
 
 // Demonstrate some basic assertions.
 TEST(loader, fail) {

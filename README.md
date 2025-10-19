@@ -89,6 +89,8 @@ Set breakpoint in source code. Start Debugging (F5).
 
 ### ARM64 Instructions
 
+- [Tuna Cici: AArch64 Procedure Call Standard (AAPCS64): ABI, Calling Conventions & Machine Registers](https://medium.com/@tunacici7/aarch64-procedure-call-standard-aapcs64-abi-calling-conventions-machine-registers-a2c762540278)
+- [The Aarch64 Instruction Format for Code Generation in Compiler Design](https://deviceix.github.io/posts/arm_isa_encoding/)
 - [Arm A-profile A64 Instruction Set Architecture](https://developer.arm.com/documentation/ddi0602/2025-09?lang=en)
 
 ### ARM64 Online Tools

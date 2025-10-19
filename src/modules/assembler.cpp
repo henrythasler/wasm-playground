@@ -1,4 +1,4 @@
-#include "tiny-assembler.hpp"
+#include "assembler.hpp"
 
 namespace tiny {
 
@@ -37,12 +37,12 @@ Assembler::~Assembler() {
 //       }
 //     }
 
-//     // serializeUint32(machinecode, 0xD2800540); // mov x0, 42
+//     // serializeUint32LE(machinecode, 0xD2800540); // mov x0, 42
 
 //     if (entry->func()->expr().size() > 0) {
 //       for (size_t k = 0; k < entry->func()->expr().size(); ++k) {
 //         if (k > 0) {
-//           serializeUint32(machinecode, mapOpcodeToArm64(entry->func()->expr().at(k)));
+//           serializeUint32LE(machinecode, mapOpcodeToArm64(entry->func()->expr().at(k)));
 //         }
 //       }
 //     }

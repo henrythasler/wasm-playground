@@ -1,4 +1,4 @@
-#include "tiny-loader.hpp"
+#include "loader.hpp"
 
 namespace tiny {
 

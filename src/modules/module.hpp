@@ -15,7 +15,7 @@ private:
   std::vector<webassembly_t::val_types_t> parameters;
   std::vector<webassembly_t::val_types_t> results;
 
-  void serializeUint32(uint32_t value);
+  void serializeUint32LE(uint32_t value);
 
   std::string joinValTypes(const std::vector<webassembly_t::val_types_t> &valTypes);
 

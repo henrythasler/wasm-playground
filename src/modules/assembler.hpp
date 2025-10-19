@@ -5,7 +5,7 @@
 #include <vector>
 
 #include "helper.hpp"
-#include "tiny-module.hpp"
+#include "module.hpp"
 #include "webassembly.h"
 
 namespace tiny {

@@ -2,10 +2,10 @@ cmake_minimum_required(VERSION 3.20)
 
 # Define the tiny-modules library, STATIC means it will be a static library
 add_library(tiny_modules STATIC
-    tiny-loader.cpp
-    tiny-assembler.cpp
-    tiny-module.cpp
-    tiny-runtime.cpp
+    loader.cpp
+    assembler.cpp
+    module.cpp
+    runtime.cpp
     wasm-dissector.cpp
 )
 

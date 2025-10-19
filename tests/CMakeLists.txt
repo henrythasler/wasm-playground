@@ -19,29 +19,30 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(googletest)
 include(GoogleTest)
 
-add_executable(loader_test
+add_executable(all_tests
   loader_test.cpp
+  instructions_test.cpp
 )
 
 # GoogleTest requires at least C++17
-set_target_properties(loader_test PROPERTIES
+set_target_properties(all_tests PROPERTIES
   CXX_STANDARD 17
   CXX_STANDARD_REQUIRED YES
   CXX_EXTENSIONS NO
 )
 
 # Remove sanitizer flags from test target
-target_compile_options(loader_test PRIVATE -fno-sanitize=all)
+target_compile_options(all_tests PRIVATE -fno-sanitize=all)
 # target_link_options(loader_test PRIVATE -fno-sanitize=all)  # project is compiled with -fsanitize=address so linking without it will cause issues
 
-target_include_directories(loader_test PRIVATE 
+target_include_directories(all_tests PRIVATE 
   ${CMAKE_ROOT_DIR}/src
 )
 
-target_link_libraries(loader_test PRIVATE
+target_link_libraries(all_tests PRIVATE
   tiny_modules  
   GTest::gtest_main
   GTest::gmock
 )
 
-add_test(NAME loader_test COMMAND loader_test)
+add_test(NAME all_tests COMMAND all_tests)

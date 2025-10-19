@@ -1,4 +1,4 @@
-#include "tiny-runtime.hpp"
+#include "runtime.hpp"
 
 namespace tiny {
 void Runtime::execute(const std::vector<uint8_t> &machinecode) {
