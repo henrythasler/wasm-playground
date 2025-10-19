@@ -96,20 +96,20 @@ size_t WasmFunction::compile(const webassembly_t::func_t *func, const std::uniqu
   // mov fp, sp
   serializeUint32LE(0x910003FD);
 
-  // Allocate 64 bytes on stack
-  // FIXME: allocate based on parameters and locals
-  serializeUint32LE(0xD10103FF);
+  // Allocate stack
+  initialStackSize = uint16_t(((initialStackSize >> 4) + 1) << 4);
+  serializeUint32LE(encode_sub_immediate(SP, SP, initialStackSize, false, size2_t::SIZE_64BIT));
 
   // save parameters to stack
   uint16_t stackPosition = initialStackSize;
   for (auto parameter : parameters) {
     switch (parameter) {
     case webassembly_t::VAL_TYPES_I32:
-      serializeUint32LE(encode_str_unsigned_offset(W0, SP, stackPosition, SIZE_32BIT));
+      serializeUint32LE(encode_str_immediate(W0, SP, stackPosition, size4_t::SIZE_32BIT));
       stackPosition -= 4;
       break;
     case webassembly_t::VAL_TYPES_I64:
-      serializeUint32LE(encode_str_unsigned_offset(W0, SP, stackPosition, SIZE_64BIT));
+      serializeUint32LE(encode_str_immediate(W0, SP, stackPosition, size4_t::SIZE_64BIT));
       stackPosition -= 8;
       break;
     default:
@@ -138,8 +138,8 @@ size_t WasmFunction::compile(const webassembly_t::func_t *func, const std::uniqu
   if (func->expr().size() > 0) {
   }
 
-  // deallocate stack memory (add sp, sp, #64)
-  serializeUint32LE(0x910103FF);
+  // deallocate stack memory (add sp, sp, #initialStackSize)
+  serializeUint32LE(encode_add_immediate(SP, SP, initialStackSize, false, size2_t::SIZE_64BIT));
 
   // Epilogue: destroy stack frame (ldp fp, lr, [sp], #16)
   serializeUint32LE(0xA8C17BFD);

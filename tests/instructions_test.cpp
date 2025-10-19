@@ -14,7 +14,14 @@
 // Demonstrate some basic assertions.
 TEST(instructions, str) {
   // str w0, [sp, 24]
-  EXPECT_EQ_HEX(encode_str_unsigned_offset(W0, SP, 24, SIZE_32BIT), 0xB9001BE0);
+  EXPECT_EQ_HEX(encode_str_immediate(W0, SP, 24, size4_t::SIZE_32BIT), 0xB9001BE0);
   // str x0, [sp, 16]
-  EXPECT_EQ_HEX(encode_str_unsigned_offset(X1, SP, 16, SIZE_64BIT), 0xF9000BE1);
+  EXPECT_EQ_HEX(encode_str_immediate(X1, SP, 16, size4_t::SIZE_64BIT), 0xF9000BE1);
+}
+
+TEST(instruction, sub) {
+  // sub sp, sp, #0x40
+  EXPECT_EQ_HEX(encode_sub_immediate(SP, SP, 0x40, false, size2_t::SIZE_64BIT), 0xD10103FF);
+  // sub w0, w0, #1
+  EXPECT_EQ_HEX(encode_sub_immediate(W0, W0, 0x01, false, size2_t::SIZE_32BIT), 0x51000400);
 }

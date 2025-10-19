@@ -11,6 +11,7 @@ void Runtime::execute(const std::vector<uint8_t> &machinecode) {
 
   // Execute
   auto wasm_module = reinterpret_cast<void (*)()>(exec_mem);
+  // Invalidate and clean cache memory
   __builtin___clear_cache(exec_mem, static_cast<size_t *>(exec_mem) + alloc_size);
   wasm_module();
 
