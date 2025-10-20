@@ -1,8 +1,11 @@
+#pragma once
+
 #include <cstdint>
 #include <iomanip>
 #include <iostream>
 #include <vector>
 
+#include "aarch64-instructions.hpp"
 #include "helper.hpp"
 #include "webassembly.h"
 

@@ -1,4 +1,3 @@
-#include "instructions.hpp"
 #include "module.hpp"
 
 namespace tiny {
@@ -51,6 +50,9 @@ size_t WasmFunction::compile(const webassembly_t::func_t *func, const std::uniqu
    */
   uint16_t initialStackSize = 0;
 
+  /**
+   * calculate the
+   */
   auto valtypes = *funcType->parameters()->valtype();
   for (auto valtype : valtypes) {
     switch (valtype) {
@@ -94,42 +96,29 @@ size_t WasmFunction::compile(const webassembly_t::func_t *func, const std::uniqu
   // Prologue: create a new stack frame (stp fp, lr, [sp, #-16]!)
   serializeUint32LE(0xA9BF7BFD);
   // mov fp, sp
-  serializeUint32LE(0x910003FD);
+  serializeUint32LE(arm64::encode_mov_sp(arm64::FP, arm64::SP, arm64::size2_t::SIZE_64BIT));
 
   // Allocate stack
-  initialStackSize = uint16_t(((initialStackSize >> 4) + 1) << 4);
-  serializeUint32LE(encode_sub_immediate(SP, SP, initialStackSize, false, size2_t::SIZE_64BIT));
+  initialStackSize = uint16_t(((initialStackSize + (AARCH64_STACK_ALIGNMENT - 1)) / AARCH64_STACK_ALIGNMENT) * AARCH64_STACK_ALIGNMENT);
+  serializeUint32LE(arm64::encode_sub_immediate(arm64::SP, arm64::SP, initialStackSize, false, arm64::size2_t::SIZE_64BIT));
 
   // save parameters to stack
   uint16_t stackPosition = initialStackSize;
+  uint8_t paramRegister = 0;
   for (auto parameter : parameters) {
+    asserte(paramRegister < 8, "too many parameters to fit into registers; use stack");
     switch (parameter) {
     case webassembly_t::VAL_TYPES_I32:
-      serializeUint32LE(encode_str_immediate(W0, SP, stackPosition, size4_t::SIZE_32BIT));
-      stackPosition -= 4;
+      serializeUint32LE(arm64::encode_str_immediate(arm64::reg_t(paramRegister++), arm64::SP, stackPosition, arm64::size4_t::SIZE_32BIT));
+      stackPosition -= AARCH64_INT32_SIZE;
       break;
     case webassembly_t::VAL_TYPES_I64:
-      serializeUint32LE(encode_str_immediate(W0, SP, stackPosition, size4_t::SIZE_64BIT));
-      stackPosition -= 8;
+      serializeUint32LE(arm64::encode_str_immediate(arm64::reg_t(paramRegister++), arm64::SP, stackPosition, arm64::size4_t::SIZE_64BIT));
+      stackPosition -= AARCH64_INT64_SIZE;
       break;
     default:
       asserte(false, "WasmFunction::compile(): unsupported parameter type (val_types_t)");
     }
-
-    /**
-     *  store the
-     *  str     x0, [sp, 24]
-     *           |        L Stack pointer offset
-     *        register
-     *  0xf9000fe0
-     *  11 111001000 00000000011 11111 00000
-     *                             |     L source register (Rt, 0=x0)
-     *                             L base register (Rn)
-     *
-     *  str     x1, [sp, 16]
-     *  11 111 001000 00000000010 11111 00001
-     *
-     */
   }
 
   // FIXME: create local variables on stack
@@ -139,13 +128,13 @@ size_t WasmFunction::compile(const webassembly_t::func_t *func, const std::uniqu
   }
 
   // deallocate stack memory (add sp, sp, #initialStackSize)
-  serializeUint32LE(encode_add_immediate(SP, SP, initialStackSize, false, size2_t::SIZE_64BIT));
+  serializeUint32LE(arm64::encode_add_immediate(arm64::SP, arm64::SP, initialStackSize, false, arm64::size2_t::SIZE_64BIT));
 
   // Epilogue: destroy stack frame (ldp fp, lr, [sp], #16)
   serializeUint32LE(0xA8C17BFD);
 
   // return (RET)
-  serializeUint32LE(0xD65F03C0);
+  serializeUint32LE(arm64::encode_ret());
 
   return bytecode.size();
 }

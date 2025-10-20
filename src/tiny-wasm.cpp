@@ -86,8 +86,10 @@ int main(int argc, char const *argv[]) {
       std::cout << YELLOW << "WARNING: Machinecode is empty!" << RESET << std::endl;
     } else {
       std::cout << "  Machinecode (hex): ";
-      for (uint8_t byte : machinecode) {
-        std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(byte) << " ";
+      for (int32_t i = 0; i < int32_t(machinecode.size() >> 2); i++) {
+        const uint32_t instruction = uint32_t(machinecode.at(size_t((i << 2) + 3)) << 24) + uint32_t(machinecode.at(size_t((i << 2) + 2)) << 16) +
+                                     uint32_t(machinecode.at(size_t((i << 2) + 1)) << 8) + uint32_t(machinecode.at(size_t((i << 2) + 0)));
+        std::cout << std::hex << std::setw(8) << std::setfill('0') << instruction << " ";
       }
       std::cout << std::dec << std::endl;
     }

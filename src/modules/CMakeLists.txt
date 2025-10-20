@@ -7,6 +7,7 @@ add_library(tiny_modules STATIC
     module.cpp
     runtime.cpp
     wasm-dissector.cpp
+    aarch64-instructions.cpp
 )
 
 # set compiler options for warnings and treat warnings as errors

@@ -66,7 +66,8 @@
         "semaphore": "cpp",
         "span": "cpp",
         "stop_token": "cpp",
-        "thread": "cpp"
+        "thread": "cpp",
+        "future": "cpp"
     },
     "cmake.sourceDirectory": "/home/henry/dev/wasm-playground",
     "cmake.generator": "Unix Makefiles"
