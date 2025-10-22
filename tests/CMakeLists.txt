@@ -22,6 +22,7 @@ include(GoogleTest)
 add_executable(all_tests
   loader_test.cpp
   instructions_test.cpp
+  chapter02_test.cpp
 )
 
 # GoogleTest requires at least C++17
@@ -40,7 +41,8 @@ target_include_directories(all_tests PRIVATE
 )
 
 target_link_libraries(all_tests PRIVATE
-  tiny_modules  
+  tiny_modules
+  kaitai_struct_cpp_stl_runtime
   GTest::gtest_main
   GTest::gmock
 )

@@ -108,6 +108,7 @@ enum class size2_t {
   SIZE_64BIT  // X register
 };
 
+uint32_t encode_ldr_offset(reg_t rt, reg_t rn, uint16_t imm12, size2_t size);
 uint32_t encode_str_immediate(reg_t rt, reg_t rn, uint16_t imm12, size4_t size);
 uint32_t encode_sub_immediate(reg_t rd, reg_t rn, uint16_t imm12, bool shift12, size2_t size);
 uint32_t encode_add_immediate(reg_t rd, reg_t rn, uint16_t imm12, bool shift12, size2_t size);

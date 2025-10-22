@@ -2,6 +2,28 @@
 
 namespace arm64 {
 
+uint32_t encode_ldr_offset(reg_t rt, reg_t rn, uint16_t imm12, size2_t size) {
+  uint32_t instr = 0;
+
+  switch (size) {
+  case size2_t::SIZE_32BIT:
+    instr = 0xB9400000;
+    break;
+  case size2_t::SIZE_64BIT:
+    instr = 0xF9400000;
+    break;
+  default:
+    asserte(false, "encode_ldr_offset(): invalid size value");
+    break;
+  }
+
+  instr |= (imm12 & 0xFFF) << 10; // imm12 field
+  instr |= (rn & 0x1F) << 5;      // Rn (base register)
+  instr |= (rt & 0x1F);           // Rt (source register)
+
+  return instr;
+}
+
 // Encode STR with unsigned offset: STR Xt, [Xn, #imm]
 uint32_t encode_str_immediate(reg_t rt, reg_t rn, uint16_t imm12, size4_t size) {
   uint32_t instr = 0;

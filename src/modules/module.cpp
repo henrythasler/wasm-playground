@@ -122,9 +122,37 @@ size_t WasmFunction::compile(const webassembly_t::func_t *func, const std::uniqu
   }
 
   // FIXME: create local variables on stack
+  for (auto &local : *func->locals()) {
+    switch (local->valtype()) {
+    case webassembly_t::VAL_TYPES_I32:
+      serializeUint32LE(arm64::encode_str_immediate(arm64::reg_t::WZR, arm64::SP, stackPosition, arm64::size4_t::SIZE_32BIT));
+      stackPosition -= AARCH64_INT32_SIZE;
+      break;
+    case webassembly_t::VAL_TYPES_I64:
+      serializeUint32LE(arm64::encode_str_immediate(arm64::reg_t::WZR, arm64::SP, stackPosition, arm64::size4_t::SIZE_64BIT));
+      stackPosition -= AARCH64_INT64_SIZE;
+      break;
+    default:
+      asserte(false, "WasmFunction::compile(): unsupported parameter type (val_types_t)");
+      break;
+    }
+  }
 
   // Business logic
   if (func->expr().size() > 0) {
+    std::istringstream stream(func->expr());
+    char byte;
+    while (stream.get(byte)) {
+      switch (byte) {
+      case 0x20:
+        stream.get(byte);
+        std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(byte);
+        serializeUint32LE(arm64::encode_ldr_offset(arm64::reg_t::X0, arm64::SP, uint16_t(-8), arm64::size2_t::SIZE_64BIT));
+        break;
+      default:
+        break;
+      }
+    }
   }
 
   // deallocate stack memory (add sp, sp, #initialStackSize)
