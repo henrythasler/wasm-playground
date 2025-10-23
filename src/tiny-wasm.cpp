@@ -1,3 +1,4 @@
+#include <csignal>
 #include <cstdint>
 #include <cstring>
 #include <iomanip>
@@ -87,8 +88,10 @@ int main(int argc, char const *argv[]) {
     } else {
       std::cout << "  Machinecode (hex): ";
       for (int32_t i = 0; i < int32_t(machinecode.size() >> 2); i++) {
-        const uint32_t instruction = uint32_t(machinecode.at(size_t((i << 2) + 3)) << 24) + uint32_t(machinecode.at(size_t((i << 2) + 2)) << 16) +
-                                     uint32_t(machinecode.at(size_t((i << 2) + 1)) << 8) + uint32_t(machinecode.at(size_t((i << 2) + 0)));
+        // const uint32_t instruction = uint32_t(machinecode.at(size_t((i << 2) + 3)) << 24) + uint32_t(machinecode.at(size_t((i << 2) + 2)) << 16) +
+        //                              uint32_t(machinecode.at(size_t((i << 2) + 1)) << 8) + uint32_t(machinecode.at(size_t((i << 2) + 0)));
+        const uint32_t instruction = uint32_t(machinecode.at(size_t((i << 2) + 0)) << 24) + uint32_t(machinecode.at(size_t((i << 2) + 1)) << 16) +
+                                     uint32_t(machinecode.at(size_t((i << 2) + 2)) << 8) + uint32_t(machinecode.at(size_t((i << 2) + 3)));
         std::cout << std::hex << std::setw(8) << std::setfill('0') << instruction << " ";
       }
       std::cout << std::dec << std::endl;
@@ -99,6 +102,7 @@ int main(int argc, char const *argv[]) {
       std::cout << "  Executing machine code... ";
       auto wasmFunction = tiny::make_wasm_function<tiny::wasm_i32_t>(machinecode);
       try {
+        // std::raise(SIGINT);
         auto res = wasmFunction();
         std::cout << res << " ";
       } catch (const std::exception &e) {

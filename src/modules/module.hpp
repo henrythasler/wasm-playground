@@ -11,6 +11,32 @@
 
 namespace tiny {
 
+class Locals {
+  private:
+    std::vector<uint32_t> locals_;
+    uint32_t offset_ = 0;
+
+  public:
+  Locals() = default;
+  ~Locals() = default;
+
+  uint32_t get(uint32_t id) {
+    return (locals_.at(id) + offset_);
+  }
+
+  void set(uint32_t id, uint32_t address) {
+    locals_[id] = address;
+  }
+
+  void append(uint32_t address) {
+    locals_.emplace_back(address);
+  }
+
+  void setOffset(uint32_t offset) {
+    offset_ = offset;
+  };
+};
+
 class WasmFunction {
 private:
   std::vector<uint8_t> bytecode;
