@@ -1,6 +1,3 @@
-#include <cstdint>
-#include <iomanip>
-#include <iostream>
 #include "aarch64-instructions.hpp"
 
 namespace arm64 {
@@ -11,9 +8,11 @@ uint32_t encode_ldr_offset(reg_t rt, reg_t rn, uint16_t imm12, size2_t size) {
   switch (size) {
   case size2_t::SIZE_32BIT:
     instr = 0xB9400000;
+    imm12 = (imm12 >> 2) & 0xFFF; // Scaled by 4
     break;
   case size2_t::SIZE_64BIT:
     instr = 0xF9400000;
+    imm12 = (imm12 >> 3) & 0xFFF; // Scaled by 8
     break;
   default:
     asserte(false, "encode_ldr_offset(): invalid size value");
@@ -53,7 +52,6 @@ uint32_t encode_str_immediate(reg_t rt, reg_t rn, uint16_t imm12, size4_t size) 
     asserte(false, "encode_str_immediate(): invalid size value");
     break;
   }
-  std::cout << imm12;
   instr |= (imm12 & 0xFFF) << 10; // imm12 field
   instr |= (rn & 0x1F) << 5;      // Rn (base register)
   instr |= (rt & 0x1F);           // Rt (source register)

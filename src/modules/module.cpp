@@ -107,7 +107,7 @@ size_t WasmFunction::compile(const webassembly_t::func_t *func, const std::uniqu
   uint16_t stackPosition = initialStackSize;
   uint8_t paramRegister = 0;
   for (auto parameter : parameters) {
-    std::cout << stackPosition << " ";
+    // std::cout << "parameter stackPosition " << stackPosition << " ";
     asserte(paramRegister < 8, "too many parameters to fit into registers; use stack");
     switch (parameter) {
     case webassembly_t::VAL_TYPES_I32:
@@ -125,9 +125,8 @@ size_t WasmFunction::compile(const webassembly_t::func_t *func, const std::uniqu
     }
   }
 
-  // FIXME: create local variables on stack
   for (auto &local : *func->locals()) {
-    // std::cout << stackPosition << " ";
+    // std::cout << "local stackPosition " << stackPosition << " ";
     switch (local->valtype()) {
     case webassembly_t::VAL_TYPES_I32:
       serializeUint32LE(arm64::encode_str_immediate(arm64::reg_t::WZR, arm64::SP, stackPosition, arm64::size4_t::SIZE_32BIT));
@@ -145,8 +144,6 @@ size_t WasmFunction::compile(const webassembly_t::func_t *func, const std::uniqu
     }
   }
 
-  std::cout << std::endl;
-
   // Business logic
   if (func->expr().size() > 0) {
     std::istringstream stream(func->expr());
@@ -155,9 +152,8 @@ size_t WasmFunction::compile(const webassembly_t::func_t *func, const std::uniqu
       switch (byte) {
       case 0x20:
         stream.get(byte);
-        // std::cout << locals.get(byte) << " ";
-        // std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(byte);
-        serializeUint32LE(arm64::encode_ldr_offset(arm64::reg_t::X0, arm64::SP, uint16_t(locals.get(byte)), arm64::size2_t::SIZE_64BIT));
+        // std::cout << "address: " << locals.get(byte) << std::endl;
+        serializeUint32LE(arm64::encode_ldr_offset(arm64::reg_t::W0, arm64::SP, uint16_t(locals.get(byte)), arm64::size2_t::SIZE_32BIT));
         break;
       default:
         break;

@@ -12,11 +12,11 @@
 namespace tiny {
 
 class Locals {
-  private:
-    std::vector<uint32_t> locals_;
-    uint32_t offset_ = 0;
+private:
+  std::vector<uint32_t> locals_;
+  uint32_t offset_ = 0;
 
-  public:
+public:
   Locals() = default;
   ~Locals() = default;
 

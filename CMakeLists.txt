@@ -65,7 +65,15 @@ set (CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ggdb3")
 
 # enable address sanitizer
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address")
+cmake_host_system_information(RESULT DISTRIB_VERSION_ID QUERY DISTRIB_VERSION_ID)
+cmake_host_system_information(RESULT DISTRIB_ID QUERY DISTRIB_ID)
+message(STATUS "${DISTRIB_ID}: ${DISTRIB_VERSION_ID}")
+if((DISTRIB_ID STREQUAL "ubuntu") AND (DISTRIB_VERSION_ID STREQUAL "24.04"))
+  message(STATUS "Disabling address sanitizer for ${DISTRIB_ID} ${DISTRIB_VERSION_ID}")
+else()
+  message(STATUS "Enabling address sanitizer")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address")
+endif()
 
 # Add Kaitai runtime dependency
 CLANG_TIDY(OFF)  # disable clang-tidy
