@@ -5,9 +5,9 @@
 #include <iostream>
 #include <vector>
 
-#include "assembler.hpp"
 #include "colors.hpp"
 #include "loader.hpp"
+#include "module.hpp"
 #include "runtime.hpp"
 #include "version.hpp"
 #include "wasm-dissector.hpp"
@@ -23,7 +23,7 @@ int main(int argc, char const *argv[]) {
   }
 
   tiny::Loader loader = tiny::Loader();
-  tiny::Assembler assembler = tiny::Assembler();
+  tiny::WasmModule assembler = tiny::WasmModule();
 
   // Parse command line arguments
   // The last argument is always the filename

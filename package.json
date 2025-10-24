@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "build": "cmake --build build --parallel",
-    "test": "npm run build && ASAN_OPTIONS=detect_leaks=0 ctest --test-dir build --output-on-failure",
+    "test": "npm run build && ASAN_OPTIONS=detect_leaks=0 ctest --test-dir build --output-on-failure --gtest_shuffle",
     "linter": "find src -regex '.*\\.\\(cpp\\|hpp\\|c\\|h\\)' -not -path '**/kaitai/**' | xargs clang-format -style=file:.clang-format --Werror --dry-run",
     "kaitai": "kaitai-struct-compiler --target cpp_stl --outdir src/kaitai src/kaitai/webassembly.ksy"
   },

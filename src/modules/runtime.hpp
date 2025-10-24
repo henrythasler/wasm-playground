@@ -7,7 +7,6 @@
 #include <sys/mman.h>
 #include <vector>
 
-#include "colors.hpp"
 #include "helper.hpp"
 
 namespace tiny {
@@ -124,11 +123,4 @@ template <typename ReturnType, typename... Args> ReturnType execute_wasm_once(co
   auto func = reinterpret_cast<ReturnType (*)(Args...)>(exec_mem.get());
   return func(args...);
 }
-
-// class Runtime {
-// public:
-//   Runtime() = default;
-//   ~Runtime() = default;
-//   void execute(const std::vector<uint8_t> &machinecode);
-// };
 } // namespace tiny
