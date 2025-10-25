@@ -2,6 +2,11 @@
 
 namespace tiny {
 
+WasmModule::WasmModule(const std::vector<uint8_t> &bytecode) {
+  loadModule(bytecode);
+  compileModule();
+}
+
 WasmModule::~WasmModule() {
   if (wasm != nullptr) {
     delete wasm;
@@ -27,6 +32,15 @@ Derived *WasmModule::getSectionContent(const std::vector<std::unique_ptr<Base>> 
   return nullptr;
 }
 
+const WasmFunction *WasmModule::getWasmFunction(std::string name) {
+  for (auto function : wasmFunctions) {
+    if (name == function->getName()) {
+      return function;
+    }
+  }
+  return nullptr;
+}
+
 /**
  * Assembling steps for each entry (function) in the code-section
  * 1. allocate memory to hold all locals (64-bit) using the stack; init with 0x00
@@ -36,9 +50,7 @@ Derived *WasmModule::getSectionContent(const std::vector<std::unique_ptr<Base>> 
  * 5. create a memory region to hold all parameters; copy all of them from their registers to the memory region
  * 6. read the first instruction
  */
-std::vector<WasmFunction> WasmModule::compileModule(const std::vector<uint8_t> &bytecode) {
-  loadModule(bytecode);
-
+void WasmModule::compileModule() {
   asserte(wasm != nullptr, "WasmModule: WebAssembly module is null");
 
   auto code_section = getSectionContent<webassembly_t::code_section_t>(*(wasm->sections()), webassembly_t::SECTION_ID_CODE_SECTION);
@@ -48,26 +60,22 @@ std::vector<WasmFunction> WasmModule::compileModule(const std::vector<uint8_t> &
   asserte(code_section != nullptr, "WasmModule: Invalid Code Section");
   asserte(code_section->entries() != nullptr, "WasmModule: Code section is empty");
 
-  std::vector<WasmFunction> functions;
-
   for (size_t j = 0; j < code_section->entries()->size(); ++j) {
     const auto &code = code_section->entries()->at(j);
     const auto &func = function_section->typeidx()->at(j);
     const auto &funcType = type_section->functypes()->at(static_cast<size_t>(func->value()));
 
-    WasmFunction wasmFunction;
-    wasmFunction.compile(code->func(), funcType);
-    functions.push_back(wasmFunction);
+    auto wasmFunction = new WasmFunction();
+    wasmFunction->compile(code->func(), funcType);
+    wasmFunctions.push_back(wasmFunction);
   }
 
   auto export_section = getSectionContent<webassembly_t::export_section_t>(*(wasm->sections()), webassembly_t::SECTION_ID_EXPORT_SECTION);
   for (size_t j = 0; j < export_section->exports()->size(); ++j) {
     const auto &item = export_section->exports()->at(j);
 
-    functions.at(static_cast<size_t>(item->idx()->value())).setName(item->name()->value());
+    wasmFunctions.at(static_cast<size_t>(item->idx()->value()))->setName(item->name()->value());
   }
-
-  return functions;
 }
 
 } // namespace tiny

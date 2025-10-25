@@ -23,7 +23,7 @@ int main(int argc, char const *argv[]) {
   }
 
   tiny::Loader loader = tiny::Loader();
-  tiny::WasmModule assembler = tiny::WasmModule();
+  // tiny::WasmModule assembler = tiny::WasmModule();
 
   // Parse command line arguments
   // The last argument is always the filename
@@ -63,26 +63,25 @@ int main(int argc, char const *argv[]) {
     return EXIT_FAILURE;
   }
 
-  // Assemble bytecode to machine code
-  std::vector<tiny::WasmFunction> wasmModule;
+  tiny::WasmModule *wasmModule = nullptr;
 
   /**
    * Compile the module
    */
   try {
-    wasmModule = assembler.compileModule(bytecode);
+    wasmModule = new tiny::WasmModule(bytecode);
   } catch (const std::exception &e) {
     std::cerr << RED << "Error: Assembly failed: " << e.what() << RESET << std::endl;
     return EXIT_FAILURE;
   }
-  std::cout << "Functions: " << wasmModule.size() << std::endl;
+  std::cout << "Functions: " << wasmModule->getNumFunctions() << std::endl;
 
   /**
    * print some infos about each function before executing it
    */
-  for (tiny::WasmFunction function : wasmModule) {
-    std::cout << "  " << function.getResultString() << " " << function.getName() << "(" << function.getParameterString() << ")" << std::endl;
-    auto machinecode = function.getBytecode();
+  for (auto function : wasmModule->getWasmFunctions()) {
+    std::cout << "  " << function->getResultString() << " " << function->getName() << "(" << function->getParameterString() << ")" << std::endl;
+    auto machinecode = function->getBytecode();
     if (machinecode.size() == 0) {
       std::cout << YELLOW << "WARNING: Machinecode is empty!" << RESET << std::endl;
     } else {
