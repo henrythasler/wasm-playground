@@ -20,6 +20,9 @@ std::string WasmFunction::joinValTypes(const std::vector<webassembly_t::val_type
   }
 
   for (auto valType : valTypes) {
+    if (idx > 0) {
+      resultString += ", ";
+    }
     switch (valType) {
     case webassembly_t::VAL_TYPES_I32:
       resultString += "i32";
@@ -35,9 +38,6 @@ std::string WasmFunction::joinValTypes(const std::vector<webassembly_t::val_type
       break;
     default:
       break;
-    }
-    if (idx > 0) {
-      resultString += ", ";
     }
     idx++;
   }
@@ -81,10 +81,10 @@ size_t WasmFunction::compile(const webassembly_t::func_t *func, const std::uniqu
   for (auto &local : *func->locals()) {
     switch (local->valtype()) {
     case webassembly_t::VAL_TYPES_I32:
-      initialStackSize += 4;
+      initialStackSize += uint16_t(4 * local->num_valtype()->value());
       break;
     case webassembly_t::VAL_TYPES_I64:
-      initialStackSize += 8;
+      initialStackSize += uint16_t(8 * local->num_valtype()->value());
       break;
     default:
       asserte(false, "WasmFunction::compile(): unsupported parameter type (val_types_t)");
@@ -129,14 +129,18 @@ size_t WasmFunction::compile(const webassembly_t::func_t *func, const std::uniqu
     // std::cout << "local stackPosition " << stackPosition << " ";
     switch (local->valtype()) {
     case webassembly_t::VAL_TYPES_I32:
-      serializeUint32LE(arm64::encode_str_immediate(arm64::reg_t::WZR, arm64::SP, stackPosition, arm64::size4_t::SIZE_32BIT));
-      locals.append(stackPosition);
-      stackPosition -= AARCH64_INT32_SIZE;
+      for (auto i = 0; i < local->num_valtype()->value(); i++) {
+        serializeUint32LE(arm64::encode_str_immediate(arm64::reg_t::WZR, arm64::SP, stackPosition, arm64::size4_t::SIZE_32BIT));
+        locals.append(stackPosition);
+        stackPosition -= AARCH64_INT32_SIZE;
+      }
       break;
     case webassembly_t::VAL_TYPES_I64:
-      serializeUint32LE(arm64::encode_str_immediate(arm64::reg_t::WZR, arm64::SP, stackPosition, arm64::size4_t::SIZE_64BIT));
-      locals.append(stackPosition);
-      stackPosition -= AARCH64_INT64_SIZE;
+      for (auto i = 0; i < local->num_valtype()->value(); i++) {
+        serializeUint32LE(arm64::encode_str_immediate(arm64::reg_t::WZR, arm64::SP, stackPosition, arm64::size4_t::SIZE_64BIT));
+        locals.append(stackPosition);
+        stackPosition -= AARCH64_INT64_SIZE;
+      }
       break;
     default:
       asserte(false, "WasmFunction::compile(): unsupported parameter type (val_types_t)");
