@@ -86,33 +86,20 @@ typedef enum {
   LR = 30  // Link Register (X30)
 } reg_t;
 
-// STR instruction encoding for AArch64
-// Supports multiple addressing modes
+enum class reg_size_t { SIZE_8BIT, SIZE_16BIT, SIZE_32BIT, SIZE_64BIT };
 
-enum class str_mode_t {
-  STR_UNSIGNED_OFFSET, // STR Xt, [Xn, #imm]
-  STR_REGISTER_OFFSET, // STR Xt, [Xn, Xm{, LSL #imm}]
-  STR_PRE_INDEX,       // STR Xt, [Xn, #imm]!
-  STR_POST_INDEX       // STR Xt, [Xn], #imm
-};
+/** memory operations */
+uint32_t encode_ldr_unsigned_offset(reg_t rt, reg_t rn, uint16_t imm12, reg_size_t size);
+uint32_t encode_str_unsigned_offset(reg_t rt, reg_t rn, uint16_t imm12, reg_size_t size);
 
-enum class size4_t {
-  SIZE_8BIT,  // STRB
-  SIZE_16BIT, // STRH
-  SIZE_32BIT, // STR (W register)
-  SIZE_64BIT  // STR (X register)
-};
+/** arithmetic operations*/
+uint32_t encode_sub_immediate(reg_t rd, reg_t rn, uint16_t imm12, bool shift12, reg_size_t size);
+uint32_t encode_add_immediate(reg_t rd, reg_t rn, uint16_t imm12, bool shift12, reg_size_t size);
 
-enum class size2_t {
-  SIZE_32BIT, // W register
-  SIZE_64BIT  // X register
-};
+/** register handling */
+uint32_t encode_mov_sp(reg_t rd, reg_t rn, reg_size_t size);
 
-uint32_t encode_ldr_offset(reg_t rt, reg_t rn, uint16_t imm12, size2_t size);
-uint32_t encode_str_immediate(reg_t rt, reg_t rn, uint16_t imm12, size4_t size);
-uint32_t encode_sub_immediate(reg_t rd, reg_t rn, uint16_t imm12, bool shift12, size2_t size);
-uint32_t encode_add_immediate(reg_t rd, reg_t rn, uint16_t imm12, bool shift12, size2_t size);
-uint32_t encode_mov_sp(reg_t rd, reg_t rn, size2_t size);
+/** program flow */
 uint32_t encode_ret(reg_t rn = X30);
 
 } // namespace arm64

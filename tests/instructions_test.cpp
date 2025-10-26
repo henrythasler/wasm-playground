@@ -13,31 +13,45 @@
 
 using namespace arm64;
 
-// Demonstrate some basic assertions.
+TEST(instructions, ldr) {
+  // ldrb w8, [sp, 1]
+  EXPECT_EQ_HEX(encode_ldr_unsigned_offset(W8, SP, 1, reg_size_t::SIZE_8BIT), 0x394007E8);
+  // ldrh w9, [sp, 6]
+  EXPECT_EQ_HEX(encode_ldr_unsigned_offset(W9, SP, 6, reg_size_t::SIZE_16BIT), 0x79400FE9);
+  // ldr w0, [sp, 24]
+  EXPECT_EQ_HEX(encode_ldr_unsigned_offset(W0, SP, 24, reg_size_t::SIZE_32BIT), 0xB9401BE0);
+  // ldr x1, [sp, 16]
+  EXPECT_EQ_HEX(encode_ldr_unsigned_offset(X1, SP, 16, reg_size_t::SIZE_64BIT), 0xF9400BE1);
+}
+
 TEST(instructions, str) {
+  // strb w8, [sp, 1]
+  EXPECT_EQ_HEX(encode_str_unsigned_offset(W8, SP, 1, reg_size_t::SIZE_8BIT), 0x390007E8);
+  // strh w9, [sp, 6]
+  EXPECT_EQ_HEX(encode_str_unsigned_offset(W9, SP, 6, reg_size_t::SIZE_16BIT), 0x79000FE9);
   // str w0, [sp, 24]
-  EXPECT_EQ_HEX(encode_str_immediate(W0, SP, 24, size4_t::SIZE_32BIT), 0xB9001BE0);
-  // str x0, [sp, 16]
-  EXPECT_EQ_HEX(encode_str_immediate(X1, SP, 16, size4_t::SIZE_64BIT), 0xF9000BE1);
+  EXPECT_EQ_HEX(encode_str_unsigned_offset(W0, SP, 24, reg_size_t::SIZE_32BIT), 0xB9001BE0);
+  // str x1, [sp, 16]
+  EXPECT_EQ_HEX(encode_str_unsigned_offset(X1, SP, 16, reg_size_t::SIZE_64BIT), 0xF9000BE1);
 }
 
 TEST(instruction, sub) {
   // sub sp, sp, #0x40
-  EXPECT_EQ_HEX(encode_sub_immediate(SP, SP, 0x40, false, size2_t::SIZE_64BIT), 0xD10103FF);
+  EXPECT_EQ_HEX(encode_sub_immediate(SP, SP, 0x40, false, reg_size_t::SIZE_64BIT), 0xD10103FF);
   // sub w0, w0, #1
-  EXPECT_EQ_HEX(encode_sub_immediate(W0, W0, 0x01, false, size2_t::SIZE_32BIT), 0x51000400);
+  EXPECT_EQ_HEX(encode_sub_immediate(W0, W0, 0x01, false, reg_size_t::SIZE_32BIT), 0x51000400);
 }
 
 TEST(instruction, add) {
   // sub sp, sp, #0x40
-  EXPECT_EQ_HEX(encode_add_immediate(SP, SP, 0x40, false, size2_t::SIZE_64BIT), 0x910103FF);
+  EXPECT_EQ_HEX(encode_add_immediate(SP, SP, 0x40, false, reg_size_t::SIZE_64BIT), 0x910103FF);
   // sub w0, w0, #1
-  EXPECT_EQ_HEX(encode_add_immediate(W1, W0, 0x0a, false, size2_t::SIZE_32BIT), 0x11002801);
+  EXPECT_EQ_HEX(encode_add_immediate(W1, W0, 0x0a, false, reg_size_t::SIZE_32BIT), 0x11002801);
 }
 
 TEST(instruction, mov) {
   // mov fp, sp
-  EXPECT_EQ_HEX(encode_mov_sp(FP, SP, size2_t::SIZE_64BIT), 0x910003FD);
+  EXPECT_EQ_HEX(encode_mov_sp(FP, SP, reg_size_t::SIZE_64BIT), 0x910003FD);
 }
 
 TEST(instruction, ret) {

@@ -97,11 +97,11 @@ size_t WasmFunction::compile(const webassembly_t::func_t *func, const std::uniqu
   // Prologue: create a new stack frame (stp fp, lr, [sp, #-16]!)
   serializeUint32LE(0xA9BF7BFD);
   // mov fp, sp
-  serializeUint32LE(arm64::encode_mov_sp(arm64::FP, arm64::SP, arm64::size2_t::SIZE_64BIT));
+  serializeUint32LE(arm64::encode_mov_sp(arm64::FP, arm64::SP, arm64::reg_size_t::SIZE_64BIT));
 
   // Allocate stack
   initialStackSize = uint16_t(((initialStackSize + (AARCH64_STACK_ALIGNMENT - 1)) / AARCH64_STACK_ALIGNMENT) * AARCH64_STACK_ALIGNMENT);
-  serializeUint32LE(arm64::encode_sub_immediate(arm64::SP, arm64::SP, initialStackSize, false, arm64::size2_t::SIZE_64BIT));
+  serializeUint32LE(arm64::encode_sub_immediate(arm64::SP, arm64::SP, initialStackSize, false, arm64::reg_size_t::SIZE_64BIT));
 
   // save parameters to stack
   uint16_t stackPosition = initialStackSize;
@@ -111,12 +111,12 @@ size_t WasmFunction::compile(const webassembly_t::func_t *func, const std::uniqu
     asserte(paramRegister < 8, "too many parameters to fit into registers; use stack");
     switch (parameter) {
     case webassembly_t::VAL_TYPES_I32:
-      serializeUint32LE(arm64::encode_str_immediate(arm64::reg_t(paramRegister++), arm64::SP, stackPosition, arm64::size4_t::SIZE_32BIT));
+      serializeUint32LE(arm64::encode_str_unsigned_offset(arm64::reg_t(paramRegister++), arm64::SP, stackPosition, arm64::reg_size_t::SIZE_32BIT));
       locals.append(stackPosition);
       stackPosition -= AARCH64_INT32_SIZE;
       break;
     case webassembly_t::VAL_TYPES_I64:
-      serializeUint32LE(arm64::encode_str_immediate(arm64::reg_t(paramRegister++), arm64::SP, stackPosition, arm64::size4_t::SIZE_64BIT));
+      serializeUint32LE(arm64::encode_str_unsigned_offset(arm64::reg_t(paramRegister++), arm64::SP, stackPosition, arm64::reg_size_t::SIZE_64BIT));
       locals.append(stackPosition);
       stackPosition -= AARCH64_INT64_SIZE;
       break;
@@ -130,14 +130,14 @@ size_t WasmFunction::compile(const webassembly_t::func_t *func, const std::uniqu
     switch (local->valtype()) {
     case webassembly_t::VAL_TYPES_I32:
       for (auto i = 0; i < local->num_valtype()->value(); i++) {
-        serializeUint32LE(arm64::encode_str_immediate(arm64::reg_t::WZR, arm64::SP, stackPosition, arm64::size4_t::SIZE_32BIT));
+        serializeUint32LE(arm64::encode_str_unsigned_offset(arm64::reg_t::WZR, arm64::SP, stackPosition, arm64::reg_size_t::SIZE_32BIT));
         locals.append(stackPosition);
         stackPosition -= AARCH64_INT32_SIZE;
       }
       break;
     case webassembly_t::VAL_TYPES_I64:
       for (auto i = 0; i < local->num_valtype()->value(); i++) {
-        serializeUint32LE(arm64::encode_str_immediate(arm64::reg_t::WZR, arm64::SP, stackPosition, arm64::size4_t::SIZE_64BIT));
+        serializeUint32LE(arm64::encode_str_unsigned_offset(arm64::reg_t::WZR, arm64::SP, stackPosition, arm64::reg_size_t::SIZE_64BIT));
         locals.append(stackPosition);
         stackPosition -= AARCH64_INT64_SIZE;
       }
@@ -157,7 +157,7 @@ size_t WasmFunction::compile(const webassembly_t::func_t *func, const std::uniqu
       case 0x20:
         stream.get(byte);
         // std::cout << "address: " << locals.get(byte) << std::endl;
-        serializeUint32LE(arm64::encode_ldr_offset(arm64::reg_t::W0, arm64::SP, uint16_t(locals.get(byte)), arm64::size2_t::SIZE_32BIT));
+        serializeUint32LE(arm64::encode_ldr_unsigned_offset(arm64::reg_t::W0, arm64::SP, uint16_t(locals.get(byte)), arm64::reg_size_t::SIZE_32BIT));
         break;
       default:
         break;
@@ -166,7 +166,7 @@ size_t WasmFunction::compile(const webassembly_t::func_t *func, const std::uniqu
   }
 
   // deallocate stack memory (add sp, sp, #initialStackSize)
-  serializeUint32LE(arm64::encode_add_immediate(arm64::SP, arm64::SP, initialStackSize, false, arm64::size2_t::SIZE_64BIT));
+  serializeUint32LE(arm64::encode_add_immediate(arm64::SP, arm64::SP, initialStackSize, false, arm64::reg_size_t::SIZE_64BIT));
 
   // Epilogue: destroy stack frame (ldp fp, lr, [sp], #16)
   serializeUint32LE(0xA8C17BFD);

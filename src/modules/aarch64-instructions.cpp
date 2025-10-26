@@ -2,20 +2,34 @@
 
 namespace arm64 {
 
-uint32_t encode_ldr_offset(reg_t rt, reg_t rn, uint16_t imm12, size2_t size) {
+/**
+ * This instruction loads a byte, halfword, word or doubleword from memory and writes it to a register using the unsigned offset addressing mode.
+ * LDR rt, [rn], #imm12
+ * LDRH rt, [rn], #imm12
+ * LDRB rt, [rn], #imm12
+ */
+uint32_t encode_ldr_unsigned_offset(reg_t rt, reg_t rn, uint16_t imm12, reg_size_t size) {
   uint32_t instr = 0;
 
   switch (size) {
-  case size2_t::SIZE_32BIT:
+  case reg_size_t::SIZE_8BIT:
+    instr = 0x39400000;
+    imm12 = imm12 & 0xFFF; // 12-bit unsigned offset
+    break;
+  case reg_size_t::SIZE_16BIT:
+    instr = 0x79400000;
+    imm12 = (imm12 >> 1) & 0xFFF; // Scaled by 2
+    break;
+  case reg_size_t::SIZE_32BIT:
     instr = 0xB9400000;
     imm12 = (imm12 >> 2) & 0xFFF; // Scaled by 4
     break;
-  case size2_t::SIZE_64BIT:
+  case reg_size_t::SIZE_64BIT:
     instr = 0xF9400000;
     imm12 = (imm12 >> 3) & 0xFFF; // Scaled by 8
     break;
   default:
-    asserte(false, "encode_ldr_offset(): invalid size value");
+    asserte(false, "encode_ldr_unsigned_offset(): invalid size value");
     break;
   }
 
@@ -26,30 +40,35 @@ uint32_t encode_ldr_offset(reg_t rt, reg_t rn, uint16_t imm12, size2_t size) {
   return instr;
 }
 
-// Encode STR with unsigned offset: STR Xt, [Xn, #imm]
-uint32_t encode_str_immediate(reg_t rt, reg_t rn, uint16_t imm12, size4_t size) {
+/**
+ * This instruction stores a byte, halfword, word or a doubleword from a register to memory using the unsigned offset addressing mode.
+ * STRH rt, [rn], #imm12
+ * STRB rt, [rn], #imm12
+ * STR rt, [rn], #imm12
+ */
+uint32_t encode_str_unsigned_offset(reg_t rt, reg_t rn, uint16_t imm12, reg_size_t size) {
   uint32_t instr = 0;
 
   // Base opcode for STR unsigned offset
   switch (size) {
-  case size4_t::SIZE_8BIT: // STRB
+  case reg_size_t::SIZE_8BIT: // STRB
     instr = 0x39000000;
     imm12 = imm12 & 0xFFF; // 12-bit unsigned offset
     break;
-  case size4_t::SIZE_16BIT: // STRH
+  case reg_size_t::SIZE_16BIT: // STRH
     instr = 0x79000000;
     imm12 = (imm12 >> 1) & 0xFFF; // Scaled by 2
     break;
-  case size4_t::SIZE_32BIT: // STR W
+  case reg_size_t::SIZE_32BIT: // STR W
     instr = 0xB9000000;
     imm12 = (imm12 >> 2) & 0xFFF; // Scaled by 4
     break;
-  case size4_t::SIZE_64BIT: // STR X
+  case reg_size_t::SIZE_64BIT: // STR X
     instr = 0xF9000000;
     imm12 = (imm12 >> 3) & 0xFFF; // Scaled by 8
     break;
   default:
-    asserte(false, "encode_str_immediate(): invalid size value");
+    asserte(false, "encode_str_unsigned_offset(): invalid size value");
     break;
   }
   instr |= (imm12 & 0xFFF) << 10; // imm12 field
@@ -59,14 +78,18 @@ uint32_t encode_str_immediate(reg_t rt, reg_t rn, uint16_t imm12, size4_t size) 
   return instr;
 }
 
-uint32_t encode_sub_immediate(reg_t rd, reg_t rn, uint16_t imm12, bool shift12, size2_t size) {
+/**
+ * This instruction subtracts an optionally-shifted immediate value from a register value, and writes the result to the destination register.
+ * SUB rd, rn, #imm12{, shift12}
+ */
+uint32_t encode_sub_immediate(reg_t rd, reg_t rn, uint16_t imm12, bool shift12, reg_size_t size) {
   uint32_t instr = 0;
 
   switch (size) {
-  case size2_t::SIZE_32BIT:
+  case reg_size_t::SIZE_32BIT:
     instr = 0x51000000;
     break;
-  case size2_t::SIZE_64BIT:
+  case reg_size_t::SIZE_64BIT:
     instr = 0xD1000000;
     break;
   default:
@@ -82,14 +105,18 @@ uint32_t encode_sub_immediate(reg_t rd, reg_t rn, uint16_t imm12, bool shift12, 
   return instr;
 }
 
-uint32_t encode_add_immediate(reg_t rd, reg_t rn, uint16_t imm12, bool shift12, size2_t size) {
+/**
+ * This instruction adds a register value and an optionally-shifted immediate value, and writes the result to the destination register.
+ * ADD rd, rn, #imm12{, shift12}
+ */
+uint32_t encode_add_immediate(reg_t rd, reg_t rn, uint16_t imm12, bool shift12, reg_size_t size) {
   uint32_t instr = 0;
 
   switch (size) {
-  case size2_t::SIZE_32BIT:
+  case reg_size_t::SIZE_32BIT:
     instr = 0x11000000;
     break;
-  case size2_t::SIZE_64BIT:
+  case reg_size_t::SIZE_64BIT:
     instr = 0x91000000;
     break;
   default:
@@ -105,10 +132,18 @@ uint32_t encode_add_immediate(reg_t rd, reg_t rn, uint16_t imm12, bool shift12, 
   return instr;
 }
 
-uint32_t encode_mov_sp(reg_t rd, reg_t rn, size2_t size) {
+/**
+ * This instruction copies the value of a register to or from the stack pointer.
+ * sh == '0' && imm12 == '000000000000' && (Rd == '11111' || Rn == '11111')
+ */
+uint32_t encode_mov_sp(reg_t rd, reg_t rn, reg_size_t size) {
   return encode_add_immediate(rd, rn, 0, false, size);
 }
 
+/**
+ * This instruction branches unconditionally to an address in a register. This instruction provides a hint that this is a subroutine return.
+ * rn defaults to X30
+ */
 uint32_t encode_ret(reg_t rn) {
   return 0xD65F0000 | ((rn & 0x1F) << 5);
 }
