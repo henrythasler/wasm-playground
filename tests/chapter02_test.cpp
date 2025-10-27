@@ -82,4 +82,12 @@ TEST(local1, function4) {
   auto wasmFunction = tiny::make_wasm_function<void, tiny::wasm_i64_t, tiny::wasm_i32_t, tiny::wasm_i32_t>(machinecode);
   wasmFunction(0, 0, 0);
 }
+
+TEST(local2, function0) {
+  auto wasmModule = testLoadModule("local.2.wasm");
+  auto machinecode = wasmModule.getWasmFunction("type-local-i32")->getBytecode();
+  auto wasmFunction = tiny::make_wasm_function<tiny::wasm_i32_t>(machinecode);
+  auto res = wasmFunction();
+  EXPECT_EQ(res, 1);
+}
 } // namespace

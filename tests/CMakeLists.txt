@@ -23,6 +23,7 @@ add_executable(all_tests
   loader_test.cpp
   instructions_test.cpp
   chapter02_test.cpp
+  leb128_test.cpp
 )
 
 # GoogleTest requires at least C++17

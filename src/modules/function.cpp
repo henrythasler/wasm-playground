@@ -1,4 +1,5 @@
 #include "function.hpp"
+#include "leb128.hpp"
 
 namespace tiny {
 /**
@@ -50,6 +51,8 @@ size_t WasmFunction::compile(const webassembly_t::func_t *func, const std::uniqu
    */
   uint16_t initialStackSize = 0;
   Locals locals;
+  RegisterPool registerPool;
+  std::vector<arm64::reg_t> registerStack;
 
   /**
    * calculate the
@@ -155,10 +158,54 @@ size_t WasmFunction::compile(const webassembly_t::func_t *func, const std::uniqu
     while (stream.get(byte)) {
       switch (byte) {
       case 0x20:
-        stream.get(byte);
-        // std::cout << "address: " << locals.get(byte) << std::endl;
-        serializeUint32LE(arm64::encode_ldr_unsigned_offset(arm64::reg_t::W0, arm64::SP, uint16_t(locals.get(byte)), arm64::reg_size_t::SIZE_32BIT));
-        break;
+        /**
+         * local.get localidx:u32
+         * allocates one register
+         */
+        {
+          auto reg = registerPool.allocateRegister();
+          registerStack.emplace_back(reg);
+          auto idx = uint32_t(LEB128Decoder::decodeUnsigned(stream));
+          serializeUint32LE(arm64::encode_ldr_unsigned_offset(reg, arm64::SP, uint16_t(locals.get(idx)), arm64::reg_size_t::SIZE_32BIT));
+          break;
+        }
+      case 0x21:
+        /**
+         * local.set localidx:u32
+         */
+        { 
+          auto idx = uint32_t(LEB128Decoder::decodeUnsigned(stream));
+          auto reg = registerStack.back();
+          // FIXME: determine reg_size_t
+          serializeUint32LE(arm64::encode_str_unsigned_offset(reg, arm64::SP, uint16_t(locals.get(idx)), arm64::reg_size_t::SIZE_32BIT));
+          registerPool.freeRegister(reg);
+          registerStack.pop_back();
+          break; 
+        }
+      case 0x41:
+        /**
+         * i32.const n:i32
+         */
+        {
+          auto reg = registerPool.allocateRegister();
+          registerStack.emplace_back(reg);
+          auto n = uint32_t(LEB128Decoder::decodeSigned(stream));
+          // FIXME: combine multiple instruction to actually support 32 bit immediate values
+          serializeUint32LE(arm64::encode_mov_immediate(reg, uint16_t(n), 0, arm64::reg_size_t::SIZE_32BIT));
+          break;
+        }
+      case 0x42:
+        /**
+         * i64.const n:i64
+         */
+        {
+          auto reg = registerPool.allocateRegister();
+          registerStack.emplace_back(reg);
+          auto n = uint32_t(LEB128Decoder::decodeSigned(stream));
+          // FIXME: combine multiple instruction to actually support 64 bit immediate values
+          serializeUint32LE(arm64::encode_mov_immediate(reg, uint16_t(n), 0, arm64::reg_size_t::SIZE_64BIT));
+          break;
+        }
       default:
         break;
       }

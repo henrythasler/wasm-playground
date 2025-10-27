@@ -6,6 +6,7 @@ add_library(tiny_modules STATIC
     module.cpp
     function.cpp
     runtime.cpp
+    leb128.cpp
     wasm-dissector.cpp
     aarch64-instructions.cpp
 )

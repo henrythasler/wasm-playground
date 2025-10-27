@@ -105,7 +105,7 @@ public:
 
 /**
  * Convenience factory function with automatic type deduction
- *
+ * calls WasmExecutable<ReturnType, Args...>
  * Usage:
  *   auto add = make_wasm_function<wasm_i32, wasm_i32, wasm_i32>(code);
  *   wasm_i32 result = add(5, 7);

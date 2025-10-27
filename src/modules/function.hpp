@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <iomanip>
 #include <iostream>
+#include <map>
 #include <vector>
 
 #include "aarch64-instructions.hpp"
@@ -10,6 +11,29 @@
 #include "webassembly.h"
 
 namespace tiny {
+
+class RegisterPool {
+private:
+  std::map<arm64::reg_t, bool> registers = {{arm64::X9, true},  {arm64::X10, true}, {arm64::X11, true}, {arm64::X12, true},
+                                            {arm64::X13, true}, {arm64::X14, true}, {arm64::X15, true}};
+
+public:
+  RegisterPool() = default;
+  ~RegisterPool() = default;
+
+  arm64::reg_t allocateRegister(void) {
+    for (auto reg : registers) {
+      if (reg.second) {
+        registers[reg.first] = false;
+        return reg.first;
+      }
+    }
+    asserte(false, "RegisterPool::allocateRegister(): no available register");
+  };
+  void freeRegister(arm64::reg_t reg) {
+    registers[reg] = true;
+  }
+};
 
 class Locals {
 private:
