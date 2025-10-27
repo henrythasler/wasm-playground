@@ -37,7 +37,8 @@ public:
 
 class Locals {
 private:
-  std::vector<uint32_t> locals_;
+  std::vector<uint32_t> addresses;
+  std::vector<webassembly_t::val_types_t> valTypes;
   uint32_t offset_ = 0;
 
 public:
@@ -45,15 +46,21 @@ public:
   ~Locals() = default;
 
   uint32_t get(uint32_t id) {
-    return (locals_.at(id) + offset_);
+    return (addresses.at(id) + offset_);
   }
 
-  void set(uint32_t id, uint32_t address) {
-    locals_[id] = address;
+  uint32_t getType(uint32_t id) {
+    return (valTypes.at(id));
   }
 
-  void append(uint32_t address) {
-    locals_.emplace_back(address);
+  void set(uint32_t id, uint32_t address, webassembly_t::val_types_t valType) {
+    addresses[id] = address;
+    valTypes[id] = valType;
+  }
+
+  void append(uint32_t address, webassembly_t::val_types_t valType) {
+    addresses.emplace_back(address);
+    valTypes.emplace_back(valType);
   }
 
   void setOffset(uint32_t offset) {

@@ -115,12 +115,12 @@ size_t WasmFunction::compile(const webassembly_t::func_t *func, const std::uniqu
     switch (parameter) {
     case webassembly_t::VAL_TYPES_I32:
       serializeUint32LE(arm64::encode_str_unsigned_offset(arm64::reg_t(paramRegister++), arm64::SP, stackPosition, arm64::reg_size_t::SIZE_32BIT));
-      locals.append(stackPosition);
+      locals.append(stackPosition, parameter);
       stackPosition -= AARCH64_INT32_SIZE;
       break;
     case webassembly_t::VAL_TYPES_I64:
       serializeUint32LE(arm64::encode_str_unsigned_offset(arm64::reg_t(paramRegister++), arm64::SP, stackPosition, arm64::reg_size_t::SIZE_64BIT));
-      locals.append(stackPosition);
+      locals.append(stackPosition, parameter);
       stackPosition -= AARCH64_INT64_SIZE;
       break;
     default:
@@ -134,14 +134,14 @@ size_t WasmFunction::compile(const webassembly_t::func_t *func, const std::uniqu
     case webassembly_t::VAL_TYPES_I32:
       for (auto i = 0; i < local->num_valtype()->value(); i++) {
         serializeUint32LE(arm64::encode_str_unsigned_offset(arm64::reg_t::WZR, arm64::SP, stackPosition, arm64::reg_size_t::SIZE_32BIT));
-        locals.append(stackPosition);
+        locals.append(stackPosition, local->valtype());
         stackPosition -= AARCH64_INT32_SIZE;
       }
       break;
     case webassembly_t::VAL_TYPES_I64:
       for (auto i = 0; i < local->num_valtype()->value(); i++) {
         serializeUint32LE(arm64::encode_str_unsigned_offset(arm64::reg_t::WZR, arm64::SP, stackPosition, arm64::reg_size_t::SIZE_64BIT));
-        locals.append(stackPosition);
+        locals.append(stackPosition, local->valtype());
         stackPosition -= AARCH64_INT64_SIZE;
       }
       break;
@@ -166,32 +166,61 @@ size_t WasmFunction::compile(const webassembly_t::func_t *func, const std::uniqu
           auto reg = registerPool.allocateRegister();
           registerStack.emplace_back(reg);
           auto idx = uint32_t(LEB128Decoder::decodeUnsigned(stream));
-          serializeUint32LE(arm64::encode_ldr_unsigned_offset(reg, arm64::SP, uint16_t(locals.get(idx)), arm64::reg_size_t::SIZE_32BIT));
+
+          switch (locals.getType(idx)) {
+          case webassembly_t::VAL_TYPES_I32: {
+            serializeUint32LE(arm64::encode_ldr_unsigned_offset(reg, arm64::SP, uint16_t(locals.get(idx)), arm64::reg_size_t::SIZE_32BIT));
+            break;
+          }
+          case webassembly_t::VAL_TYPES_I64: {
+            serializeUint32LE(arm64::encode_ldr_unsigned_offset(reg, arm64::SP, uint16_t(locals.get(idx)), arm64::reg_size_t::SIZE_64BIT));
+            break;
+          }
+          default:
+            break;
+          }
           break;
         }
       case 0x21:
         /**
          * local.set localidx:u32
          */
-        { 
-          auto idx = uint32_t(LEB128Decoder::decodeUnsigned(stream));
+        {
           auto reg = registerStack.back();
-          // FIXME: determine reg_size_t
-          serializeUint32LE(arm64::encode_str_unsigned_offset(reg, arm64::SP, uint16_t(locals.get(idx)), arm64::reg_size_t::SIZE_32BIT));
+          auto idx = uint32_t(LEB128Decoder::decodeUnsigned(stream));
+
+          switch (locals.getType(idx)) {
+          case webassembly_t::VAL_TYPES_I32: {
+            serializeUint32LE(arm64::encode_str_unsigned_offset(reg, arm64::SP, uint16_t(locals.get(idx)), arm64::reg_size_t::SIZE_32BIT));
+            break;
+          }
+          case webassembly_t::VAL_TYPES_I64: {
+            serializeUint32LE(arm64::encode_str_unsigned_offset(reg, arm64::SP, uint16_t(locals.get(idx)), arm64::reg_size_t::SIZE_64BIT));
+            break;
+          }
+          default:
+            break;
+          }
+
           registerPool.freeRegister(reg);
           registerStack.pop_back();
-          break; 
+          break;
         }
       case 0x41:
         /**
          * i32.const n:i32
          */
         {
+          // FIXME: unify with i64.const and move to separate function
           auto reg = registerPool.allocateRegister();
           registerStack.emplace_back(reg);
-          auto n = uint32_t(LEB128Decoder::decodeSigned(stream));
-          // FIXME: combine multiple instruction to actually support 32 bit immediate values
-          serializeUint32LE(arm64::encode_mov_immediate(reg, uint16_t(n), 0, arm64::reg_size_t::SIZE_32BIT));
+          auto constValue = LEB128Decoder::decodeSigned(stream); // n
+
+          // int32 has at most 2 16-bit chunks
+          serializeUint32LE(arm64::encode_mov_immediate(reg, uint16_t(constValue & 0xFFFF), 0, arm64::reg_size_t::SIZE_32BIT));
+          if ((constValue >> 16) & 0xFFFF) {
+            serializeUint32LE(arm64::encode_movk(reg, uint16_t((constValue >> 16) & 0xFFFF), 16, arm64::reg_size_t::SIZE_32BIT));
+          }
           break;
         }
       case 0x42:
@@ -201,9 +230,17 @@ size_t WasmFunction::compile(const webassembly_t::func_t *func, const std::uniqu
         {
           auto reg = registerPool.allocateRegister();
           registerStack.emplace_back(reg);
-          auto n = uint32_t(LEB128Decoder::decodeSigned(stream));
-          // FIXME: combine multiple instruction to actually support 64 bit immediate values
-          serializeUint32LE(arm64::encode_mov_immediate(reg, uint16_t(n), 0, arm64::reg_size_t::SIZE_64BIT));
+          auto constValue = LEB128Decoder::decodeSigned(stream); // n
+
+          // int64 has at most 4 16-bit chunks
+          for (uint8_t i = 0; i < 4; i++) {
+            uint16_t chunk = uint16_t((constValue >> (i << 4)) & 0xFFFF);
+            if (i == 0) {
+              serializeUint32LE(arm64::encode_mov_immediate(reg, chunk, 0, arm64::reg_size_t::SIZE_64BIT));
+            } else if (chunk != 0) {
+              serializeUint32LE(arm64::encode_movk(reg, chunk, i << 4, arm64::reg_size_t::SIZE_64BIT));
+            }
+          }
           break;
         }
       default:
@@ -211,6 +248,8 @@ size_t WasmFunction::compile(const webassembly_t::func_t *func, const std::uniqu
       }
     }
   }
+
+  // FIXME: move topmost stack element to X0 if there is a return value
 
   // deallocate stack memory (add sp, sp, #initialStackSize)
   serializeUint32LE(arm64::encode_add_immediate(arm64::SP, arm64::SP, initialStackSize, false, arm64::reg_size_t::SIZE_64BIT));

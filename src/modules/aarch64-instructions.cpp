@@ -143,7 +143,7 @@ uint32_t encode_mov_sp(reg_t rd, reg_t rn, reg_size_t size) {
 // MOV (wide immediate): MOV Xd, #imm
 // This is an alias for MOVZ (move with zero)
 
-uint32_t encode_mov_immediate(reg_t rd, uint16_t imm, uint8_t shift, reg_size_t size) {
+uint32_t encode_mov_immediate(reg_t rd, uint16_t imm16, uint8_t shift, reg_size_t size) {
   uint32_t instr = 0;
 
   switch (size) {
@@ -159,17 +159,41 @@ uint32_t encode_mov_immediate(reg_t rd, uint16_t imm, uint8_t shift, reg_size_t 
   }
 
   // hw = shift / 16 (which 16-bit position)
-  uint8_t hw = shift / 16;
+  uint8_t hw = shift >> 4;
 
-  instr |= (hw & 0x3) << 21;    // hw field (0-3 for 64-bit, 0-1 for 32-bit)
-  instr |= (imm & 0xFFFF) << 5; // imm16 field
-  instr |= (rd & 0x1F);         // Rd (destination register)
+  instr |= (hw & 0x3) << 21;      // hw field (0-3 for 64-bit, 0-1 for 32-bit)
+  instr |= (imm16 & 0xFFFF) << 5; // imm16 field
+  instr |= (rd & 0x1F);           // Rd (destination register)
 
   return instr;
 }
 
-uint32_t encode_movz(reg_t rd, uint16_t imm, uint8_t shift, reg_size_t size) {
-  return encode_mov_immediate(rd, imm, shift, size);
+uint32_t encode_movz(reg_t rd, uint16_t imm16, uint8_t shift, reg_size_t size) {
+  return encode_mov_immediate(rd, imm16, shift, size);
+}
+
+uint32_t encode_movk(reg_t rd, uint16_t imm16, uint8_t shift, reg_size_t size) {
+  uint32_t instr = 0;
+
+  switch (size) {
+  case reg_size_t::SIZE_32BIT:
+    instr = 0x72800000;
+    break;
+  case reg_size_t::SIZE_64BIT:
+    instr = 0xF2800000;
+    break;
+  default:
+    asserte(false, "encode_mov_immediate(): invalid size value");
+    break;
+  }
+
+  uint8_t hw = shift >> 4;
+
+  instr |= (hw & 0x3) << 21;      // hw field
+  instr |= (imm16 & 0xFFFF) << 5; // imm16 field
+  instr |= (rd & 0x1F);           // Rd (destination register)
+
+  return instr;
 }
 
 /**
