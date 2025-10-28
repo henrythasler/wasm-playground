@@ -90,4 +90,44 @@ TEST(local2, function0) {
   auto res = wasmFunction();
   EXPECT_EQ(res, 1);
 }
+
+TEST(local2, function1) {
+  auto wasmModule = testLoadModule("local.2.wasm");
+  auto machinecode = wasmModule.getWasmFunction("type-local-i64")->getBytecode();
+  auto wasmFunction = tiny::make_wasm_function<tiny::wasm_i64_t>(machinecode);
+  auto res = wasmFunction();
+  EXPECT_EQ(res, 1);
+}
+
+TEST(local2, function2) {
+  auto wasmModule = testLoadModule("local.2.wasm");
+  auto machinecode = wasmModule.getWasmFunction("type-param-i32")->getBytecode();
+  auto wasmFunction = tiny::make_wasm_function<tiny::wasm_i32_t, tiny::wasm_i32_t>(machinecode);
+  auto res = wasmFunction(2);
+  EXPECT_EQ(res, 10);
+}
+
+TEST(local2, function3) {
+  auto wasmModule = testLoadModule("local.2.wasm");
+  auto machinecode = wasmModule.getWasmFunction("type-param-i64")->getBytecode();
+  auto wasmFunction = tiny::make_wasm_function<tiny::wasm_i64_t, tiny::wasm_i64_t>(machinecode);
+  auto res = wasmFunction(3);
+  EXPECT_EQ(res, 11);
+}
+
+TEST(local2, function4) {
+  auto wasmModule = testLoadModule("local.2.wasm");
+  auto machinecode = wasmModule.getWasmFunction("as-local.set-value")->getBytecode();
+  auto wasmFunction = tiny::make_wasm_function<void>(machinecode);
+  wasmFunction();
+}
+
+TEST(local2, function5) {
+  auto wasmModule = testLoadModule("local.2.wasm");
+  auto machinecode = wasmModule.getWasmFunction("as-local.tee-value")->getBytecode();
+  auto wasmFunction = tiny::make_wasm_function<tiny::wasm_i32_t, tiny::wasm_i32_t>(machinecode);
+  auto res = wasmFunction(0);
+  EXPECT_EQ(res, 1);
+}
+
 } // namespace

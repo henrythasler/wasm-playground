@@ -97,6 +97,7 @@ uint32_t encode_sub_immediate(reg_t rd, reg_t rn, uint16_t imm12, bool shift12, 
 uint32_t encode_add_immediate(reg_t rd, reg_t rn, uint16_t imm12, bool shift12, reg_size_t size);
 
 /** register handling */
+uint32_t encode_mov_register(reg_t rd, reg_t rm, reg_size_t size);
 uint32_t encode_mov_sp(reg_t rd, reg_t rn, reg_size_t size);
 uint32_t encode_mov_immediate(reg_t rd, uint16_t imm, uint8_t shift, reg_size_t size);
 uint32_t encode_movz(reg_t rd, uint16_t imm, uint8_t shift, reg_size_t size);

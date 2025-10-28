@@ -57,8 +57,8 @@ size_t WasmFunction::compile(const webassembly_t::func_t *func, const std::uniqu
   /**
    * calculate the
    */
-  auto valtypes = *funcType->parameters()->valtype();
-  for (auto valtype : valtypes) {
+  auto parameterTypes = *funcType->parameters()->valtype();
+  for (auto valtype : parameterTypes) {
     switch (valtype) {
     case webassembly_t::VAL_TYPES_I32:
       initialStackSize += 4;
@@ -73,8 +73,8 @@ size_t WasmFunction::compile(const webassembly_t::func_t *func, const std::uniqu
     parameters.push_back(valtype);
   }
 
-  valtypes = *funcType->results()->valtype();
-  for (auto valtype : valtypes) {
+  auto resultTypes = *funcType->results()->valtype();
+  for (auto valtype : resultTypes) {
     results.push_back(valtype);
   }
 
@@ -206,6 +206,29 @@ size_t WasmFunction::compile(const webassembly_t::func_t *func, const std::uniqu
           registerStack.pop_back();
           break;
         }
+      case 0x22:
+        /**
+         * local.tee localidx:u32
+         */
+        {
+          auto reg = registerStack.back();
+          auto idx = uint32_t(LEB128Decoder::decodeUnsigned(stream));
+
+          switch (locals.getType(idx)) {
+          case webassembly_t::VAL_TYPES_I32: {
+            serializeUint32LE(arm64::encode_str_unsigned_offset(reg, arm64::SP, uint16_t(locals.get(idx)), arm64::reg_size_t::SIZE_32BIT));
+            break;
+          }
+          case webassembly_t::VAL_TYPES_I64: {
+            serializeUint32LE(arm64::encode_str_unsigned_offset(reg, arm64::SP, uint16_t(locals.get(idx)), arm64::reg_size_t::SIZE_64BIT));
+            break;
+          }
+          default:
+            break;
+          }
+
+          break;
+        }
       case 0x41:
         /**
          * i32.const n:i32
@@ -244,12 +267,28 @@ size_t WasmFunction::compile(const webassembly_t::func_t *func, const std::uniqu
           break;
         }
       default:
+        std::cout << "unsupported instruction: 0x" << std::hex << std::setw(2) << std::setfill('0') << int32_t(byte) << " " << std::endl;
         break;
       }
     }
   }
 
-  // FIXME: move topmost stack element to X0 if there is a return value
+  if (results.size() > 0) {
+    auto sourceReg = registerStack.back();
+    switch (results.back()) {
+    case webassembly_t::val_types_t::VAL_TYPES_I32: {
+      serializeUint32LE(arm64::encode_mov_register(arm64::W0, sourceReg, arm64::reg_size_t::SIZE_32BIT));
+      break;
+    }
+    case webassembly_t::val_types_t::VAL_TYPES_I64: {
+      serializeUint32LE(arm64::encode_mov_register(arm64::X0, sourceReg, arm64::reg_size_t::SIZE_64BIT));
+      break;
+    }
+    default:
+      asserte(false, "function result: unsupported type");
+      break;
+    }
+  }
 
   // deallocate stack memory (add sp, sp, #initialStackSize)
   serializeUint32LE(arm64::encode_add_immediate(arm64::SP, arm64::SP, initialStackSize, false, arm64::reg_size_t::SIZE_64BIT));

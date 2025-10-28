@@ -132,6 +132,29 @@ uint32_t encode_add_immediate(reg_t rd, reg_t rn, uint16_t imm12, bool shift12, 
   return instr;
 }
 
+// MOV (register): MOV Xd, Xm
+// This is an alias for ORR Xd, XZR, Xm
+uint32_t encode_mov_register(reg_t rd, reg_t rm, reg_size_t size) {
+  uint32_t instr = 0;
+
+  switch (size) {
+  case reg_size_t::SIZE_32BIT:
+    instr = 0x2A0003E0; // 32-bit ORR
+    break;
+  case reg_size_t::SIZE_64BIT:
+    instr = 0xAA0003E0; // 64-bit ORR
+    break;
+  default:
+    asserte(false, "encode_mov_register(): invalid size value");
+    break;
+  }
+
+  instr |= (rm & 0x1F) << 16; // Rm (source register)
+  instr |= (rd & 0x1F);       // Rd (destination register)
+
+  return instr;
+}
+
 /**
  * This instruction copies the value of a register to or from the stack pointer.
  * sh == '0' && imm12 == '000000000000' && (Rd == '11111' || Rn == '11111')
