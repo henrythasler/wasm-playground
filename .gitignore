@@ -8,3 +8,6 @@ arm64/*
 
 # Ignore build directory
 build/
+
+# machinecode dumps
+tests/machinecode/

@@ -7,8 +7,8 @@ Following [Tiny Wasm Compiler Tutorial](https://github.com/Schleifner/Tiny-Wasm-
 Progress:
 
 - Chapter00: ✅
-- Chapter01: 95%
-- Chapter02: 5%
+- Chapter01: ✅
+- Chapter02: 95%
 - Chapter03: 0%
 - Chapter04: 0%
 - Chapter05: 0%
