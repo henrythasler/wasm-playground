@@ -103,8 +103,10 @@ size_t WasmFunction::compile(const webassembly_t::func_t *func, const std::uniqu
   serializeUint32LE(arm64::encode_mov_sp(arm64::FP, arm64::SP, arm64::reg_size_t::SIZE_64BIT));
 
   // Allocate stack
-  initialStackSize = uint16_t(((initialStackSize + (AARCH64_STACK_ALIGNMENT - 1)) / AARCH64_STACK_ALIGNMENT) * AARCH64_STACK_ALIGNMENT);
-  serializeUint32LE(arm64::encode_sub_immediate(arm64::SP, arm64::SP, initialStackSize, false, arm64::reg_size_t::SIZE_64BIT));
+  if (initialStackSize > 0) {
+    initialStackSize = uint16_t(((initialStackSize + (AARCH64_STACK_ALIGNMENT - 1)) / AARCH64_STACK_ALIGNMENT) * AARCH64_STACK_ALIGNMENT);
+    serializeUint32LE(arm64::encode_sub_immediate(arm64::SP, arm64::SP, initialStackSize, false, arm64::reg_size_t::SIZE_64BIT));
+  }
 
   // save parameters to stack
   uint16_t stackPosition = initialStackSize;
@@ -291,7 +293,9 @@ size_t WasmFunction::compile(const webassembly_t::func_t *func, const std::uniqu
   }
 
   // deallocate stack memory (add sp, sp, #initialStackSize)
-  serializeUint32LE(arm64::encode_add_immediate(arm64::SP, arm64::SP, initialStackSize, false, arm64::reg_size_t::SIZE_64BIT));
+  if (initialStackSize > 0) {
+    serializeUint32LE(arm64::encode_add_immediate(arm64::SP, arm64::SP, initialStackSize, false, arm64::reg_size_t::SIZE_64BIT));
+  }
 
   // Epilogue: destroy stack frame (ldp fp, lr, [sp], #16)
   serializeUint32LE(0xA8C17BFD);

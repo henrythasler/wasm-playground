@@ -30,7 +30,10 @@ void dumpMachinecode(std::string filename, std::vector<uint8_t> data) {
     stream.write(reinterpret_cast<const char *>(data.data()), data.size());
     for (int i = 0; i < data.size() >> 2; i++) {
       uint32_t instr = (uint32_t(stream.get()) << 24) + (uint32_t(stream.get()) << 16) + (uint32_t(stream.get()) << 8) + (uint32_t(stream.get()));
-      outFile << instr << " ";
+      if (i > 0) {
+        outFile << " ";
+      }
+      outFile << std::setw(8) << std::setfill('0') << instr;
     }
     outFile.close();
     return; // Return true if loading was successful
@@ -43,6 +46,7 @@ TEST(echo, echo32) {
   auto wasmModule = testLoadModule("echo.wasm");
   auto machinecode = wasmModule.getWasmFunction("echo32")->getBytecode();
   auto wasmFunction = tiny::make_wasm_function<tiny::wasm_i32_t, tiny::wasm_i32_t>(machinecode);
+  dumpMachinecode("echo32.hex", machinecode);
 
   EXPECT_EQ(wasmFunction(-1), -1);
   EXPECT_EQ(wasmFunction(10000), 10000);
@@ -55,6 +59,7 @@ TEST(echo, echo64) {
   auto wasmModule = testLoadModule("echo.wasm");
   auto machinecode = wasmModule.getWasmFunction("echo64")->getBytecode();
   auto wasmFunction = tiny::make_wasm_function<tiny::wasm_i64_t, tiny::wasm_i64_t>(machinecode);
+  dumpMachinecode("echo64.hex", machinecode);
 
   EXPECT_EQ(wasmFunction(-1), -1);
   EXPECT_EQ(wasmFunction(10000), 10000);

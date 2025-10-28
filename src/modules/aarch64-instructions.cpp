@@ -132,8 +132,14 @@ uint32_t encode_add_immediate(reg_t rd, reg_t rn, uint16_t imm12, bool shift12, 
   return instr;
 }
 
-// MOV (register): MOV Xd, Xm
-// This is an alias for ORR Xd, XZR, Xm
+/**
+ * This instruction copies the value in a source register to the destination register.
+ * This is an alias for ORR Xd, XZR, Xm
+ * MOV Xd, Xm
+ * @param rd destination register
+ * @param rm source register
+ * @param size 32-bit or 64-bit variant
+ */
 uint32_t encode_mov_register(reg_t rd, reg_t rm, reg_size_t size) {
   uint32_t instr = 0;
 
@@ -163,9 +169,15 @@ uint32_t encode_mov_sp(reg_t rd, reg_t rn, reg_size_t size) {
   return encode_add_immediate(rd, rn, 0, false, size);
 }
 
-// MOV (wide immediate): MOV Xd, #imm
-// This is an alias for MOVZ (move with zero)
-
+/**
+ * This instruction moves a 16-bit immediate value to a register.
+ * This is an alias of MOVZ
+ * MOV Wd, #imm16
+ * @param rd destination register
+ * @param imm16 16-bit immediate value
+ * @param shift bits by which to shift the immediate left
+ * @param size 32-bit or 64-bit variant
+ */
 uint32_t encode_mov_immediate(reg_t rd, uint16_t imm16, uint8_t shift, reg_size_t size) {
   uint32_t instr = 0;
 
