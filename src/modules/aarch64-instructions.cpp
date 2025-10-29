@@ -49,6 +49,10 @@ uint32_t encode_ldr_unsigned_offset(reg_t rt, reg_t rn, uint16_t imm12, reg_size
  * STRH rt, [rn], #imm12
  * STRB rt, [rn], #imm12
  * STR rt, [rn], #imm12
+ * @param rt source register
+ * @param rn base register
+ * @param imm12 12-bit unsigned immediate offset
+ * @param size 8-bit, 16-bit, 32-bit or 64-bit variant
  */
 uint32_t encode_str_unsigned_offset(reg_t rt, reg_t rn, uint16_t imm12, reg_size_t size) {
   uint32_t instr = 0;
@@ -85,6 +89,11 @@ uint32_t encode_str_unsigned_offset(reg_t rt, reg_t rn, uint16_t imm12, reg_size
 /**
  * This instruction subtracts an optionally-shifted immediate value from a register value, and writes the result to the destination register.
  * SUB rd, rn, #imm12{, shift12}
+ * @param rd destination register
+ * @param rn source register
+ * @param imm12 12-bit immediate value
+ * @param shift12 whether to left shift the immediate by 12 bits
+ * @param size 32-bit or 64-bit variant
  */
 uint32_t encode_sub_immediate(reg_t rd, reg_t rn, uint16_t imm12, bool shift12, reg_size_t size) {
   uint32_t instr = 0;
@@ -112,6 +121,11 @@ uint32_t encode_sub_immediate(reg_t rd, reg_t rn, uint16_t imm12, bool shift12, 
 /**
  * This instruction adds a register value and an optionally-shifted immediate value, and writes the result to the destination register.
  * ADD rd, rn, #imm12{, shift12}
+ * @param rd destination register
+ * @param rn source register
+ * @param imm12 12-bit immediate value
+ * @param shift12 whether to left shift the immediate by 12 bits
+ * @param size 32-bit or 64-bit variant
  */
 uint32_t encode_add_immediate(reg_t rd, reg_t rn, uint16_t imm12, bool shift12, reg_size_t size) {
   uint32_t instr = 0;
@@ -168,6 +182,11 @@ uint32_t encode_mov_register(reg_t rd, reg_t rm, reg_size_t size) {
 /**
  * This instruction copies the value of a register to or from the stack pointer.
  * sh == '0' && imm12 == '000000000000' && (Rd == '11111' || Rn == '11111')
+ * MOV SP, Rn
+ * MOV Rd, SP
+ * @param rd destination register
+ * @param rn source register
+ * @param size 32-bit or 64-bit variant
  */
 uint32_t encode_mov_sp(reg_t rd, reg_t rn, reg_size_t size) {
   return encode_add_immediate(rd, rn, 0, false, size);
@@ -207,10 +226,26 @@ uint32_t encode_mov_immediate(reg_t rd, uint16_t imm16, uint8_t shift, reg_size_
   return instr;
 }
 
+/**
+ * This instruction moves a 16-bit immediate value to a register, zeroing the rest of the register.
+ * MOVZ Wd, #imm16 {, LSL #shift}
+ * @param rd destination register
+ * @param imm16 16-bit immediate value
+ * @param shift bits by which to shift the immediate left
+ * @param size 32-bit or 64-bit variant
+ */
 uint32_t encode_movz(reg_t rd, uint16_t imm16, uint8_t shift, reg_size_t size) {
   return encode_mov_immediate(rd, imm16, shift, size);
 }
 
+/**
+ * This instruction moves a 16-bit immediate value to a register, keeping the rest of the register unchanged.
+ * MOVK Wd, #imm16 {, LSL #shift}
+ * @param rd destination register
+ * @param imm16 16-bit immediate value
+ * @param shift bits by which to shift the immediate left
+ * @param size 32-bit or 64-bit variant
+ */
 uint32_t encode_movk(reg_t rd, uint16_t imm16, uint8_t shift, reg_size_t size) {
   uint32_t instr = 0;
 
@@ -238,6 +273,8 @@ uint32_t encode_movk(reg_t rd, uint16_t imm16, uint8_t shift, reg_size_t size) {
 /**
  * This instruction branches unconditionally to an address in a register. This instruction provides a hint that this is a subroutine return.
  * rn defaults to X30
+ * RET rn
+ * @param rn register containing the return address
  */
 uint32_t encode_ret(reg_t rn) {
   return 0xD65F0000 | ((rn & 0x1F) << 5);
