@@ -7,6 +7,10 @@ namespace arm64 {
  * LDR rt, [rn], #imm12
  * LDRH rt, [rn], #imm12
  * LDRB rt, [rn], #imm12
+ * @param rt destination register
+ * @param rn base register
+ * @param imm12 12-bit unsigned immediate offset
+ * @param size 8-bit, 16-bit, 32-bit or 64-bit variant
  */
 uint32_t encode_ldr_unsigned_offset(reg_t rt, reg_t rn, uint16_t imm12, reg_size_t size) {
   uint32_t instr = 0;
