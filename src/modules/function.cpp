@@ -5,12 +5,12 @@ namespace tiny {
 /**
  * As we are cross-compiling to arm64 the byteorder is litte endian anyways.
  */
-void WasmFunction::serializeUint32LE(uint32_t value) {
-  bytecode.push_back(uint8_t(value & 0xFF));
-  bytecode.push_back(uint8_t((value >> 8) & 0xFF));
-  bytecode.push_back(uint8_t((value >> 16) & 0xFF));
-  bytecode.push_back(uint8_t((value >> 24) & 0xFF));
-}
+// void WasmFunction::serializeUint32LE(uint32_t value) {
+//   bytecode.push_back(uint8_t(value & 0xFF));
+//   bytecode.push_back(uint8_t((value >> 8) & 0xFF));
+//   bytecode.push_back(uint8_t((value >> 16) & 0xFF));
+//   bytecode.push_back(uint8_t((value >> 24) & 0xFF));
+// }
 
 std::string WasmFunction::joinValTypes(const std::vector<webassembly_t::val_types_t> &valTypes) {
   std::string resultString;
@@ -95,17 +95,17 @@ size_t WasmFunction::compile(const webassembly_t::func_t *func, const std::uniqu
     }
   }
 
-  bytecode.clear();
+  machinecode.clear();
 
   // Prologue: create a new stack frame (stp fp, lr, [sp, #-16]!)
-  serializeUint32LE(0xA9BF7BFD);
+  machinecode.push_back(0xA9BF7BFD);
   // mov fp, sp
-  serializeUint32LE(arm64::encode_mov_sp(arm64::FP, arm64::SP, arm64::reg_size_t::SIZE_64BIT));
+  machinecode.push_back(arm64::encode_mov_sp(arm64::FP, arm64::SP, arm64::reg_size_t::SIZE_64BIT));
 
   // Allocate stack
   if (initialStackSize > 0) {
     initialStackSize = uint16_t(((initialStackSize + (AARCH64_STACK_ALIGNMENT - 1)) / AARCH64_STACK_ALIGNMENT) * AARCH64_STACK_ALIGNMENT);
-    serializeUint32LE(arm64::encode_sub_immediate(arm64::SP, arm64::SP, initialStackSize, false, arm64::reg_size_t::SIZE_64BIT));
+    machinecode.push_back(arm64::encode_sub_immediate(arm64::SP, arm64::SP, initialStackSize, false, arm64::reg_size_t::SIZE_64BIT));
   }
 
   // save parameters to stack
@@ -116,12 +116,14 @@ size_t WasmFunction::compile(const webassembly_t::func_t *func, const std::uniqu
     asserte(paramRegister < 8, "too many parameters to fit into registers; use stack");
     switch (parameter) {
     case webassembly_t::VAL_TYPES_I32:
-      serializeUint32LE(arm64::encode_str_unsigned_offset(arm64::reg_t(paramRegister++), arm64::SP, stackPosition, arm64::reg_size_t::SIZE_32BIT));
+      machinecode.push_back(
+          arm64::encode_str_unsigned_offset(arm64::reg_t(paramRegister++), arm64::SP, stackPosition, arm64::reg_size_t::SIZE_32BIT));
       locals.append(stackPosition, parameter);
       stackPosition -= AARCH64_INT32_SIZE;
       break;
     case webassembly_t::VAL_TYPES_I64:
-      serializeUint32LE(arm64::encode_str_unsigned_offset(arm64::reg_t(paramRegister++), arm64::SP, stackPosition, arm64::reg_size_t::SIZE_64BIT));
+      machinecode.push_back(
+          arm64::encode_str_unsigned_offset(arm64::reg_t(paramRegister++), arm64::SP, stackPosition, arm64::reg_size_t::SIZE_64BIT));
       locals.append(stackPosition, parameter);
       stackPosition -= AARCH64_INT64_SIZE;
       break;
@@ -135,14 +137,14 @@ size_t WasmFunction::compile(const webassembly_t::func_t *func, const std::uniqu
     switch (local->valtype()) {
     case webassembly_t::VAL_TYPES_I32:
       for (auto i = 0; i < local->num_valtype()->value(); i++) {
-        serializeUint32LE(arm64::encode_str_unsigned_offset(arm64::reg_t::WZR, arm64::SP, stackPosition, arm64::reg_size_t::SIZE_32BIT));
+        machinecode.push_back(arm64::encode_str_unsigned_offset(arm64::reg_t::WZR, arm64::SP, stackPosition, arm64::reg_size_t::SIZE_32BIT));
         locals.append(stackPosition, local->valtype());
         stackPosition -= AARCH64_INT32_SIZE;
       }
       break;
     case webassembly_t::VAL_TYPES_I64:
       for (auto i = 0; i < local->num_valtype()->value(); i++) {
-        serializeUint32LE(arm64::encode_str_unsigned_offset(arm64::reg_t::WZR, arm64::SP, stackPosition, arm64::reg_size_t::SIZE_64BIT));
+        machinecode.push_back(arm64::encode_str_unsigned_offset(arm64::reg_t::WZR, arm64::SP, stackPosition, arm64::reg_size_t::SIZE_64BIT));
         locals.append(stackPosition, local->valtype());
         stackPosition -= AARCH64_INT64_SIZE;
       }
@@ -171,11 +173,11 @@ size_t WasmFunction::compile(const webassembly_t::func_t *func, const std::uniqu
 
           switch (locals.getType(idx)) {
           case webassembly_t::VAL_TYPES_I32: {
-            serializeUint32LE(arm64::encode_ldr_unsigned_offset(reg, arm64::SP, uint16_t(locals.get(idx)), arm64::reg_size_t::SIZE_32BIT));
+            machinecode.push_back(arm64::encode_ldr_unsigned_offset(reg, arm64::SP, uint16_t(locals.get(idx)), arm64::reg_size_t::SIZE_32BIT));
             break;
           }
           case webassembly_t::VAL_TYPES_I64: {
-            serializeUint32LE(arm64::encode_ldr_unsigned_offset(reg, arm64::SP, uint16_t(locals.get(idx)), arm64::reg_size_t::SIZE_64BIT));
+            machinecode.push_back(arm64::encode_ldr_unsigned_offset(reg, arm64::SP, uint16_t(locals.get(idx)), arm64::reg_size_t::SIZE_64BIT));
             break;
           }
           default:
@@ -193,11 +195,11 @@ size_t WasmFunction::compile(const webassembly_t::func_t *func, const std::uniqu
 
           switch (locals.getType(idx)) {
           case webassembly_t::VAL_TYPES_I32: {
-            serializeUint32LE(arm64::encode_str_unsigned_offset(reg, arm64::SP, uint16_t(locals.get(idx)), arm64::reg_size_t::SIZE_32BIT));
+            machinecode.push_back(arm64::encode_str_unsigned_offset(reg, arm64::SP, uint16_t(locals.get(idx)), arm64::reg_size_t::SIZE_32BIT));
             break;
           }
           case webassembly_t::VAL_TYPES_I64: {
-            serializeUint32LE(arm64::encode_str_unsigned_offset(reg, arm64::SP, uint16_t(locals.get(idx)), arm64::reg_size_t::SIZE_64BIT));
+            machinecode.push_back(arm64::encode_str_unsigned_offset(reg, arm64::SP, uint16_t(locals.get(idx)), arm64::reg_size_t::SIZE_64BIT));
             break;
           }
           default:
@@ -218,11 +220,11 @@ size_t WasmFunction::compile(const webassembly_t::func_t *func, const std::uniqu
 
           switch (locals.getType(idx)) {
           case webassembly_t::VAL_TYPES_I32: {
-            serializeUint32LE(arm64::encode_str_unsigned_offset(reg, arm64::SP, uint16_t(locals.get(idx)), arm64::reg_size_t::SIZE_32BIT));
+            machinecode.push_back(arm64::encode_str_unsigned_offset(reg, arm64::SP, uint16_t(locals.get(idx)), arm64::reg_size_t::SIZE_32BIT));
             break;
           }
           case webassembly_t::VAL_TYPES_I64: {
-            serializeUint32LE(arm64::encode_str_unsigned_offset(reg, arm64::SP, uint16_t(locals.get(idx)), arm64::reg_size_t::SIZE_64BIT));
+            machinecode.push_back(arm64::encode_str_unsigned_offset(reg, arm64::SP, uint16_t(locals.get(idx)), arm64::reg_size_t::SIZE_64BIT));
             break;
           }
           default:
@@ -242,9 +244,9 @@ size_t WasmFunction::compile(const webassembly_t::func_t *func, const std::uniqu
           auto constValue = LEB128Decoder::decodeSigned(stream); // n
 
           // int32 has at most 2 16-bit chunks
-          serializeUint32LE(arm64::encode_mov_immediate(reg, uint16_t(constValue & 0xFFFF), 0, arm64::reg_size_t::SIZE_32BIT));
+          machinecode.push_back(arm64::encode_mov_immediate(reg, uint16_t(constValue & 0xFFFF), 0, arm64::reg_size_t::SIZE_32BIT));
           if ((constValue >> 16) & 0xFFFF) {
-            serializeUint32LE(arm64::encode_movk(reg, uint16_t((constValue >> 16) & 0xFFFF), 16, arm64::reg_size_t::SIZE_32BIT));
+            machinecode.push_back(arm64::encode_movk(reg, uint16_t((constValue >> 16) & 0xFFFF), 16, arm64::reg_size_t::SIZE_32BIT));
           }
           break;
         }
@@ -261,9 +263,9 @@ size_t WasmFunction::compile(const webassembly_t::func_t *func, const std::uniqu
           for (uint8_t i = 0; i < 4; i++) {
             uint16_t chunk = uint16_t((constValue >> (i << 4)) & 0xFFFF);
             if (i == 0) {
-              serializeUint32LE(arm64::encode_mov_immediate(reg, chunk, 0, arm64::reg_size_t::SIZE_64BIT));
+              machinecode.push_back(arm64::encode_mov_immediate(reg, chunk, 0, arm64::reg_size_t::SIZE_64BIT));
             } else if (chunk != 0) {
-              serializeUint32LE(arm64::encode_movk(reg, chunk, i << 4, arm64::reg_size_t::SIZE_64BIT));
+              machinecode.push_back(arm64::encode_movk(reg, chunk, i << 4, arm64::reg_size_t::SIZE_64BIT));
             }
           }
           break;
@@ -279,11 +281,11 @@ size_t WasmFunction::compile(const webassembly_t::func_t *func, const std::uniqu
     auto sourceReg = registerStack.back();
     switch (results.back()) {
     case webassembly_t::val_types_t::VAL_TYPES_I32: {
-      serializeUint32LE(arm64::encode_mov_register(arm64::W0, sourceReg, arm64::reg_size_t::SIZE_32BIT));
+      machinecode.push_back(arm64::encode_mov_register(arm64::W0, sourceReg, arm64::reg_size_t::SIZE_32BIT));
       break;
     }
     case webassembly_t::val_types_t::VAL_TYPES_I64: {
-      serializeUint32LE(arm64::encode_mov_register(arm64::X0, sourceReg, arm64::reg_size_t::SIZE_64BIT));
+      machinecode.push_back(arm64::encode_mov_register(arm64::X0, sourceReg, arm64::reg_size_t::SIZE_64BIT));
       break;
     }
     default:
@@ -294,15 +296,15 @@ size_t WasmFunction::compile(const webassembly_t::func_t *func, const std::uniqu
 
   // deallocate stack memory (add sp, sp, #initialStackSize)
   if (initialStackSize > 0) {
-    serializeUint32LE(arm64::encode_add_immediate(arm64::SP, arm64::SP, initialStackSize, false, arm64::reg_size_t::SIZE_64BIT));
+    machinecode.push_back(arm64::encode_add_immediate(arm64::SP, arm64::SP, initialStackSize, false, arm64::reg_size_t::SIZE_64BIT));
   }
 
   // Epilogue: destroy stack frame (ldp fp, lr, [sp], #16)
-  serializeUint32LE(0xA8C17BFD);
+  machinecode.push_back(0xA8C17BFD);
 
   // return (RET)
-  serializeUint32LE(arm64::encode_ret());
+  machinecode.push_back(arm64::encode_ret());
 
-  return bytecode.size();
+  return machinecode.size();
 }
 } // namespace tiny

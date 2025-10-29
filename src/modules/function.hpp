@@ -70,7 +70,8 @@ public:
 
 class WasmFunction {
 private:
-  std::vector<uint8_t> bytecode;
+  // std::vector<uint8_t> bytecode;
+  std::vector<uint32_t> machinecode;
   std::string name;
   std::vector<webassembly_t::val_types_t> parameters;
   std::vector<webassembly_t::val_types_t> results;
@@ -109,8 +110,12 @@ public:
     name = newName;
   };
 
-  const std::vector<uint8_t> &getBytecode() const {
-    return bytecode;
+  // const std::vector<uint8_t> &getBytecode() const {
+  //   return bytecode;
+  // }
+
+  const std::vector<uint32_t> &getMachinecode() const {
+    return machinecode;
   }
 };
 

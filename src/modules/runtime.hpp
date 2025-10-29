@@ -25,25 +25,45 @@ private:
   void *mem_;
   size_t size_;
 
-public:
-  ExecutableMemory(const std::vector<uint8_t> &code) : mem_(nullptr), size_(code.size()) {
-    asserte(size_ > 0, "Cannot allocate zero-sized memory");
+  // Helper to get byte size from uint32_t vector
+  static size_t get_byte_size(const std::vector<uint32_t> &code) {
+    return code.size() * sizeof(uint32_t);
+  }
+
+  // Helper to get byte pointer from uint32_t vector
+  static const uint8_t *get_byte_ptr(const std::vector<uint32_t> &code) {
+    return reinterpret_cast<const uint8_t *>(code.data());
+  }
+
+  void allocate_and_copy(const uint8_t *data, size_t byte_size) {
+    asserte(byte_size > 0, "Cannot allocate zero-sized memory");
 
     // Allocate writable memory
-    mem_ = mmap(nullptr, size_, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+    mem_ = mmap(nullptr, byte_size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
     asserte(mem_ != MAP_FAILED, "mmap failed: " + std::string(strerror(errno)));
 
     // Copy machine code
-    memcpy(mem_, code.data(), code.size());
+    memcpy(mem_, data, byte_size);
 
     // Clear instruction cache (critical for ARM/AArch64)
-    __builtin___clear_cache(mem_, static_cast<char *>(mem_) + size_);
+    __builtin___clear_cache(mem_, static_cast<char *>(mem_) + byte_size);
 
     // Make executable (remove write permission for W^X compliance)
-    if (mprotect(mem_, size_, PROT_READ | PROT_EXEC) != 0) {
-      munmap(mem_, size_);
+    if (mprotect(mem_, byte_size, PROT_READ | PROT_EXEC) != 0) {
+      munmap(mem_, byte_size);
       asserte(false, "mprotect failed: " + std::string(strerror(errno)));
     }
+  }
+
+public:
+  // Constructor for uint8_t vector (byte array)
+  ExecutableMemory(const std::vector<uint8_t> &code) : mem_(nullptr), size_(code.size()) {
+    allocate_and_copy(code.data(), size_);
+  }
+
+  // Constructor for uint32_t vector (word array)
+  ExecutableMemory(const std::vector<uint32_t> &code) : mem_(nullptr), size_(get_byte_size(code)) {
+    allocate_and_copy(get_byte_ptr(code), size_);
   }
 
   ~ExecutableMemory() {
@@ -65,6 +85,10 @@ public:
   void *get() const {
     return mem_;
   }
+
+  size_t size() const {
+    return size_;
+  }
 };
 
 /**
@@ -82,6 +106,14 @@ private:
 
 public:
   explicit WasmExecutable(const std::vector<uint8_t> &machine_code) : exec_mem_(machine_code), func_ptr_(reinterpret_cast<FuncPtr>(exec_mem_.get())) {
+    if (func_ptr_ == nullptr) {
+      throw std::runtime_error("Invalid function pointer");
+    }
+  }
+
+  // Constructor for uint32_t vector
+  explicit WasmExecutable(const std::vector<uint32_t> &machine_code)
+      : exec_mem_(machine_code), func_ptr_(reinterpret_cast<FuncPtr>(exec_mem_.get())) {
     if (func_ptr_ == nullptr) {
       throw std::runtime_error("Invalid function pointer");
     }
@@ -114,13 +146,8 @@ template <typename ReturnType, typename... Args> WasmExecutable<ReturnType, Args
   return WasmExecutable<ReturnType, Args...>(code);
 }
 
-/**
- * Type-erased quick executor for one-time execution
- * Useful when you don't need to keep the function around
- */
-template <typename ReturnType, typename... Args> ReturnType execute_wasm_once(const std::vector<uint8_t> &code, Args... args) {
-  ExecutableMemory exec_mem(code);
-  auto func = reinterpret_cast<ReturnType (*)(Args...)>(exec_mem.get());
-  return func(args...);
+template <typename ReturnType, typename... Args> WasmExecutable<ReturnType, Args...> make_wasm_function(const std::vector<uint32_t> &code) {
+  return WasmExecutable<ReturnType, Args...>(code);
 }
+
 } // namespace tiny

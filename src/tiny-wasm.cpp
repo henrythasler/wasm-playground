@@ -81,17 +81,13 @@ int main(int argc, char const *argv[]) {
    */
   for (auto function : wasmModule->getWasmFunctions()) {
     std::cout << "  " << function->getResultString() << " " << function->getName() << "(" << function->getParameterString() << ")" << std::endl;
-    auto machinecode = function->getBytecode();
+    auto machinecode = function->getMachinecode();
     if (machinecode.size() == 0) {
       std::cout << YELLOW << "WARNING: Machinecode is empty!" << RESET << std::endl;
     } else {
-      std::cout << "  Machinecode (hex): ";
-      for (int32_t i = 0; i < int32_t(machinecode.size() >> 2); i++) {
-        // const uint32_t instruction = uint32_t(machinecode.at(size_t((i << 2) + 3)) << 24) + uint32_t(machinecode.at(size_t((i << 2) + 2)) << 16) +
-        //                              uint32_t(machinecode.at(size_t((i << 2) + 1)) << 8) + uint32_t(machinecode.at(size_t((i << 2) + 0)));
-        const uint32_t instruction = uint32_t(machinecode.at(size_t((i << 2) + 0)) << 24) + uint32_t(machinecode.at(size_t((i << 2) + 1)) << 16) +
-                                     uint32_t(machinecode.at(size_t((i << 2) + 2)) << 8) + uint32_t(machinecode.at(size_t((i << 2) + 3)));
-        std::cout << std::hex << std::setw(8) << std::setfill('0') << instruction << " ";
+      std::cout << "  Machinecode (hex): " << std::hex;
+      for (const auto instruction : machinecode) {
+        std::cout << std::setw(8) << std::setfill('0') << instruction << " ";
       }
       std::cout << std::dec << std::endl;
     }

@@ -25,6 +25,7 @@ add_executable(all_tests
   chapter02_test.cpp
   echo_test.cpp
   leb128_test.cpp
+  helper.cpp
 )
 
 # GoogleTest requires at least C++17

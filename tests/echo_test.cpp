@@ -7,46 +7,15 @@
 #include "../src/modules/module.hpp"
 #include "../src/modules/runtime.hpp"
 
+#include "helper.hpp"
+
 namespace {
-tiny::WasmModule testLoadModule(std::string filename) {
-  tiny::Loader loader = tiny::Loader();
-  auto path = std::filesystem::path(__FILE__).parent_path() / "assets";
-  auto loadSuccess = loader.loadFromFile(path / filename);
-  std::vector<uint8_t> bytecode = loader.getBytecode();
-  return tiny::WasmModule(bytecode);
-}
-
-void dumpMachinecode(std::string filename, std::vector<uint8_t> data) {
-  auto path = std::filesystem::path(__FILE__).parent_path() / "machinecode";
-  std::filesystem::create_directories(path);
-
-  if (!path.empty()) {
-    std::ofstream outFile(path / filename, std::ios::binary);
-    if (!outFile) {
-      return;
-    }
-    outFile << std::hex << std::setw(8) << std::setfill('0');
-    std::stringstream stream;
-    stream.write(reinterpret_cast<const char *>(data.data()), data.size());
-    for (int i = 0; i < data.size() >> 2; i++) {
-      uint32_t instr = (uint32_t(stream.get()) << 24) + (uint32_t(stream.get()) << 16) + (uint32_t(stream.get()) << 8) + (uint32_t(stream.get()));
-      if (i > 0) {
-        outFile << " ";
-      }
-      outFile << std::setw(8) << std::setfill('0') << instr;
-    }
-    outFile.close();
-    return; // Return true if loading was successful
-  } else {
-    return; // Return false if no path is provided
-  }
-}
 
 TEST(echo, echo32) {
-  auto wasmModule = testLoadModule("echo.wasm");
-  auto machinecode = wasmModule.getWasmFunction("echo32")->getBytecode();
+  auto wasmModule = helper::loadModule("echo.wasm");
+  auto machinecode = wasmModule.getWasmFunction("echo32")->getMachinecode();
   auto wasmFunction = tiny::make_wasm_function<tiny::wasm_i32_t, tiny::wasm_i32_t>(machinecode);
-  dumpMachinecode("echo32.hex", machinecode);
+  helper::dump("echo32.bin", machinecode);
 
   EXPECT_EQ(wasmFunction(-1), -1);
   EXPECT_EQ(wasmFunction(10000), 10000);
@@ -56,10 +25,10 @@ TEST(echo, echo32) {
 }
 
 TEST(echo, echo64) {
-  auto wasmModule = testLoadModule("echo.wasm");
-  auto machinecode = wasmModule.getWasmFunction("echo64")->getBytecode();
+  auto wasmModule = helper::loadModule("echo.wasm");
+  auto machinecode = wasmModule.getWasmFunction("echo64")->getMachinecode();
   auto wasmFunction = tiny::make_wasm_function<tiny::wasm_i64_t, tiny::wasm_i64_t>(machinecode);
-  dumpMachinecode("echo64.hex", machinecode);
+  helper::dump("echo64.bin", machinecode);
 
   EXPECT_EQ(wasmFunction(-1), -1);
   EXPECT_EQ(wasmFunction(10000), 10000);
@@ -73,19 +42,19 @@ TEST(echo, echo64) {
 }
 
 TEST(echo, geti64) {
-  auto wasmModule = testLoadModule("echo.wasm");
-  auto machinecode = wasmModule.getWasmFunction("geti64")->getBytecode();
+  auto wasmModule = helper::loadModule("echo.wasm");
+  auto machinecode = wasmModule.getWasmFunction("geti64")->getMachinecode();
   auto wasmFunction = tiny::make_wasm_function<tiny::wasm_i64_t>(machinecode);
-  dumpMachinecode("geti64.hex", machinecode);
+  helper::dump("geti64.bin", machinecode);
 
   EXPECT_EQ(wasmFunction(), 0x123456789ABCDEF0);
 }
 
 TEST(echo, geti64max) {
-  auto wasmModule = testLoadModule("echo.wasm");
-  auto machinecode = wasmModule.getWasmFunction("geti64max")->getBytecode();
+  auto wasmModule = helper::loadModule("echo.wasm");
+  auto machinecode = wasmModule.getWasmFunction("geti64max")->getMachinecode();
   auto wasmFunction = tiny::make_wasm_function<tiny::wasm_i64_t>(machinecode);
-  dumpMachinecode("geti64max.hex", machinecode);
+  helper::dump("geti64max.bin", machinecode);
 
   EXPECT_EQ(wasmFunction(), 0x7fffffffffffffff);
 }
