@@ -233,6 +233,46 @@ size_t WasmFunction::compile(const webassembly_t::func_t *func, const std::uniqu
 
           break;
         }
+      case 0x6A:
+        /**
+         * i32.add
+         */
+        {
+          asserte(registerStack.size() >= 2, "insufficient operands on stack for i32.add");
+
+          auto dest = registerPool.allocateRegister();
+          auto src1 = registerStack.at(registerStack.size() - 1);
+          auto src2 = registerStack.at(registerStack.size() - 2);
+
+          machinecode.push_back(arm64::encode_add_register(dest, src1, src2, 0, arm64::reg_shift_t::SHIFT_LSL, arm64::reg_size_t::SIZE_32BIT));
+
+          registerPool.freeRegister(src2);
+          registerStack.pop_back();
+          registerPool.freeRegister(src1);
+          registerStack.pop_back();
+          registerStack.emplace_back(dest);
+          break;
+        }
+      case 0x7c:
+        /**
+         * i64.add
+         */
+        {
+          asserte(registerStack.size() >= 2, "insufficient operands on stack for i64.add");
+
+          auto dest = registerPool.allocateRegister();
+          auto src1 = registerStack.at(registerStack.size() - 1);
+          auto src2 = registerStack.at(registerStack.size() - 2);
+
+          machinecode.push_back(arm64::encode_add_register(dest, src1, src2, 0, arm64::reg_shift_t::SHIFT_LSL, arm64::reg_size_t::SIZE_64BIT));
+
+          registerPool.freeRegister(src2);
+          registerStack.pop_back();
+          registerPool.freeRegister(src1);
+          registerStack.pop_back();
+          registerStack.emplace_back(dest);
+          break;
+        }
       case 0x41:
         /**
          * i32.const n:i32
@@ -270,6 +310,11 @@ size_t WasmFunction::compile(const webassembly_t::func_t *func, const std::uniqu
           }
           break;
         }
+      case 0x0b:
+        /**
+         * ret
+         */
+        break;
       default:
         std::cout << "unsupported instruction: 0x" << std::hex << std::setw(2) << std::setfill('0') << int32_t(byte) << " " << std::endl;
         break;

@@ -20,12 +20,19 @@ FetchContent_MakeAvailable(googletest)
 include(GoogleTest)
 
 add_executable(all_tests
-  loader_test.cpp
-  instructions_test.cpp
-  chapter02_test.cpp
-  echo_test.cpp
-  leb128_test.cpp
+  # test helper
   helper.cpp
+  # support function tests
+  loader_test.cpp
+  leb128_test.cpp
+  # aarch64 instruction encoder tests
+  instructions_test.cpp
+  # tutorial chapters (in sequence)
+  empty_test.cpp
+  local_test.cpp
+  arithmetic_test.cpp
+  # additional test cases
+  echo_test.cpp
 )
 
 # GoogleTest requires at least C++17

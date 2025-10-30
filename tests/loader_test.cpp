@@ -16,7 +16,7 @@ TEST(loader, fail) {
 TEST(loader, success) {
   tiny::Loader loader = tiny::Loader();
   auto path = std::filesystem::path(__FILE__).parent_path() / "assets";
-  auto res = loader.loadFromFile(path / "nop-fn.wasm");
+  auto res = loader.loadFromFile(path / "empty-fn.wasm");
 
   // Check that loading succeeded
   ASSERT_TRUE(res); // assertion stops the test if it fails

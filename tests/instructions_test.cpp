@@ -47,6 +47,13 @@ TEST(instruction, add) {
   EXPECT_EQ_HEX(encode_add_immediate(SP, SP, 0x40, false, reg_size_t::SIZE_64BIT), 0x910103FF);
   // sub w0, w0, #1
   EXPECT_EQ_HEX(encode_add_immediate(W1, W0, 0x0a, false, reg_size_t::SIZE_32BIT), 0x11002801);
+
+  // add w0, w1, w0
+  EXPECT_EQ_HEX(encode_add_register(W0, W1, W0, 0, reg_shift_t::SHIFT_LSL, reg_size_t::SIZE_32BIT), 0x0b000020);
+  // add x0, x1, x2
+  EXPECT_EQ_HEX(encode_add_register(X0, X1, X2, 0, reg_shift_t::SHIFT_LSL, reg_size_t::SIZE_64BIT), 0x8B020020);
+  // add x2, x1, x0, ASR #32
+  EXPECT_EQ_HEX(encode_add_register(X2, X1, X0, 32, reg_shift_t::SHIFT_ASR, reg_size_t::SIZE_64BIT), 0x8B808022);
 }
 
 TEST(instruction, mov) {
