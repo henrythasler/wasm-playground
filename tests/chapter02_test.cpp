@@ -113,6 +113,7 @@ TEST(local2, function4) {
   auto wasmModule = helper::loadModule("local.2.wasm");
   auto machinecode = wasmModule.getWasmFunction("as-local.set-value")->getMachinecode();
   auto wasmFunction = tiny::make_wasm_function<void>(machinecode);
+  helper::dump("as-local.set-value.bin", machinecode);
   wasmFunction();
 }
 
