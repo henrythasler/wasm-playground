@@ -158,9 +158,9 @@ size_t WasmFunction::compile(const webassembly_t::func_t *func, const std::uniqu
   // Business logic
   if (func->expr().size() > 0) {
     std::istringstream stream(func->expr());
-    char byte;
-    while (stream.get(byte)) {
-      switch (byte) {
+    char wasmSymbol;
+    while (stream.get(wasmSymbol)) {
+      switch (wasmSymbol) {
       case 0x20:
         /**
          * local.get localidx:u32
@@ -170,19 +170,8 @@ size_t WasmFunction::compile(const webassembly_t::func_t *func, const std::uniqu
           auto reg = registerPool.allocateRegister();
           registerStack.emplace_back(reg);
           auto idx = uint32_t(LEB128Decoder::decodeUnsigned(stream));
-
-          switch (locals.getType(idx)) {
-          case webassembly_t::VAL_TYPES_I32: {
-            machinecode.push_back(arm64::encode_ldr_unsigned_offset(reg, arm64::SP, uint16_t(locals.get(idx)), arm64::reg_size_t::SIZE_32BIT));
-            break;
-          }
-          case webassembly_t::VAL_TYPES_I64: {
-            machinecode.push_back(arm64::encode_ldr_unsigned_offset(reg, arm64::SP, uint16_t(locals.get(idx)), arm64::reg_size_t::SIZE_64BIT));
-            break;
-          }
-          default:
-            break;
-          }
+          auto registerSize = assembler::map_valtype_to_regsize(locals.getType(idx));
+          machinecode.push_back(arm64::encode_ldr_unsigned_offset(reg, arm64::SP, uint16_t(locals.get(idx)), registerSize));
           break;
         }
       case 0x21:
@@ -192,22 +181,11 @@ size_t WasmFunction::compile(const webassembly_t::func_t *func, const std::uniqu
         {
           auto reg = registerStack.back();
           auto idx = uint32_t(LEB128Decoder::decodeUnsigned(stream));
-
-          switch (locals.getType(idx)) {
-          case webassembly_t::VAL_TYPES_I32: {
-            machinecode.push_back(arm64::encode_str_unsigned_offset(reg, arm64::SP, uint16_t(locals.get(idx)), arm64::reg_size_t::SIZE_32BIT));
-            break;
-          }
-          case webassembly_t::VAL_TYPES_I64: {
-            machinecode.push_back(arm64::encode_str_unsigned_offset(reg, arm64::SP, uint16_t(locals.get(idx)), arm64::reg_size_t::SIZE_64BIT));
-            break;
-          }
-          default:
-            break;
-          }
-
-          registerPool.freeRegister(reg);
+          auto registerSize = assembler::map_valtype_to_regsize(locals.getType(idx));
+          machinecode.push_back(arm64::encode_str_unsigned_offset(reg, arm64::SP, uint16_t(locals.get(idx)), registerSize));
+          // remove register from stack and mark it as free
           registerStack.pop_back();
+          registerPool.freeRegister(reg);
           break;
         }
       case 0x22:
@@ -217,25 +195,14 @@ size_t WasmFunction::compile(const webassembly_t::func_t *func, const std::uniqu
         {
           auto reg = registerStack.back();
           auto idx = uint32_t(LEB128Decoder::decodeUnsigned(stream));
-
-          switch (locals.getType(idx)) {
-          case webassembly_t::VAL_TYPES_I32: {
-            machinecode.push_back(arm64::encode_str_unsigned_offset(reg, arm64::SP, uint16_t(locals.get(idx)), arm64::reg_size_t::SIZE_32BIT));
-            break;
-          }
-          case webassembly_t::VAL_TYPES_I64: {
-            machinecode.push_back(arm64::encode_str_unsigned_offset(reg, arm64::SP, uint16_t(locals.get(idx)), arm64::reg_size_t::SIZE_64BIT));
-            break;
-          }
-          default:
-            break;
-          }
-
+          auto registerSize = assembler::map_valtype_to_regsize(locals.getType(idx));
+          machinecode.push_back(arm64::encode_str_unsigned_offset(reg, arm64::SP, uint16_t(locals.get(idx)), registerSize));
           break;
         }
       case 0x6A:
+      case 0x7c:
         /**
-         * i32.add
+         * (i32|i64).add
          */
         {
           asserte(registerStack.size() >= 2, "insufficient operands on stack for i32.add");
@@ -244,27 +211,11 @@ size_t WasmFunction::compile(const webassembly_t::func_t *func, const std::uniqu
           auto src1 = registerStack.at(registerStack.size() - 1);
           auto src2 = registerStack.at(registerStack.size() - 2);
 
-          machinecode.push_back(arm64::encode_add_register(dest, src1, src2, 0, arm64::reg_shift_t::SHIFT_LSL, arm64::reg_size_t::SIZE_32BIT));
-
-          registerPool.freeRegister(src2);
-          registerStack.pop_back();
-          registerPool.freeRegister(src1);
-          registerStack.pop_back();
-          registerStack.emplace_back(dest);
-          break;
-        }
-      case 0x7c:
-        /**
-         * i64.add
-         */
-        {
-          asserte(registerStack.size() >= 2, "insufficient operands on stack for i64.add");
-
-          auto dest = registerPool.allocateRegister();
-          auto src1 = registerStack.at(registerStack.size() - 1);
-          auto src2 = registerStack.at(registerStack.size() - 2);
-
-          machinecode.push_back(arm64::encode_add_register(dest, src1, src2, 0, arm64::reg_shift_t::SHIFT_LSL, arm64::reg_size_t::SIZE_64BIT));
+          if (wasmSymbol == 0x6A) {
+            machinecode.push_back(arm64::encode_add_register(dest, src1, src2, 0, arm64::reg_shift_t::SHIFT_LSL, arm64::reg_size_t::SIZE_32BIT));
+          } else {
+            machinecode.push_back(arm64::encode_add_register(dest, src1, src2, 0, arm64::reg_shift_t::SHIFT_LSL, arm64::reg_size_t::SIZE_64BIT));
+          }
 
           registerPool.freeRegister(src2);
           registerStack.pop_back();
@@ -274,38 +225,23 @@ size_t WasmFunction::compile(const webassembly_t::func_t *func, const std::uniqu
           break;
         }
       case 0x41:
-        /**
-         * i32.const n:i32
-         */
-        {
-          // FIXME: unify with i64.const and move to separate function
-          auto reg = registerPool.allocateRegister();
-          registerStack.emplace_back(reg);
-          auto constValue = LEB128Decoder::decodeSigned(stream); // n
-
-          // int32 has at most 2 16-bit chunks
-          machinecode.push_back(arm64::encode_mov_immediate(reg, uint16_t(constValue & 0xFFFF), 0, arm64::reg_size_t::SIZE_32BIT));
-          if ((constValue >> 16) & 0xFFFF) {
-            machinecode.push_back(arm64::encode_movk(reg, uint16_t((constValue >> 16) & 0xFFFF), 16, arm64::reg_size_t::SIZE_32BIT));
-          }
-          break;
-        }
       case 0x42:
         /**
+         * i32.const n:i32
          * i64.const n:i64
          */
         {
           auto reg = registerPool.allocateRegister();
           registerStack.emplace_back(reg);
           auto constValue = LEB128Decoder::decodeSigned(stream); // n
+          auto registerSize = (wasmSymbol == 0x41) ? arm64::reg_size_t::SIZE_32BIT : arm64::reg_size_t::SIZE_64BIT;
 
-          // int64 has at most 4 16-bit chunks
           for (uint8_t i = 0; i < 4; i++) {
             uint16_t chunk = uint16_t((constValue >> (i << 4)) & 0xFFFF);
             if (i == 0) {
-              machinecode.push_back(arm64::encode_mov_immediate(reg, chunk, 0, arm64::reg_size_t::SIZE_64BIT));
+              machinecode.push_back(arm64::encode_mov_immediate(reg, chunk, 0, registerSize));
             } else if (chunk != 0) {
-              machinecode.push_back(arm64::encode_movk(reg, chunk, i << 4, arm64::reg_size_t::SIZE_64BIT));
+              machinecode.push_back(arm64::encode_movk(reg, chunk, i << 4, registerSize));
             }
           }
           break;
@@ -316,7 +252,8 @@ size_t WasmFunction::compile(const webassembly_t::func_t *func, const std::uniqu
          */
         break;
       default:
-        std::cout << "unsupported instruction: 0x" << std::hex << std::setw(2) << std::setfill('0') << int32_t(byte) << " " << std::endl;
+        // asserte(false, "unsupported instruction: " + std::to_string(int32_t(wasmSymbol)));
+        std::cout << "unsupported instruction: 0x" << std::hex << std::setw(2) << std::setfill('0') << int32_t(wasmSymbol) << " " << std::endl;
         break;
       }
     }

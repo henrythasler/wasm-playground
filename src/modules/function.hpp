@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "aarch64-instructions.hpp"
+#include "assembler.hpp"
 #include "helper.hpp"
 #include "webassembly.h"
 
@@ -49,7 +50,7 @@ public:
     return (addresses.at(id) + offset_);
   }
 
-  uint32_t getType(uint32_t id) {
+  webassembly_t::val_types_t getType(uint32_t id) {
     return (valTypes.at(id));
   }
 

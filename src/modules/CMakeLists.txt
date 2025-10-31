@@ -4,6 +4,7 @@ cmake_minimum_required(VERSION 3.20)
 add_library(tiny_modules STATIC
     loader.cpp
     module.cpp
+    assembler.cpp
     function.cpp
     runtime.cpp
     leb128.cpp
