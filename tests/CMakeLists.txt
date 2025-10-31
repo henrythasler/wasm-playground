@@ -58,3 +58,9 @@ target_link_libraries(all_tests PRIVATE
 )
 
 add_test(NAME all_tests COMMAND all_tests)
+
+if(ENABLE_COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    message(STATUS "Enabling coverage collection.")
+    target_compile_options(all_tests PRIVATE --coverage -O0 -g)
+    target_link_options(all_tests PRIVATE --coverage)    
+endif()

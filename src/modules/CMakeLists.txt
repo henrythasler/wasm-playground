@@ -20,3 +20,9 @@ target_include_directories(tiny_modules PUBLIC
 )
 
 target_link_libraries(tiny_modules PRIVATE kaitai)
+
+if(ENABLE_COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    message(STATUS "Enabling coverage collection.")
+    target_compile_options(tiny_wasm PRIVATE --coverage -O0 -g)
+    target_link_options(tiny_wasm PRIVATE --coverage)
+endif()

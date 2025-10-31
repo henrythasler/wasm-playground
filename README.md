@@ -30,7 +30,7 @@ Progress:
 
 ### Install Dependencies
 
-`sudo apt install g++-aarch64-linux-gnu clang-format clang-tidy wabt cmake qemu-user qemu-user-static gdb-multiarch`
+`sudo apt install g++-aarch64-linux-gnu clang-format clang-tidy wabt cmake qemu-user qemu-user-static gdb-multiarch lcov`
 
 ### Checkout Submodules
 

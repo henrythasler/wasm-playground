@@ -56,6 +56,7 @@ endif()
 
 option(ENABLE_CLANG_TIDY "Enable clang-tidy static analysis" ON)
 option(ENABLE_UNITTEST "Enable unit tests" ON)
+option(ENABLE_COVERAGE "Enable code coverage reporting" ON)
 option(ENABLE_ARM64_CROSSCOMPILE "Enable arm64 (aarch64) cross-compilation" ON)
 
 # set C++ standard to C++14
