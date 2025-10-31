@@ -8,8 +8,8 @@ Progress:
 
 - Chapter00: ✅
 - Chapter01: ✅
-- Chapter02: 95%
-- Chapter03: 0%
+- Chapter02: ✅
+- Chapter03: ✅
 - Chapter04: 0%
 - Chapter05: 0%
 - Chapter06: 0%
