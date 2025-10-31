@@ -119,6 +119,40 @@ uint32_t encode_sub_immediate(reg_t rd, reg_t rn, uint16_t imm12, bool shift12, 
 }
 
 /**
+ * This instruction subtracts an optionally-shifted register value from a register value, and writes the result to the destination register.
+ * SUB rd, rn, rm{, shift #imm6}
+ * @param rd destination register
+ * @param rn first source register
+ * @param rm second source register
+ * @param imm6 shift amount in the range 0..63 (64-bit) or 0..31 (32-bit)
+ * @param shift optional shift type to be applied to the second source register (00=LSL, 01=LSR, 10=ASR, 11=RESERVED)
+ * @return the encoded instruction
+ */
+uint32_t encode_sub_register(reg_t rd, reg_t rn, reg_t rm, uint8_t imm6, reg_shift_t shift, reg_size_t size) {
+  uint32_t instr = 0;
+
+  switch (size) {
+  case reg_size_t::SIZE_32BIT:
+    instr = 0x4b000000;
+    break;
+  case reg_size_t::SIZE_64BIT:
+    instr = 0xcb000000;
+    break;
+  default:
+    asserte(false, "encode_sub_register(): invalid size value");
+    break;
+  }
+
+  instr |= (uint32_t(shift) & 0x03) << 22; // shift operator on rm
+  instr |= (imm6 & 0x3F) << 10;            // shift amount in imm6 field
+  instr |= (rm & 0x1F) << 16;              // Rm (second source register)
+  instr |= (rn & 0x1F) << 5;               // Rn (source register)
+  instr |= (rd & 0x1F);                    // Rd (desination register)
+
+  return instr;
+}
+
+/**
  * This instruction adds a register value and an optionally-shifted immediate value, and writes the result to the destination register.
  * ADD rd, rn, #imm12{, shift12}
  * @param rd destination register
@@ -182,6 +216,43 @@ uint32_t encode_add_register(reg_t rd, reg_t rn, reg_t rm, uint8_t imm6, reg_shi
   instr |= (rd & 0x1F);                    // Rd (desination register)
 
   return instr;
+}
+
+/**
+ * This instruction multiplies two register values, adds a third register value, and writes the result to the destination register.
+ * MADD rd, rn, rm, ra
+ * where: rd = ra + rn * rm
+ * @param rd destination register
+ * @param rn multiplicand source register
+ * @param rm multiplier source register
+ * @param ra addend source register
+ * @return the encoded instruction
+ */
+uint32_t encode_madd_register(reg_t rd, reg_t rn, reg_t rm, reg_t ra, reg_size_t size) {
+  uint32_t instr = 0;
+
+  switch (size) {
+  case reg_size_t::SIZE_32BIT:
+    instr = 0x1b000000;
+    break;
+  case reg_size_t::SIZE_64BIT:
+    instr = 0x9b000000;
+    break;
+  default:
+    asserte(false, "encode_madd_register(): invalid size value");
+    break;
+  }
+
+  instr |= (rm & 0x1F) << 16; // Rm (multiplier source register)
+  instr |= (ra & 0x1F) << 10; // Ra (addend source register)
+  instr |= (rn & 0x1F) << 5;  // Rn (multiplicand source register)
+  instr |= (rd & 0x1F);       // Rd (desination register)
+
+  return instr;
+}
+
+uint32_t encode_mul_register(reg_t rd, reg_t rn, reg_t rm, reg_size_t size) {
+  return encode_madd_register(rd, rn, rm, WZR, size);
 }
 
 /**

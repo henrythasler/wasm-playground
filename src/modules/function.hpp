@@ -15,6 +15,7 @@ namespace tiny {
 
 class RegisterPool {
 private:
+  // true=available; false=in use
   std::map<arm64::reg_t, bool> registers = {{arm64::X9, true},  {arm64::X10, true}, {arm64::X11, true}, {arm64::X12, true},
                                             {arm64::X13, true}, {arm64::X14, true}, {arm64::X15, true}};
 

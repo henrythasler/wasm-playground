@@ -14,7 +14,7 @@ TEST(arithmetic_i32, add) {
   auto wasmModule = helper::loadModule("arithmetic.0.wasm");
   auto machinecode = wasmModule.getWasmFunction("add")->getMachinecode();
   auto wasmFunction = tiny::make_wasm_function<tiny::wasm_i32_t, tiny::wasm_i32_t, tiny::wasm_i32_t>(machinecode);
-  helper::dump("arithmetic.0.bin", machinecode);
+  helper::dump("arithmetic.add32.bin", machinecode);
 
   EXPECT_EQ(wasmFunction(0, 0), 0);
   EXPECT_EQ(wasmFunction(1, 0), 1);
@@ -34,7 +34,7 @@ TEST(arithmetic_i64, add) {
   auto wasmModule = helper::loadModule("arithmetic.1.wasm");
   auto machinecode = wasmModule.getWasmFunction("add")->getMachinecode();
   auto wasmFunction = tiny::make_wasm_function<tiny::wasm_i64_t, tiny::wasm_i64_t, tiny::wasm_i64_t>(machinecode);
-  helper::dump("arithmetic.1.bin", machinecode);
+  helper::dump("arithmetic.add64.bin", machinecode);
 
   EXPECT_EQ(wasmFunction(0, 0), 0);
   EXPECT_EQ(wasmFunction(1, 0), 1);
@@ -48,6 +48,90 @@ TEST(arithmetic_i64, add) {
   EXPECT_EQ(wasmFunction(0x8000000000000000, -1), 0x7fffffffffffffff);
   EXPECT_EQ(wasmFunction(0x8000000000000000, -0x8000000000000000), 0);
   EXPECT_EQ(wasmFunction(0x3fffffff, 1), 0x40000000);
+}
+
+TEST(arithmetic_i32, sub) {
+  auto wasmModule = helper::loadModule("arithmetic.0.wasm");
+  auto machinecode = wasmModule.getWasmFunction("sub")->getMachinecode();
+  auto wasmFunction = tiny::make_wasm_function<tiny::wasm_i32_t, tiny::wasm_i32_t, tiny::wasm_i32_t>(machinecode);
+  helper::dump("arithmetic.sub32.bin", machinecode);
+
+  EXPECT_EQ(wasmFunction(0, 0), 0);
+  EXPECT_EQ(wasmFunction(1, 0), 1);
+  EXPECT_EQ(wasmFunction(0, 1), -1);
+  EXPECT_EQ(wasmFunction(1, 1), 0);
+  EXPECT_EQ(wasmFunction(-1, -1), 0);
+  EXPECT_EQ(wasmFunction(-1, 1), -2);
+  EXPECT_EQ(wasmFunction(1, -1), 2);
+
+  EXPECT_EQ(wasmFunction(0x7fffffff, -1), 0x80000000);
+  EXPECT_EQ(wasmFunction(0x80000000, 1), 0x7fffffff);
+  EXPECT_EQ(wasmFunction(0x80000000, 0x80000000), 0);
+  EXPECT_EQ(wasmFunction(0x3fffffff, -1), 0x40000000);
+}
+
+TEST(arithmetic_i64, sub) {
+  auto wasmModule = helper::loadModule("arithmetic.1.wasm");
+  auto machinecode = wasmModule.getWasmFunction("sub")->getMachinecode();
+  auto wasmFunction = tiny::make_wasm_function<tiny::wasm_i64_t, tiny::wasm_i64_t, tiny::wasm_i64_t>(machinecode);
+  helper::dump("arithmetic.sub64.bin", machinecode);
+
+  EXPECT_EQ(wasmFunction(0, 0), 0);
+  EXPECT_EQ(wasmFunction(1, 0), 1);
+  EXPECT_EQ(wasmFunction(0, 1), -1);
+  EXPECT_EQ(wasmFunction(1, 1), 0);
+  EXPECT_EQ(wasmFunction(-1, -1), 0);
+  EXPECT_EQ(wasmFunction(-1, 1), -2);
+  EXPECT_EQ(wasmFunction(1, -1), 2);
+
+  EXPECT_EQ(wasmFunction(0x7fffffffffffffff, -1), 0x8000000000000000);
+  EXPECT_EQ(wasmFunction(0x8000000000000000, 1), 0x7fffffffffffffff);
+  EXPECT_EQ(wasmFunction(0x8000000000000000, 0x8000000000000000), 0);
+  EXPECT_EQ(wasmFunction(0x3fffffff, -1), 0x40000000);
+}
+
+TEST(arithmetic_i32, mul) {
+  auto wasmModule = helper::loadModule("arithmetic.0.wasm");
+  auto machinecode = wasmModule.getWasmFunction("mul")->getMachinecode();
+  auto wasmFunction = tiny::make_wasm_function<tiny::wasm_i32_t, tiny::wasm_i32_t, tiny::wasm_i32_t>(machinecode);
+  helper::dump("arithmetic.mul32.bin", machinecode);
+
+  EXPECT_EQ(wasmFunction(0, 0), 0);
+  EXPECT_EQ(wasmFunction(1, 0), 0);
+  EXPECT_EQ(wasmFunction(0, 1), 0);
+  EXPECT_EQ(wasmFunction(1, 1), 1);
+  EXPECT_EQ(wasmFunction(-1, -1), 1);
+  EXPECT_EQ(wasmFunction(-1, 1), -1);
+  EXPECT_EQ(wasmFunction(1, -1), -1);
+
+  EXPECT_EQ(wasmFunction(0x10000000, 4096), 0);
+  EXPECT_EQ(wasmFunction(0x80000000, 0), 0);
+  EXPECT_EQ(wasmFunction(0x80000000, -1), 0x80000000);
+  EXPECT_EQ(wasmFunction(0x7fffffff, -1), 0x80000001);
+  EXPECT_EQ(wasmFunction(0x01234567, 0x76543210), 0x358e7470);
+  EXPECT_EQ(wasmFunction(0x7fffffff, 0x7fffffff), 1);
+}
+
+TEST(arithmetic_i64, mul) {
+  auto wasmModule = helper::loadModule("arithmetic.1.wasm");
+  auto machinecode = wasmModule.getWasmFunction("mul")->getMachinecode();
+  auto wasmFunction = tiny::make_wasm_function<tiny::wasm_i64_t, tiny::wasm_i64_t, tiny::wasm_i64_t>(machinecode);
+  helper::dump("arithmetic.mul64.bin", machinecode);
+
+  EXPECT_EQ(wasmFunction(0, 0), 0);
+  EXPECT_EQ(wasmFunction(1, 0), 0);
+  EXPECT_EQ(wasmFunction(0, 1), 0);
+  EXPECT_EQ(wasmFunction(1, 1), 1);
+  EXPECT_EQ(wasmFunction(-1, -1), 1);
+  EXPECT_EQ(wasmFunction(-1, 1), -1);
+  EXPECT_EQ(wasmFunction(1, -1), -1);
+
+  EXPECT_EQ(wasmFunction(0x1000000000000000, 4096), 0);
+  EXPECT_EQ(wasmFunction(0x8000000000000000, 0), 0);
+  EXPECT_EQ(wasmFunction(0x8000000000000000, -1), 0x8000000000000000);
+  EXPECT_EQ(wasmFunction(0x7fffffffffffffff, -1), 0x8000000000000001);
+  EXPECT_EQ(wasmFunction(0x0123456789abcdef, 0xfedcba9876543210), 0x2236d88fe5618cf0);
+  EXPECT_EQ(wasmFunction(0x7fffffffffffffff, 0x7fffffffffffffff), 1);
 }
 
 } // namespace

@@ -205,23 +205,61 @@ size_t WasmFunction::compile(const webassembly_t::func_t *func, const std::uniqu
          * (i32|i64).add
          */
         {
-          asserte(registerStack.size() >= 2, "insufficient operands on stack for i32.add");
+          asserte(registerStack.size() >= 2, "insufficient operands on stack for add");
 
-          auto dest = registerPool.allocateRegister();
-          auto src1 = registerStack.at(registerStack.size() - 1);
-          auto src2 = registerStack.at(registerStack.size() - 2);
+          auto reg2 = registerStack.at(registerStack.size() - 1);
+          auto reg1 = registerStack.at(registerStack.size() - 2);
 
           if (wasmSymbol == 0x6A) {
-            machinecode.push_back(arm64::encode_add_register(dest, src1, src2, 0, arm64::reg_shift_t::SHIFT_LSL, arm64::reg_size_t::SIZE_32BIT));
+            machinecode.push_back(arm64::encode_add_register(reg1, reg1, reg2, 0, arm64::reg_shift_t::SHIFT_LSL, arm64::reg_size_t::SIZE_32BIT));
           } else {
-            machinecode.push_back(arm64::encode_add_register(dest, src1, src2, 0, arm64::reg_shift_t::SHIFT_LSL, arm64::reg_size_t::SIZE_64BIT));
+            machinecode.push_back(arm64::encode_add_register(reg1, reg1, reg2, 0, arm64::reg_shift_t::SHIFT_LSL, arm64::reg_size_t::SIZE_64BIT));
           }
 
-          registerPool.freeRegister(src2);
           registerStack.pop_back();
-          registerPool.freeRegister(src1);
+          registerPool.freeRegister(reg2);
+          break;
+        }
+      case 0x6B:
+      case 0x7D:
+        /**
+         * (i32|i64).sub
+         */
+        {
+          asserte(registerStack.size() >= 2, "insufficient operands on stack for sub");
+
+          auto reg2 = registerStack.at(registerStack.size() - 1);
+          auto reg1 = registerStack.at(registerStack.size() - 2);
+
+          if (wasmSymbol == 0x6B) {
+            machinecode.push_back(arm64::encode_sub_register(reg1, reg1, reg2, 0, arm64::reg_shift_t::SHIFT_LSL, arm64::reg_size_t::SIZE_32BIT));
+          } else {
+            machinecode.push_back(arm64::encode_sub_register(reg1, reg1, reg2, 0, arm64::reg_shift_t::SHIFT_LSL, arm64::reg_size_t::SIZE_64BIT));
+          }
+
           registerStack.pop_back();
-          registerStack.emplace_back(dest);
+          registerPool.freeRegister(reg2);
+          break;
+        }
+      case 0x6C:
+      case 0x7E:
+        /**
+         * (i32|i64).mul
+         */
+        {
+          asserte(registerStack.size() >= 2, "insufficient operands on stack for mul");
+
+          auto reg2 = registerStack.at(registerStack.size() - 1);
+          auto reg1 = registerStack.at(registerStack.size() - 2);
+
+          if (wasmSymbol == 0x6C) {
+            machinecode.push_back(arm64::encode_mul_register(reg1, reg1, reg2, arm64::reg_size_t::SIZE_32BIT));
+          } else {
+            machinecode.push_back(arm64::encode_mul_register(reg1, reg1, reg2, arm64::reg_size_t::SIZE_64BIT));
+          }
+
+          registerStack.pop_back();
+          registerPool.freeRegister(reg2);
           break;
         }
       case 0x41:
