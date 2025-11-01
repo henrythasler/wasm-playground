@@ -87,7 +87,19 @@ typedef enum {
 } reg_t;
 
 enum class reg_size_t { SIZE_8BIT, SIZE_16BIT, SIZE_32BIT, SIZE_64BIT };
-enum class reg_shift_t { SHIFT_LSL, SHIFT_LSR, SHIFT_ASR, RESERVED };
+enum class reg_shift_t { SHIFT_LSL, SHIFT_LSR, SHIFT_ASR, SHIFT_ROR };
+
+// Extend types for register operands
+enum class extend_type_t {
+  EXTEND_UXTB = 0, // Unsigned extend byte
+  EXTEND_UXTH = 1, // Unsigned extend halfword
+  EXTEND_UXTW = 2, // Unsigned extend word
+  EXTEND_UXTX = 3, // Unsigned extend doubleword
+  EXTEND_SXTB = 4, // Signed extend byte
+  EXTEND_SXTH = 5, // Signed extend halfword
+  EXTEND_SXTW = 6, // Signed extend word
+  EXTEND_SXTX = 7  // Signed extend doubleword
+};
 
 /** memory operations */
 uint32_t encode_ldr_unsigned_offset(reg_t rt, reg_t rn, uint16_t imm12, reg_size_t size);
@@ -96,6 +108,10 @@ uint32_t encode_str_unsigned_offset(reg_t rt, reg_t rn, uint16_t imm12, reg_size
 /** arithmetic operations*/
 uint32_t encode_sub_immediate(reg_t rd, reg_t rn, uint16_t imm12, bool shift12, reg_size_t size);
 uint32_t encode_sub_register(reg_t rd, reg_t rn, reg_t rm, uint8_t imm6, reg_shift_t shift, reg_size_t size);
+uint32_t encode_subs_shifted_register(reg_t rd, reg_t rn, reg_t rm, reg_shift_t shift, uint8_t imm6, reg_size_t size);
+uint32_t encode_cmp_shifted_register(reg_t rn, reg_t rm, reg_shift_t shift, uint8_t imm6, reg_size_t size);
+uint32_t encode_subs_extended_register(reg_t rd, reg_t rn, reg_t rm, extend_type_t option, uint8_t imm3, reg_size_t size);
+
 uint32_t encode_add_immediate(reg_t rd, reg_t rn, uint16_t imm12, bool shift12, reg_size_t size);
 uint32_t encode_add_register(reg_t rd, reg_t rn, reg_t rm, uint8_t imm6, reg_shift_t shift, reg_size_t size);
 uint32_t encode_madd_register(reg_t rd, reg_t rn, reg_t rm, reg_t ra, reg_size_t size);
@@ -110,5 +126,8 @@ uint32_t encode_movk(reg_t rd, uint16_t imm16, uint8_t shift, reg_size_t size);
 
 /** program flow */
 uint32_t encode_ret(reg_t rn = X30);
+
+/** misc */
+uint32_t encode_nop();
 
 } // namespace arm64

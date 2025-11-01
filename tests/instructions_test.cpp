@@ -80,6 +80,25 @@ TEST(instruction, mov) {
   EXPECT_EQ_HEX(encode_mov_immediate(X7, 0xABCD, 48, reg_size_t::SIZE_64BIT), 0xD2F579A7);
 }
 
+TEST(instruction, subs) {
+  // SUBS X0, X1, W2, UXTW
+  EXPECT_EQ_HEX(encode_subs_extended_register(X0, X1, W2, extend_type_t::EXTEND_UXTW, 0, reg_size_t::SIZE_64BIT), 0xEB224020);
+  // SUBS X5, X6, W7, SXTW #2
+  EXPECT_EQ_HEX(encode_subs_extended_register(X5, X6, W7, extend_type_t::EXTEND_SXTW, 2, reg_size_t::SIZE_64BIT), 0xEB27C8C5);
+
+  // SUBS X0, X1, X2
+  EXPECT_EQ_HEX(encode_subs_shifted_register(X0, X1, X2, reg_shift_t::SHIFT_LSL, 0, reg_size_t::SIZE_64BIT), 0xEB020020);
+  // SUBS X15, X16, X17, ASR #4
+  EXPECT_EQ_HEX(encode_subs_shifted_register(X15, X16, X17, reg_shift_t::SHIFT_ASR, 4, reg_size_t::SIZE_64BIT), 0xEB91120F);
+
+  // cmp w1, w0
+  EXPECT_EQ_HEX(encode_cmp_shifted_register(W1, W0, reg_shift_t::SHIFT_LSL, 0, reg_size_t::SIZE_32BIT), 0x6B00003F);
+  // cmp x0, x1
+  EXPECT_EQ_HEX(encode_cmp_shifted_register(X0, X1, reg_shift_t::SHIFT_LSL, 0, reg_size_t::SIZE_64BIT), 0xEB01001F);
+  // CMP X5, X6, LSL #2
+  EXPECT_EQ_HEX(encode_cmp_shifted_register(X5, X6, reg_shift_t::SHIFT_LSL, 2, reg_size_t::SIZE_64BIT), 0xEB0608BF);
+}
+
 TEST(instruction, ret) {
   // ret
   EXPECT_EQ_HEX(encode_ret(), 0xD65F03C0);

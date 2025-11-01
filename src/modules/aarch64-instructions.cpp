@@ -88,7 +88,8 @@ uint32_t encode_str_unsigned_offset(reg_t rt, reg_t rn, uint16_t imm12, reg_size
 
 /**
  * This instruction subtracts an optionally-shifted immediate value from a register value, and writes the result to the destination register.
- * SUB rd, rn, #imm12{, shift12}
+ *
+ * `SUB rd, rn, #imm12{, shift12}`
  * @param rd destination register
  * @param rn source register
  * @param imm12 12-bit immediate value
@@ -120,12 +121,14 @@ uint32_t encode_sub_immediate(reg_t rd, reg_t rn, uint16_t imm12, bool shift12, 
 
 /**
  * This instruction subtracts an optionally-shifted register value from a register value, and writes the result to the destination register.
- * SUB rd, rn, rm{, shift #imm6}
+ *
+ * `SUB rd, rn, rm{, shift #imm6}`
  * @param rd destination register
  * @param rn first source register
  * @param rm second source register
  * @param imm6 shift amount in the range 0..63 (64-bit) or 0..31 (32-bit)
  * @param shift optional shift type to be applied to the second source register (00=LSL, 01=LSR, 10=ASR, 11=RESERVED)
+ * @param size 32-bit or 64-bit variant
  * @return the encoded instruction
  */
 uint32_t encode_sub_register(reg_t rd, reg_t rn, reg_t rm, uint8_t imm6, reg_shift_t shift, reg_size_t size) {
@@ -148,6 +151,94 @@ uint32_t encode_sub_register(reg_t rd, reg_t rn, reg_t rm, uint8_t imm6, reg_shi
   instr |= (rm & 0x1F) << 16;              // Rm (second source register)
   instr |= (rn & 0x1F) << 5;               // Rn (source register)
   instr |= (rd & 0x1F);                    // Rd (desination register)
+
+  return instr;
+}
+
+/**
+ * This instruction subtracts an optionally-shifted register value from a register value, and writes the result to the destination register. It
+ * updates the condition flags based on the result.
+ *
+ * `SUBS rd, rn, rm{, shift #imm6}`
+ * @param rd destination register
+ * @param rn first source register
+ * @param rm second source register
+ * @param imm6 shift amount in the range 0..63 (64-bit) or 0..31 (32-bit)
+ * @param shift optional shift type to be applied to the second source register (00=LSL, 01=LSR, 10=ASR, 11=RESERVED)
+ * @param size 32-bit or 64-bit variant
+ * @return the encoded instruction
+ */
+uint32_t encode_subs_shifted_register(reg_t rd, reg_t rn, reg_t rm, reg_shift_t shift, uint8_t imm6, reg_size_t size) {
+  uint32_t instr = 0;
+  switch (size) {
+  case reg_size_t::SIZE_32BIT:
+    instr = 0x6B000000;
+    break;
+  case reg_size_t::SIZE_64BIT:
+    instr = 0xEB000000;
+    break;
+  default:
+    asserte(false, "encode_subs_shifted_register(): invalid size value");
+    break;
+  }
+
+  instr |= (uint32_t(shift) & 0x3) << 22; // shift type
+  instr |= (imm6 & 0x3F) << 10;           // shift amount (0-63 for 64-bit, 0-31 for 32-bit)
+  instr |= (rm & 0x1F) << 16;             // Rm (operand register)
+  instr |= (rn & 0x1F) << 5;              // Rn (source register)
+  instr |= (rd & 0x1F);                   // Rd (destination register)
+
+  return instr;
+}
+
+/**
+ * This instruction subtracts an optionally-shifted register value from a register value. It updates the condition flags based on the result, and
+ * discards the result.
+ *
+ * `CMP rn, rm{, shift #imm6}`
+ * @param rn first source register
+ * @param rm second source register
+ * @param imm6 shift amount in the range 0..63 (64-bit) or 0..31 (32-bit)
+ * @param shift optional shift type to be applied to the second source register (00=LSL, 01=LSR, 10=ASR, 11=RESERVED)
+ * @param size 32-bit or 64-bit variant
+ * @return the encoded instruction
+ */
+uint32_t encode_cmp_shifted_register(reg_t rn, reg_t rm, reg_shift_t shift, uint8_t imm6, reg_size_t size) {
+  return encode_subs_shifted_register((size == reg_size_t::SIZE_64BIT) ? XZR : WZR, rn, rm, shift, imm6, size);
+}
+
+/**
+ * This instruction subtracts a sign or zero-extended register value, followed by an optional left shift amount, from a register value, and writes
+ * the result to the destination register. The argument that is extended from the <Rm> register can be a byte, halfword, word, or doubleword. It
+ * updates the condition flags based on the result. SUBS rd, rn|SP, rm{, extend {#imm3}}
+ * @param rd destination register
+ * @param rn first source register
+ * @param rm second source register
+ * @param option extension to be applied to the second source operand
+ * @param imm3 the left shift amount to be applied after extension in the range 0..4
+ * @param size 32-bit or 64-bit variant
+ * @return the encoded instruction
+ */
+uint32_t encode_subs_extended_register(reg_t rd, reg_t rn, reg_t rm, extend_type_t option, uint8_t imm3, reg_size_t size) {
+  uint32_t instr = 0;
+
+  switch (size) {
+  case reg_size_t::SIZE_32BIT:
+    instr = 0x6b200000;
+    break;
+  case reg_size_t::SIZE_64BIT:
+    instr = 0xeb200000;
+    break;
+  default:
+    asserte(false, "encode_subs_extended_register(): invalid size value");
+    break;
+  }
+
+  instr |= (rm & 0x1F) << 16;              // Rm (operand register)
+  instr |= (uint32_t(option) & 0x7) << 13; // extend type
+  instr |= (imm3 & 0x7) << 10;             // shift amount (0-4)
+  instr |= (rn & 0x1F) << 5;               // Rn (source register)
+  instr |= (rd & 0x1F);                    // Rd (destination register)
 
   return instr;
 }
@@ -383,5 +474,12 @@ uint32_t encode_movk(reg_t rd, uint16_t imm16, uint8_t shift, reg_size_t size) {
  */
 uint32_t encode_ret(reg_t rn) {
   return 0xD65F0000 | ((rn & 0x1F) << 5);
+}
+
+/**
+ * This instruction does nothing, other than advance the value of the program counter by 4.
+ */
+uint32_t encode_nop() {
+  return 0xD503201F;
 }
 } // namespace arm64

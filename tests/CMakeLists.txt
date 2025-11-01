@@ -31,6 +31,7 @@ add_executable(all_tests
   empty_test.cpp
   local_test.cpp
   arithmetic_test.cpp
+  conditionals_test.cpp
   # additional test cases
   echo_test.cpp
 )
