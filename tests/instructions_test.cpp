@@ -78,6 +78,9 @@ TEST(instruction, mov) {
 }
 
 TEST(instruction, subs) {
+  // SUBS X0, X1, #100
+  EXPECT_EQ_HEX(encode_subs_immediate(X0, X1, 100, false, reg_size_t::SIZE_64BIT), 0xF1019020);
+
   // SUBS X0, X1, W2, UXTW
   EXPECT_EQ_HEX(encode_subs_extended_register(X0, X1, W2, extend_type_t::EXTEND_UXTW, 0, reg_size_t::SIZE_64BIT), 0xEB224020);
   // SUBS X5, X6, W7, SXTW #2
@@ -88,6 +91,9 @@ TEST(instruction, subs) {
   // SUBS X15, X16, X17, ASR #4
   EXPECT_EQ_HEX(encode_subs_shifted_register(X15, X16, X17, reg_shift_t::SHIFT_ASR, 4, reg_size_t::SIZE_64BIT), 0xEB91120F);
 
+  // CMP X0, #5
+  EXPECT_EQ_HEX(encode_cmp_immediate(X0, 5, false, reg_size_t::SIZE_64BIT), 0xF100141F);
+  
   // cmp w1, w0
   EXPECT_EQ_HEX(encode_cmp_shifted_register(W1, W0, reg_shift_t::SHIFT_LSL, 0, reg_size_t::SIZE_32BIT), 0x6B00003F);
   // cmp x0, x1

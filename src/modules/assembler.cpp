@@ -19,10 +19,7 @@ std::vector<uint32_t> assembleExpression(std::istringstream &stream, Locals &loc
   while (stream.get(wasmSymbol)) {
     switch (wasmSymbol) {
     case 0x20:
-      /**
-       * local.get localidx:u32
-       * allocates one register
-       */
+      /** local.get localidx:u32 */
       {
         auto reg = registerPool.allocateRegister();
         stack.emplace_back(reg);
@@ -32,9 +29,7 @@ std::vector<uint32_t> assembleExpression(std::istringstream &stream, Locals &loc
         break;
       }
     case 0x21:
-      /**
-       * local.set localidx:u32
-       */
+      /** local.set localidx:u32 */
       {
         auto reg = stack.back();
         auto idx = uint32_t(decoder::LEB128Decoder::decodeUnsigned(stream));
@@ -46,9 +41,7 @@ std::vector<uint32_t> assembleExpression(std::istringstream &stream, Locals &loc
         break;
       }
     case 0x22:
-      /**
-       * local.tee localidx:u32
-       */
+      /** local.tee localidx:u32 */
       {
         auto reg = stack.back();
         auto idx = uint32_t(decoder::LEB128Decoder::decodeUnsigned(stream));
@@ -58,9 +51,7 @@ std::vector<uint32_t> assembleExpression(std::istringstream &stream, Locals &loc
       }
     case 0x6A:
     case 0x7c:
-      /**
-       * (i32|i64).add
-       */
+      /** (i32|i64).add */
       {
         asserte(stack.size() >= 2, "insufficient operands on stack for add");
 
@@ -79,9 +70,7 @@ std::vector<uint32_t> assembleExpression(std::istringstream &stream, Locals &loc
       }
     case 0x6B:
     case 0x7D:
-      /**
-       * (i32|i64).sub
-       */
+      /** (i32|i64).sub */
       {
         asserte(stack.size() >= 2, "insufficient operands on stack for sub");
 
@@ -100,9 +89,7 @@ std::vector<uint32_t> assembleExpression(std::istringstream &stream, Locals &loc
       }
     case 0x6C:
     case 0x7E:
-      /**
-       * (i32|i64).mul
-       */
+      /** (i32|i64).mul */
       {
         asserte(stack.size() >= 2, "insufficient operands on stack for mul");
 
@@ -121,10 +108,7 @@ std::vector<uint32_t> assembleExpression(std::istringstream &stream, Locals &loc
       }
     case 0x41:
     case 0x42:
-      /**
-       * i32.const n:i32
-       * i64.const n:i64
-       */
+      /** (i32|i64).const n:(i32|i64) */
       {
         auto reg = registerPool.allocateRegister();
         stack.emplace_back(reg);
@@ -141,10 +125,43 @@ std::vector<uint32_t> assembleExpression(std::istringstream &stream, Locals &loc
         }
         break;
       }
+    case 0x04:
+      /** if */
+      {
+        auto reg = stack.back();
+        // remove register from stack and mark it as free; make sure to assemble the block so that this register is used before other blocks
+        stack.pop_back();
+        registerPool.freeRegister(reg);
+
+        // skip blocktype for now
+        stream.get();
+        // auto rawBlocktype = stream.get();
+        // auto blocktype = (rawBlocktype == 0x40) ? webassembly_t::val_types_t(0) : webassembly_t::val_types_t(rawBlocktype);
+        auto block = assembleExpression(stream, locals, registerPool, stack);
+        std::vector<uint32_t> block2;
+        if(stream.peek() == 0x05) {
+          block2 = assembleExpression(stream, locals, registerPool, stack);
+        }
+
+        machinecode.push_back(arm64::encode_cmp_immediate(reg, 0, false, arm64::reg_size_t::SIZE_32BIT));
+        machinecode.push_back(arm64::encode_branch_cond(arm64::branch_condition_t::EQ, int32_t(block.size() + 1) << 2));
+        machinecode.insert(machinecode.end(), block.begin(), block.end());
+        machinecode.insert(machinecode.end(), block2.begin(), block2.end());
+
+        break;
+      }
+    case 0x05:
+      /** else */
+      break;
+      // return machinecode;
+    case 0x01:
+      /** nop */
+      {
+        machinecode.push_back(arm64::encode_nop());
+        break;
+      }
     case 0x0b:
-      /**
-       * ret
-       */
+      /** ret */
       return machinecode;
     default:
       // asserte(false, "unsupported instruction: " + std::to_string(int32_t(wasmSymbol)));

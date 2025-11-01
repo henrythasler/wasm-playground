@@ -129,6 +129,8 @@ uint32_t encode_str_unsigned_offset(reg_t rt, reg_t rn, uint16_t imm12, reg_size
 /** arithmetic operations*/
 uint32_t encode_sub_immediate(reg_t rd, reg_t rn, uint16_t imm12, bool shift12, reg_size_t size);
 uint32_t encode_sub_register(reg_t rd, reg_t rn, reg_t rm, uint8_t imm6, reg_shift_t shift, reg_size_t size);
+uint32_t encode_subs_immediate(reg_t rd, reg_t rn, uint16_t imm12, bool shift12, reg_size_t size);
+uint32_t encode_cmp_immediate(reg_t rn, uint16_t imm12, bool shift12, reg_size_t size);
 uint32_t encode_subs_shifted_register(reg_t rd, reg_t rn, reg_t rm, reg_shift_t shift, uint8_t imm6, reg_size_t size);
 uint32_t encode_cmp_shifted_register(reg_t rn, reg_t rm, reg_shift_t shift, uint8_t imm6, reg_size_t size);
 uint32_t encode_subs_extended_register(reg_t rd, reg_t rn, reg_t rm, extend_type_t option, uint8_t imm3, reg_size_t size);

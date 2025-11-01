@@ -120,6 +120,55 @@ uint32_t encode_sub_immediate(reg_t rd, reg_t rn, uint16_t imm12, bool shift12, 
 }
 
 /**
+ * This instruction subtracts an optionally-shifted immediate value from a register value, and writes the result to the destination register. It
+ * updates the condition flags based on the result.
+ *
+ * `SUBS rd, rn|SP, #imm12{, shift12}`
+ * @param rd destination register
+ * @param rn source register
+ * @param imm12 12-bit immediate value
+ * @param shift12 whether to left shift the immediate by 12 bits
+ * @param size 32-bit or 64-bit variant
+ */
+uint32_t encode_subs_immediate(reg_t rd, reg_t rn, uint16_t imm12, bool shift12, reg_size_t size) {
+  uint32_t instr = 0;
+
+  switch (size) {
+  case reg_size_t::SIZE_32BIT:
+    instr = 0x71000000;
+    break;
+  case reg_size_t::SIZE_64BIT:
+    instr = 0xf1000000;
+    break;
+  default:
+    asserte(false, "encode_subs_immediate(): invalid size value");
+    break;
+  }
+
+  instr |= (shift12) ? 0x400000 : 0; // optional left shift (LSL #12)
+  instr |= (imm12 & 0xFFF) << 10;    // imm12 field
+  instr |= (rn & 0x1F) << 5;         // Rn (source register)
+  instr |= (rd & 0x1F);              // Rd (desination register)
+
+  return instr;
+}
+
+/**
+ * This instruction subtracts an optionally-shifted immediate value from a register value. It updates the condition flags based on the result, and
+ * discards the result.
+ *
+ * `CMP rn|SP, #imm12{, shift12}`
+ * @param rd destination register
+ * @param rn source register
+ * @param imm12 12-bit immediate value
+ * @param shift12 whether to left shift the immediate by 12 bits
+ * @param size 32-bit or 64-bit variant
+ */
+uint32_t encode_cmp_immediate(reg_t rn, uint16_t imm12, bool shift12, reg_size_t size) {
+  return encode_subs_immediate((size == reg_size_t::SIZE_64BIT) ? XZR : WZR, rn, imm12, shift12, size);
+}
+
+/**
  * This instruction subtracts an optionally-shifted register value from a register value, and writes the result to the destination register.
  *
  * `SUB rd, rn, rm{, shift #imm6}`
