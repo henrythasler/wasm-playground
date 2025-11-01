@@ -3,6 +3,8 @@
 
 #include "../src/modules/leb128.hpp"
 
+using namespace decoder;
+
 TEST(leb128, unsigned) {
     std::string data = std::string("\xE5\x8E\x26", 3);
     std::istringstream stream(data);

@@ -1,7 +1,10 @@
+#pragma once
+
 #include <cstdint>
 #include <sstream>
 #include <stdexcept>
 
+namespace decoder {
 class LEB128Decoder {
 public:
   // Decode unsigned LEB128 from stream
@@ -73,3 +76,4 @@ public:
     throw std::runtime_error("LEB128: unexpected end of stream");
   }
 };
+} // namespace decoder

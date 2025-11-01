@@ -1,3 +1,5 @@
+Source: https://claude.ai
+
 I've created a comprehensive AArch64 SUBS instruction encoder! SUBS is a critical instruction that performs subtraction and sets condition flags (NZCV: Negative, Zero, Carry, oVerflow).
 
 **SUBS Variants:**
