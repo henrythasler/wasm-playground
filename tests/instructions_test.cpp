@@ -6,10 +6,7 @@
 
 #include "../src/modules/aarch64-instructions.hpp"
 
-#define EXPECT_EQ_HEX(actual, expected) \
-    EXPECT_EQ(actual, expected) \
-        << "Expected: 0x" << std::hex << (expected) \
-        << ", Got: 0x" << std::hex << (actual)
+#define EXPECT_EQ_HEX(actual, expected) EXPECT_EQ(actual, expected) << "Expected: 0x" << std::hex << (expected) << ", Got: 0x" << std::hex << (actual)
 
 using namespace arm64;
 
@@ -97,6 +94,17 @@ TEST(instruction, subs) {
   EXPECT_EQ_HEX(encode_cmp_shifted_register(X0, X1, reg_shift_t::SHIFT_LSL, 0, reg_size_t::SIZE_64BIT), 0xEB01001F);
   // CMP X5, X6, LSL #2
   EXPECT_EQ_HEX(encode_cmp_shifted_register(X5, X6, reg_shift_t::SHIFT_LSL, 2, reg_size_t::SIZE_64BIT), 0xEB0608BF);
+}
+
+TEST(instruction, branch) {
+  // b.eq #0  // jump to the same instruction
+  EXPECT_EQ_HEX(encode_branch_cond(branch_condition_t::EQ, 0), 0x54000000);
+  // b.eq #4  // jump to the next instruction
+  EXPECT_EQ_HEX(encode_branch_cond(branch_condition_t::EQ, 4), 0x54000020);
+  // b.eq #36 // jump 9 instructions ahead
+  EXPECT_EQ_HEX(encode_branch_cond(branch_condition_t::EQ, 36), 0x54000120);
+  // b.eq #-36 // jump 9 instructions back
+  EXPECT_EQ_HEX(encode_branch_cond(branch_condition_t::EQ, -36), 0x54fffee0);
 }
 
 TEST(instruction, ret) {

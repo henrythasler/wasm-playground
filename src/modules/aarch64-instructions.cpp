@@ -353,6 +353,7 @@ uint32_t encode_mul_register(reg_t rd, reg_t rn, reg_t rm, reg_size_t size) {
  * @param rd destination register
  * @param rm source register
  * @param size 32-bit or 64-bit variant
+ * @return the encoded instruction
  */
 uint32_t encode_mov_register(reg_t rd, reg_t rm, reg_size_t size) {
   uint32_t instr = 0;
@@ -383,6 +384,7 @@ uint32_t encode_mov_register(reg_t rd, reg_t rm, reg_size_t size) {
  * @param rd destination register
  * @param rn source register
  * @param size 32-bit or 64-bit variant
+ * @return the encoded instruction
  */
 uint32_t encode_mov_sp(reg_t rd, reg_t rn, reg_size_t size) {
   return encode_add_immediate(rd, rn, 0, false, size);
@@ -396,6 +398,7 @@ uint32_t encode_mov_sp(reg_t rd, reg_t rn, reg_size_t size) {
  * @param imm16 16-bit immediate value
  * @param shift bits by which to shift the immediate left
  * @param size 32-bit or 64-bit variant
+ * @return the encoded instruction
  */
 uint32_t encode_mov_immediate(reg_t rd, uint16_t imm16, uint8_t shift, reg_size_t size) {
   uint32_t instr = 0;
@@ -429,6 +432,7 @@ uint32_t encode_mov_immediate(reg_t rd, uint16_t imm16, uint8_t shift, reg_size_
  * @param imm16 16-bit immediate value
  * @param shift bits by which to shift the immediate left
  * @param size 32-bit or 64-bit variant
+ * @return the encoded instruction
  */
 uint32_t encode_movz(reg_t rd, uint16_t imm16, uint8_t shift, reg_size_t size) {
   return encode_mov_immediate(rd, imm16, shift, size);
@@ -441,6 +445,7 @@ uint32_t encode_movz(reg_t rd, uint16_t imm16, uint8_t shift, reg_size_t size) {
  * @param imm16 16-bit immediate value
  * @param shift bits by which to shift the immediate left
  * @param size 32-bit or 64-bit variant
+ * @return the encoded instruction
  */
 uint32_t encode_movk(reg_t rd, uint16_t imm16, uint8_t shift, reg_size_t size) {
   uint32_t instr = 0;
@@ -470,10 +475,29 @@ uint32_t encode_movk(reg_t rd, uint16_t imm16, uint8_t shift, reg_size_t size) {
  * This instruction branches unconditionally to an address in a register. This instruction provides a hint that this is a subroutine return.
  * rn defaults to X30
  * RET rn
- * @param rn register containing the return address
+ * @param rn register containing the return address (defaults to X30)
+ * @return the encoded instruction
  */
 uint32_t encode_ret(reg_t rn) {
   return 0xD65F0000 | ((rn & 0x1F) << 5);
+}
+
+/**
+ * This instruction branches conditionally to a label at a PC-relative offset. This instruction provides a hint that this is not a subroutine call or
+ * return.
+ *
+ * `B.cond imm19`
+ * @param cond one of the standard conditions
+ * @param imm19 offset from the address of this instruction, in the range +/-1MB
+ * @return the encoded instruction
+ */
+uint32_t encode_branch_cond(branch_condition_t cond, int32_t imm19) {
+  uint32_t instr = 0x54000000;
+
+  instr |= ((imm19 >> 2) & 0x7FFFF) << 5; // imm19 offset
+  instr |= uint32_t(cond);                // branch condition
+
+  return instr;
 }
 
 /**

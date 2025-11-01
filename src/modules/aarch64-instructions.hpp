@@ -101,6 +101,27 @@ enum class extend_type_t {
   EXTEND_SXTX = 7  // Signed extend doubleword
 };
 
+enum class branch_condition_t {
+  EQ = 0b0000, // equal
+  NE = 0b0001, // not equal
+  CS = 0b0010, // Carry set (identical to HS)
+  HS = 0b0010, // Unsigned Higher or same (identical to CS)
+  CC = 0b0011, // Carry clear (identical to LO)
+  LO = 0b0011, // Unsigned Lower (identical to CC)
+  MI = 0b0100, // Minus or negative result
+  PL = 0b0101, // Positive or zero result
+  VS = 0b0110, // Signed Overflow
+  VC = 0b0111, // No signed Overflow
+  HI = 0b1000, // Unsigned higher
+  LS = 0b1001, // Unsigned lower or same
+  GE = 0b1010, // Signed greater than or equal
+  LT = 0b1011, // Signed less than
+  GT = 0b1100, // Signed greater than
+  LE = 0b1101, // Signed less than or equal
+  AL = 0b1110, // Always (this is the default)
+  NV = 0b1111, // Never executed
+};
+
 /** memory operations */
 uint32_t encode_ldr_unsigned_offset(reg_t rt, reg_t rn, uint16_t imm12, reg_size_t size);
 uint32_t encode_str_unsigned_offset(reg_t rt, reg_t rn, uint16_t imm12, reg_size_t size);
@@ -126,6 +147,7 @@ uint32_t encode_movk(reg_t rd, uint16_t imm16, uint8_t shift, reg_size_t size);
 
 /** program flow */
 uint32_t encode_ret(reg_t rn = X30);
+uint32_t encode_branch_cond(branch_condition_t cond, int32_t imm19);
 
 /** misc */
 uint32_t encode_nop();
