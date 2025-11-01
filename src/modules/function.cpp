@@ -147,9 +147,11 @@ size_t WasmFunction::compile(const webassembly_t::func_t *func, const std::uniqu
 
   // Business logic
   if (func->expr().size() > 0) {
-    std::istringstream exprStream(func->expr());
-    auto expr = assembler::assembleExpression(exprStream, locals, registerPool, registerStack);
-    machinecode.insert(machinecode.end(), expr.begin(), expr.end());
+    auto exprStr = func->expr();
+    std::vector<uint8_t> expr(exprStr.begin(), exprStr.end());
+    auto it = expr.cbegin();
+    auto block = assembler::assembleExpression(it, expr.end(), locals, registerPool, registerStack);
+    machinecode.insert(machinecode.end(), block.begin(), block.end());
   }
 
   if (results.size() > 0) {

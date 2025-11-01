@@ -531,6 +531,14 @@ uint32_t encode_ret(reg_t rn) {
   return 0xD65F0000 | ((rn & 0x1F) << 5);
 }
 
+uint32_t encode_branch(int32_t imm26) {
+  uint32_t instr = 0x14000000;
+
+  instr |= ((imm26 >> 2) & 0x3FFFFFF); // imm26 offset
+
+  return instr;
+}
+
 /**
  * This instruction branches conditionally to a label at a PC-relative offset. This instruction provides a hint that this is not a subroutine call or
  * return.

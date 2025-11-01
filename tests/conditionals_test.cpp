@@ -16,7 +16,7 @@ TEST(conditionals, singular) {
   auto wasmFunction = tiny::make_wasm_function<tiny::wasm_i32_t, tiny::wasm_i32_t>(machinecode);
   helper::dump("conditionals.singular.bin", machinecode);
 
-  // EXPECT_EQ(wasmFunction(0), 8);
+  EXPECT_EQ(wasmFunction(0), 8);
   // EXPECT_EQ(wasmFunction(1), 7);
   // EXPECT_EQ(wasmFunction(10), 7);
   // EXPECT_EQ(wasmFunction(-10), 7);

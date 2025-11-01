@@ -67,5 +67,6 @@ public:
 };
 
 arm64::reg_size_t map_valtype_to_regsize(const webassembly_t::val_types_t type);
-std::vector<uint32_t> assembleExpression(std::istringstream &stream, Locals &locals, RegisterPool &registerPool, std::vector<arm64::reg_t> &stack);
+std::vector<uint32_t> assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vector<uint8_t>::const_iterator end, Locals &locals,
+                                         RegisterPool &registerPool, std::vector<arm64::reg_t> &stack);
 } // namespace assembler
