@@ -59,6 +59,7 @@ TEST(arithmetic_i32, sub) {
   EXPECT_EQ(wasmFunction(0, 0), 0);
   EXPECT_EQ(wasmFunction(1, 0), 1);
   EXPECT_EQ(wasmFunction(0, 1), -1);
+  EXPECT_EQ(wasmFunction(0, -10), 10);
   EXPECT_EQ(wasmFunction(1, 1), 0);
   EXPECT_EQ(wasmFunction(-1, -1), 0);
   EXPECT_EQ(wasmFunction(-1, 1), -2);

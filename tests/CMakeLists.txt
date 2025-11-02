@@ -34,6 +34,7 @@ add_executable(all_tests
   conditionals_test.cpp
   # additional test cases
   echo_test.cpp
+  compare_test.cpp
 )
 
 # GoogleTest requires at least C++17

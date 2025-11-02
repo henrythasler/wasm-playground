@@ -52,4 +52,16 @@ TEST(conditionals, local_tee) {
   EXPECT_EQ(wasmFunction(1), 1);
 }
 
+TEST(conditionals, abs) {
+  auto wasmModule = helper::loadModule("abs.wasm");
+  auto machinecode = wasmModule.getWasmFunction("abs")->getMachinecode();
+  auto wasmFunction = tiny::make_wasm_function<tiny::wasm_i32_t, tiny::wasm_i32_t>(machinecode);
+  helper::dump("conditionals.abs.bin", machinecode);
+
+  EXPECT_EQ(wasmFunction(0), 0);
+  EXPECT_EQ(wasmFunction(10), 10);
+  EXPECT_EQ(wasmFunction(-10), 10);
+  EXPECT_EQ(wasmFunction(-0x7fffffff), 0x7fffffff);
+}
+
 } // namespace

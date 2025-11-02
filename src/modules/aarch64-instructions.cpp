@@ -247,8 +247,8 @@ uint32_t encode_subs_shifted_register(reg_t rd, reg_t rn, reg_t rm, reg_shift_t 
  * `CMP rn, rm{, shift #imm6}`
  * @param rn first source register
  * @param rm second source register
- * @param imm6 shift amount in the range 0..63 (64-bit) or 0..31 (32-bit)
  * @param shift optional shift type to be applied to the second source register (00=LSL, 01=LSR, 10=ASR, 11=RESERVED)
+ * @param imm6 shift amount in the range 0..63 (64-bit) or 0..31 (32-bit)
  * @param size 32-bit or 64-bit variant
  * @return the encoded instruction
  */

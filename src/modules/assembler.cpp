@@ -110,10 +110,10 @@ std::vector<uint32_t> assembleExpression(std::vector<uint8_t>::const_iterator &s
     case 0x42:
       /** (i32|i64).const n:(i32|i64) */
       {
+        auto registerSize = (*(stream - 1) == 0x41) ? arm64::reg_size_t::SIZE_32BIT : arm64::reg_size_t::SIZE_64BIT;
         auto reg = registerPool.allocateRegister();
         stack.emplace_back(reg);
         auto constValue = decoder::LEB128Decoder::decodeSigned(stream, streamEnd); // n
-        auto registerSize = (*(stream - 1) == 0x41) ? arm64::reg_size_t::SIZE_32BIT : arm64::reg_size_t::SIZE_64BIT;
 
         for (uint8_t i = 0; i < 4; i++) {
           uint16_t chunk = uint16_t((constValue >> (i << 4)) & 0xFFFF);
@@ -123,6 +123,30 @@ std::vector<uint32_t> assembleExpression(std::vector<uint8_t>::const_iterator &s
             machinecode.push_back(arm64::encode_movk(reg, chunk, i << 4, registerSize));
           }
         }
+        break;
+      }
+    case 0x48:
+    case 0x53:
+      /** (i32|i64).lt_s */
+      {
+        asserte(stack.size() >= 2, "insufficient operands on stack for lt_s");
+        auto registerSize = (*(stream - 1) == 0x48) ? arm64::reg_size_t::SIZE_32BIT : arm64::reg_size_t::SIZE_64BIT;
+
+        auto reg2 = stack.at(stack.size() - 1);
+        auto reg1 = stack.at(stack.size() - 2);
+
+        machinecode.push_back(arm64::encode_cmp_shifted_register(reg1, reg2, arm64::reg_shift_t::SHIFT_LSL, 0, registerSize));
+
+        machinecode.push_back(arm64::encode_branch_cond(arm64::branch_condition_t::LT, 3 * 4));
+        // // load 0
+        machinecode.push_back(arm64::encode_mov_immediate(reg1, 0, 0, arm64::reg_size_t::SIZE_32BIT));
+        machinecode.push_back(arm64::encode_branch(2 * 4));
+        // // load 1
+        machinecode.push_back(arm64::encode_mov_immediate(reg1, 1, 0, arm64::reg_size_t::SIZE_32BIT));
+
+        stack.pop_back();
+        registerPool.freeRegister(reg2);
+
         break;
       }
     case 0x04:
@@ -173,11 +197,15 @@ std::vector<uint32_t> assembleExpression(std::vector<uint8_t>::const_iterator &s
         machinecode.push_back(arm64::encode_nop());
         break;
       }
+    case 0x0f:
+      /** return */
+      { return machinecode; }
     case 0x0b:
-      /** ret */
+      /** end */
       { return machinecode; }
     default:
       std::cout << "unsupported instruction: 0x" << std::hex << std::setw(2) << std::setfill('0') << int32_t(*(stream - 1)) << " " << std::endl;
+      asserte(false, "unsupported instruction");
       break;
     }
   }
