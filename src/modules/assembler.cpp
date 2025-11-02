@@ -13,17 +13,17 @@ arm64::reg_size_t map_valtype_to_regsize(const webassembly_t::val_types_t type) 
   }
 }
 
-std::vector<uint32_t> assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vector<uint8_t>::const_iterator end, Locals &locals,
+std::vector<uint32_t> assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vector<uint8_t>::const_iterator streamEnd, Locals &locals,
                                          RegisterPool &registerPool, std::vector<arm64::reg_t> &stack) {
   std::vector<uint32_t> machinecode;
-  while (stream != end) {
+  while (stream != streamEnd) {
     switch (*stream++) {
     case 0x20:
       /** local.get localidx:u32 */
       {
         auto reg = registerPool.allocateRegister();
         stack.emplace_back(reg);
-        auto idx = uint32_t(decoder::LEB128Decoder::decodeUnsigned(stream, end));
+        auto idx = uint32_t(decoder::LEB128Decoder::decodeUnsigned(stream, streamEnd));
         auto registerSize = assembler::map_valtype_to_regsize(locals.getType(idx));
         machinecode.push_back(arm64::encode_ldr_unsigned_offset(reg, arm64::SP, uint16_t(locals.get(idx)), registerSize));
         break;
@@ -32,7 +32,7 @@ std::vector<uint32_t> assembleExpression(std::vector<uint8_t>::const_iterator &s
       /** local.set localidx:u32 */
       {
         auto reg = stack.back();
-        auto idx = uint32_t(decoder::LEB128Decoder::decodeUnsigned(stream, end));
+        auto idx = uint32_t(decoder::LEB128Decoder::decodeUnsigned(stream, streamEnd));
         auto registerSize = assembler::map_valtype_to_regsize(locals.getType(idx));
         machinecode.push_back(arm64::encode_str_unsigned_offset(reg, arm64::SP, uint16_t(locals.get(idx)), registerSize));
         // remove register from stack and mark it as free
@@ -44,7 +44,7 @@ std::vector<uint32_t> assembleExpression(std::vector<uint8_t>::const_iterator &s
       /** local.tee localidx:u32 */
       {
         auto reg = stack.back();
-        auto idx = uint32_t(decoder::LEB128Decoder::decodeUnsigned(stream, end));
+        auto idx = uint32_t(decoder::LEB128Decoder::decodeUnsigned(stream, streamEnd));
         auto registerSize = assembler::map_valtype_to_regsize(locals.getType(idx));
         machinecode.push_back(arm64::encode_str_unsigned_offset(reg, arm64::SP, uint16_t(locals.get(idx)), registerSize));
         break;
@@ -112,7 +112,7 @@ std::vector<uint32_t> assembleExpression(std::vector<uint8_t>::const_iterator &s
       {
         auto reg = registerPool.allocateRegister();
         stack.emplace_back(reg);
-        auto constValue = decoder::LEB128Decoder::decodeSigned(stream, end); // n
+        auto constValue = decoder::LEB128Decoder::decodeSigned(stream, streamEnd); // n
         auto registerSize = (*(stream - 1) == 0x41) ? arm64::reg_size_t::SIZE_32BIT : arm64::reg_size_t::SIZE_64BIT;
 
         for (uint8_t i = 0; i < 4; i++) {
@@ -133,21 +133,32 @@ std::vector<uint32_t> assembleExpression(std::vector<uint8_t>::const_iterator &s
         stack.pop_back();
         registerPool.freeRegister(reg);
 
-        // skip blocktype for now
-        stream++;
-        // auto rawBlocktype = stream.get();
-        // auto blocktype = (rawBlocktype == 0x40) ? webassembly_t::val_types_t(0) : webassembly_t::val_types_t(rawBlocktype);
-        auto block = assembleExpression(stream, end, locals, registerPool, stack);
+        auto rawBlocktype = *stream++;
+        auto blocktype = (rawBlocktype == 0x40) ? webassembly_t::val_types_t(0) : webassembly_t::val_types_t(rawBlocktype);
+
+        // need an independent copy of the register pool for each branch
+        RegisterPool conditionalRegisterPool(registerPool);
+        auto block = assembleExpression(stream, streamEnd, locals, conditionalRegisterPool, stack);
+
         std::vector<uint32_t> block2;
         if (*(stream - 1) == 0x05) {
-          block2 = assembleExpression(stream, end, locals, registerPool, stack);
+          RegisterPool conditionalElseRegisterPool(registerPool);
+          block2 = assembleExpression(stream, streamEnd, locals, conditionalElseRegisterPool, stack);
         }
 
-        machinecode.push_back(arm64::encode_cmp_immediate(reg, 0, false, arm64::reg_size_t::SIZE_32BIT));
-        machinecode.push_back(arm64::encode_branch_cond(arm64::branch_condition_t::EQ, int32_t(block.size() + block2.size() + 1) << 2));
+        if (blocktype != 0) {
+          // FIXME: do something with this information
+        }
+
+        // assemble conditional branch
+        machinecode.push_back(arm64::encode_cbz(reg, int32_t(block.size() + block2.size() + 1) << 2, arm64::reg_size_t::SIZE_32BIT));
         machinecode.insert(machinecode.end(), block.begin(), block.end());
+
+        // handle else block if present
         if (block2.size() > 0) {
+          // jump over else block after if block
           machinecode.push_back(arm64::encode_branch(int32_t(block2.size() + 1) << 2));
+          // insert else block
           machinecode.insert(machinecode.end(), block2.begin(), block2.end());
         }
 
@@ -155,10 +166,7 @@ std::vector<uint32_t> assembleExpression(std::vector<uint8_t>::const_iterator &s
       }
     case 0x05:
       /** else */
-      {
-        //  break;
-        return machinecode;
-      }
+      { return machinecode; }
     case 0x01:
       /** nop */
       {

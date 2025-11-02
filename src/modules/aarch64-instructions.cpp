@@ -558,6 +558,36 @@ uint32_t encode_branch_cond(branch_condition_t cond, int32_t imm19) {
 }
 
 /**
+ * This instruction compares the value in a register with zero, and conditionally branches to a label at a PC-relative offset if the comparison is
+ * equal. This instruction provides a hint that this is not a subroutine call or return. This instruction does not affect condition flags.
+ *
+ * `CBZ rt, imm19`
+ * @param rt register to be tested
+ * @param imm19 offset in bytes from the address of this instruction, in the range +/-1MB
+ * @return the encoded instruction
+ */
+uint32_t encode_cbz(reg_t rt, int32_t imm19, reg_size_t size) {
+  uint32_t instr = 0;
+
+  switch (size) {
+  case reg_size_t::SIZE_32BIT:
+    instr = 0x34000000;
+    break;
+  case reg_size_t::SIZE_64BIT:
+    instr = 0xB4000000;
+    break;
+  default:
+    asserte(false, "encode_cbz(): invalid size value");
+    break;
+  }
+
+  instr |= ((imm19 >> 2) & 0x7FFFF) << 5; // imm19 offset
+  instr |= (rt & 0x1F);                   // Rt (register to be tested)
+
+  return instr;
+}
+
+/**
  * This instruction does nothing, other than advance the value of the program counter by 4.
  */
 uint32_t encode_nop() {
