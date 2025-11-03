@@ -13,6 +13,36 @@ arm64::reg_size_t map_valtype_to_regsize(const webassembly_t::val_types_t type) 
   }
 }
 
+uint32_t mapWasmValTypeToArm64Size(webassembly_t::val_types_t valType) {
+  switch (valType) {
+  case webassembly_t::VAL_TYPES_I32:
+    return AARCH64_INT32_SIZE;
+  case webassembly_t::VAL_TYPES_I64:
+    return AARCH64_INT64_SIZE;
+  default:
+    asserte(false, "WasmFunction::mapWasmValTypeToArm64Size(): unsupported val_types_t");
+    return 0;
+  }
+}
+
+std::vector<uint32_t> saveParametersToStack(const std::vector<webassembly_t::val_types_t> &parameters, uint32_t &offset, assembler::Locals &locals) {
+  std::vector<uint32_t> machinecode;
+  uint8_t paramRegister = 0;
+  for (auto parameter : parameters) {
+    auto registerSize = map_valtype_to_regsize(parameter);
+
+    machinecode.push_back(arm64::encode_str_unsigned_offset(arm64::reg_t(paramRegister), arm64::SP, uint16_t(offset), registerSize));
+    locals.append(offset, parameter);
+    offset -= mapWasmValTypeToArm64Size(parameter);
+
+    paramRegister++;
+  }
+  return machinecode;
+}
+
+/**
+ * Assemble a WebAssembly expression (aka bytecode) into ARM64 machine code.
+ */
 std::vector<uint32_t> assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vector<uint8_t>::const_iterator streamEnd, Locals &locals,
                                          RegisterPool &registerPool, std::vector<arm64::reg_t> &stack) {
   std::vector<uint32_t> machinecode;
@@ -24,7 +54,7 @@ std::vector<uint32_t> assembleExpression(std::vector<uint8_t>::const_iterator &s
         auto reg = registerPool.allocateRegister();
         stack.emplace_back(reg);
         auto idx = uint32_t(decoder::LEB128Decoder::decodeUnsigned(stream, streamEnd));
-        auto registerSize = assembler::map_valtype_to_regsize(locals.getType(idx));
+        auto registerSize = map_valtype_to_regsize(locals.getType(idx));
         machinecode.push_back(arm64::encode_ldr_unsigned_offset(reg, arm64::SP, uint16_t(locals.get(idx)), registerSize));
         break;
       }
@@ -33,7 +63,7 @@ std::vector<uint32_t> assembleExpression(std::vector<uint8_t>::const_iterator &s
       {
         auto reg = stack.back();
         auto idx = uint32_t(decoder::LEB128Decoder::decodeUnsigned(stream, streamEnd));
-        auto registerSize = assembler::map_valtype_to_regsize(locals.getType(idx));
+        auto registerSize = map_valtype_to_regsize(locals.getType(idx));
         machinecode.push_back(arm64::encode_str_unsigned_offset(reg, arm64::SP, uint16_t(locals.get(idx)), registerSize));
         // remove register from stack and mark it as free
         stack.pop_back();
@@ -45,7 +75,7 @@ std::vector<uint32_t> assembleExpression(std::vector<uint8_t>::const_iterator &s
       {
         auto reg = stack.back();
         auto idx = uint32_t(decoder::LEB128Decoder::decodeUnsigned(stream, streamEnd));
-        auto registerSize = assembler::map_valtype_to_regsize(locals.getType(idx));
+        auto registerSize = map_valtype_to_regsize(locals.getType(idx));
         machinecode.push_back(arm64::encode_str_unsigned_offset(reg, arm64::SP, uint16_t(locals.get(idx)), registerSize));
         break;
       }
