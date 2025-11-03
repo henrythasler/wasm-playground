@@ -33,15 +33,15 @@ public:
   }
 };
 
-class Locals {
+class Variables {
 private:
   std::vector<uint32_t> addresses;
   std::vector<webassembly_t::val_types_t> valTypes;
   uint32_t offset_ = 0;
 
 public:
-  Locals() = default;
-  ~Locals() = default;
+  Variables() = default;
+  ~Variables() = default;
 
   uint32_t get(uint32_t id) {
     return (addresses.at(id) + offset_);
@@ -67,8 +67,11 @@ public:
 };
 
 arm64::reg_size_t map_valtype_to_regsize(const webassembly_t::val_types_t type);
-std::vector<uint32_t> assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vector<uint8_t>::const_iterator streamEnd, Locals &locals,
-                                         RegisterPool &registerPool, std::vector<arm64::reg_t> &stack);
+std::vector<uint32_t> assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vector<uint8_t>::const_iterator streamEnd,
+                                         Variables &locals, RegisterPool &registerPool, std::vector<arm64::reg_t> &stack);
 uint32_t mapWasmValTypeToArm64Size(webassembly_t::val_types_t valType);
-std::vector<uint32_t> saveParametersToStack(const std::vector<webassembly_t::val_types_t> &parameters, uint32_t &offset, assembler::Locals &locals);
+std::vector<uint32_t> saveParametersToStack(const std::vector<webassembly_t::val_types_t> &parameters, uint32_t &offset,
+                                            assembler::Variables &locals);
+std::vector<uint32_t> initLocals(const std::map<webassembly_t::val_types_t, uint32_t> &locals, uint32_t &offset, assembler::Variables &variables);
+std::vector<uint32_t> loadResult(const std::vector<webassembly_t::val_types_t> &results, const std::vector<arm64::reg_t> &wasmStack);
 } // namespace assembler

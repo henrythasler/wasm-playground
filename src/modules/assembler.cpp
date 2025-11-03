@@ -25,14 +25,15 @@ uint32_t mapWasmValTypeToArm64Size(webassembly_t::val_types_t valType) {
   }
 }
 
-std::vector<uint32_t> saveParametersToStack(const std::vector<webassembly_t::val_types_t> &parameters, uint32_t &offset, assembler::Locals &locals) {
+std::vector<uint32_t> saveParametersToStack(const std::vector<webassembly_t::val_types_t> &parameters, uint32_t &offset,
+                                            assembler::Variables &variables) {
   std::vector<uint32_t> machinecode;
   uint8_t paramRegister = 0;
   for (auto parameter : parameters) {
     auto registerSize = map_valtype_to_regsize(parameter);
 
     machinecode.push_back(arm64::encode_str_unsigned_offset(arm64::reg_t(paramRegister), arm64::SP, uint16_t(offset), registerSize));
-    locals.append(offset, parameter);
+    variables.append(offset, parameter);
     offset -= mapWasmValTypeToArm64Size(parameter);
 
     paramRegister++;
@@ -40,11 +41,34 @@ std::vector<uint32_t> saveParametersToStack(const std::vector<webassembly_t::val
   return machinecode;
 }
 
+std::vector<uint32_t> initLocals(const std::map<webassembly_t::val_types_t, uint32_t> &locals, uint32_t &offset, assembler::Variables &variables) {
+  std::vector<uint32_t> machinecode;
+  for (auto local : locals) {
+    auto registerSize = map_valtype_to_regsize(local.first);
+    for (uint32_t i = 0; i < local.second; i++) {
+      auto sourceReg = (registerSize == arm64::reg_size_t::SIZE_32BIT) ? arm64::reg_t::WZR : arm64::reg_t::XZR;
+      machinecode.push_back(arm64::encode_str_unsigned_offset(sourceReg, arm64::SP, uint16_t(offset), registerSize));
+      variables.append(offset, local.first);
+      offset -= mapWasmValTypeToArm64Size(local.first);
+    }
+  }
+  return machinecode;
+}
+
+std::vector<uint32_t> loadResult(const std::vector<webassembly_t::val_types_t> &results, const std::vector<arm64::reg_t> &wasmStack) {
+  std::vector<uint32_t> machinecode;
+  auto registerSize = map_valtype_to_regsize(results.back());
+  auto sourceReg = wasmStack.back();
+  auto targetReg = (registerSize == arm64::reg_size_t::SIZE_32BIT) ? arm64::reg_t::W0 : arm64::reg_t::X0;
+  machinecode.push_back(arm64::encode_mov_register(targetReg, sourceReg, registerSize));
+  return machinecode;
+}
+
 /**
  * Assemble a WebAssembly expression (aka bytecode) into ARM64 machine code.
  */
-std::vector<uint32_t> assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vector<uint8_t>::const_iterator streamEnd, Locals &locals,
-                                         RegisterPool &registerPool, std::vector<arm64::reg_t> &stack) {
+std::vector<uint32_t> assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vector<uint8_t>::const_iterator streamEnd,
+                                         Variables &locals, RegisterPool &registerPool, std::vector<arm64::reg_t> &stack) {
   std::vector<uint32_t> machinecode;
   while (stream != streamEnd) {
     switch (*stream++) {

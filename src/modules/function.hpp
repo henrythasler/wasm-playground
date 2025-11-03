@@ -17,6 +17,7 @@ private:
   std::vector<uint32_t> machinecode;
   std::string name;
   std::vector<webassembly_t::val_types_t> parameters;
+  std::map<webassembly_t::val_types_t, uint32_t> locals;
   std::vector<webassembly_t::val_types_t> results;
 
   void serializeUint32LE(uint32_t value);

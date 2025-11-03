@@ -39,11 +39,13 @@ size_t WasmFunction::compile(const webassembly_t::func_t *func, const std::uniqu
   // stack size allocated for this function; value may change during compilation
   uint32_t stackSize = 0;
   // set of local variables
-  assembler::Locals locals;
+  assembler::Variables variables;
   // available registers to hold wasmStack values; can be extended with spilling to memory
   assembler::RegisterPool registerPool;
   // WebAssembly stack; currently only registers are used to hold values
   std::vector<arm64::reg_t> wasmStack;
+  // this keeps track of the current position in the stack frame relative to fp
+  uint32_t stackPosition = 0;
 
   // evaluate parameters to determine initial stack size
   auto parameterTypes = *funcType->parameters()->valtype();
@@ -60,6 +62,7 @@ size_t WasmFunction::compile(const webassembly_t::func_t *func, const std::uniqu
 
   // reserve additional space for local variables on the stack
   for (auto &local : *func->locals()) {
+    locals[local->valtype()] = uint32_t(local->num_valtype()->value());
     stackSize += assembler::mapWasmValTypeToArm64Size(local->valtype()) * uint32_t(local->num_valtype()->value());
   }
 
@@ -78,34 +81,20 @@ size_t WasmFunction::compile(const webassembly_t::func_t *func, const std::uniqu
     machinecode.push_back(arm64::encode_sub_immediate(arm64::SP, arm64::SP, uint16_t(stackSize), false, arm64::reg_size_t::SIZE_64BIT));
   }
 
-  // save parameters to stack
-  uint32_t stackPosition = stackSize;
-  auto paramBlock = assembler::saveParametersToStack(parameters, stackPosition, locals);
-  machinecode.insert(machinecode.end(), paramBlock.begin(), paramBlock.end());
+  // arm64 stack is full descending; that means we start allocating from the top (higher addresses) and grow downwards (lower addresses)
+  stackPosition = stackSize;
 
-  for (auto &local : *func->locals()) {
-    // std::cout << "local stackPosition " << stackPosition << " ";
-    switch (local->valtype()) {
-    case webassembly_t::VAL_TYPES_I32:
-      for (auto i = 0; i < local->num_valtype()->value(); i++) {
-        machinecode.push_back(
-            arm64::encode_str_unsigned_offset(arm64::reg_t::WZR, arm64::SP, uint16_t(stackPosition), arm64::reg_size_t::SIZE_32BIT));
-        locals.append(stackPosition, local->valtype());
-        stackPosition -= AARCH64_INT32_SIZE;
-      }
-      break;
-    case webassembly_t::VAL_TYPES_I64:
-      for (auto i = 0; i < local->num_valtype()->value(); i++) {
-        machinecode.push_back(
-            arm64::encode_str_unsigned_offset(arm64::reg_t::WZR, arm64::SP, uint16_t(stackPosition), arm64::reg_size_t::SIZE_64BIT));
-        locals.append(stackPosition, local->valtype());
-        stackPosition -= AARCH64_INT64_SIZE;
-      }
-      break;
-    default:
-      asserte(false, "WasmFunction::compile(): unsupported parameter type (val_types_t)");
-      break;
-    }
+  // save parameters to stack
+  if (parameters.size() > 0) {
+    // all parameters are the first n locals
+    auto paramBlock = assembler::saveParametersToStack(parameters, stackPosition, variables);
+    machinecode.insert(machinecode.end(), paramBlock.begin(), paramBlock.end());
+  }
+
+  // initialize locals on stack
+  if (locals.size() > 0) {
+    auto localBlock = assembler::initLocals(locals, stackPosition, variables);
+    machinecode.insert(machinecode.end(), localBlock.begin(), localBlock.end());
   }
 
   // Business logic
@@ -113,25 +102,13 @@ size_t WasmFunction::compile(const webassembly_t::func_t *func, const std::uniqu
     auto exprStr = func->expr();
     std::vector<uint8_t> expr(exprStr.begin(), exprStr.end());
     auto it = expr.cbegin();
-    auto block = assembler::assembleExpression(it, expr.end(), locals, registerPool, wasmStack);
+    auto block = assembler::assembleExpression(it, expr.end(), variables, registerPool, wasmStack);
     machinecode.insert(machinecode.end(), block.begin(), block.end());
   }
 
   if (results.size() > 0) {
-    auto sourceReg = wasmStack.back();
-    switch (results.back()) {
-    case webassembly_t::val_types_t::VAL_TYPES_I32: {
-      machinecode.push_back(arm64::encode_mov_register(arm64::W0, sourceReg, arm64::reg_size_t::SIZE_32BIT));
-      break;
-    }
-    case webassembly_t::val_types_t::VAL_TYPES_I64: {
-      machinecode.push_back(arm64::encode_mov_register(arm64::X0, sourceReg, arm64::reg_size_t::SIZE_64BIT));
-      break;
-    }
-    default:
-      asserte(false, "function result: unsupported type");
-      break;
-    }
+    auto resultBlock = assembler::loadResult(results, wasmStack);
+    machinecode.insert(machinecode.end(), resultBlock.begin(), resultBlock.end());
   }
 
   // deallocate stack memory (add sp, sp, #stackSize)
