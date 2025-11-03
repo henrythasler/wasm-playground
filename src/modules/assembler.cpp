@@ -25,9 +25,8 @@ uint32_t mapWasmValTypeToArm64Size(webassembly_t::val_types_t valType) {
   }
 }
 
-std::vector<uint32_t> saveParametersToStack(const std::vector<webassembly_t::val_types_t> &parameters, uint32_t &offset,
-                                            assembler::Variables &variables) {
-  std::vector<uint32_t> machinecode;
+uint32_t saveParametersToStack(const std::vector<webassembly_t::val_types_t> &parameters, uint32_t offset, assembler::Variables &variables,
+                               std::vector<uint32_t> &machinecode) {
   uint8_t paramRegister = 0;
   for (auto parameter : parameters) {
     auto registerSize = map_valtype_to_regsize(parameter);
@@ -38,11 +37,11 @@ std::vector<uint32_t> saveParametersToStack(const std::vector<webassembly_t::val
 
     paramRegister++;
   }
-  return machinecode;
+  return offset;
 }
 
-std::vector<uint32_t> initLocals(const std::map<webassembly_t::val_types_t, uint32_t> &locals, uint32_t &offset, assembler::Variables &variables) {
-  std::vector<uint32_t> machinecode;
+uint32_t initLocals(const std::map<webassembly_t::val_types_t, uint32_t> &locals, uint32_t offset, assembler::Variables &variables,
+                    std::vector<uint32_t> &machinecode) {
   for (auto local : locals) {
     auto registerSize = map_valtype_to_regsize(local.first);
     for (uint32_t i = 0; i < local.second; i++) {
@@ -52,16 +51,42 @@ std::vector<uint32_t> initLocals(const std::map<webassembly_t::val_types_t, uint
       offset -= mapWasmValTypeToArm64Size(local.first);
     }
   }
-  return machinecode;
+  return offset;
 }
 
-std::vector<uint32_t> loadResult(const std::vector<webassembly_t::val_types_t> &results, const std::vector<arm64::reg_t> &wasmStack) {
-  std::vector<uint32_t> machinecode;
+void loadResult(const std::vector<webassembly_t::val_types_t> &results, const std::vector<arm64::reg_t> &wasmStack,
+                std::vector<uint32_t> &machinecode) {
   auto registerSize = map_valtype_to_regsize(results.back());
   auto sourceReg = wasmStack.back();
   auto targetReg = (registerSize == arm64::reg_size_t::SIZE_32BIT) ? arm64::reg_t::W0 : arm64::reg_t::X0;
   machinecode.push_back(arm64::encode_mov_register(targetReg, sourceReg, registerSize));
-  return machinecode;
+}
+
+uint32_t createPreamble(uint32_t stackSize, std::vector<uint32_t> &machinecode) {
+  // Prologue: create a new stack frame (stp fp, lr, [sp, #-16]!)
+  machinecode.push_back(0xA9BF7BFD);
+  // mov fp, sp
+  machinecode.push_back(arm64::encode_mov_sp(arm64::FP, arm64::SP, arm64::reg_size_t::SIZE_64BIT));
+
+  // Allocate stack
+  if (stackSize > 0) {
+    stackSize = ((stackSize + (AARCH64_STACK_ALIGNMENT - 1)) / AARCH64_STACK_ALIGNMENT) * AARCH64_STACK_ALIGNMENT;
+    asserte(stackSize % AARCH64_STACK_ALIGNMENT == 0, "stack size not aligned properly");
+    asserte(stackSize < 65536, "stack size too large to encode in a single instruction");
+    machinecode.push_back(arm64::encode_sub_immediate(arm64::SP, arm64::SP, uint16_t(stackSize), false, arm64::reg_size_t::SIZE_64BIT));
+  }
+  return stackSize;
+}
+
+void createEpilogue(const uint32_t stackSize, std::vector<uint32_t> &machinecode) {
+  if (stackSize > 0) {
+    // deallocate stack memory (add sp, sp, #stackSize)
+    machinecode.push_back(arm64::encode_add_immediate(arm64::SP, arm64::SP, uint16_t(stackSize), false, arm64::reg_size_t::SIZE_64BIT));
+  }
+  // Epilogue: destroy stack frame (ldp fp, lr, [sp], #16)
+  machinecode.push_back(0xA8C17BFD);
+  // return (RET)
+  machinecode.push_back(arm64::encode_ret());
 }
 
 /**

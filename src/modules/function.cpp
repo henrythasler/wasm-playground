@@ -68,18 +68,9 @@ size_t WasmFunction::compile(const webassembly_t::func_t *func, const std::uniqu
 
   machinecode.clear();
 
-  // Prologue: create a new stack frame (stp fp, lr, [sp, #-16]!)
-  machinecode.push_back(0xA9BF7BFD);
-  // mov fp, sp
-  machinecode.push_back(arm64::encode_mov_sp(arm64::FP, arm64::SP, arm64::reg_size_t::SIZE_64BIT));
-
-  // Allocate stack
-  if (stackSize > 0) {
-    stackSize = ((stackSize + (AARCH64_STACK_ALIGNMENT - 1)) / AARCH64_STACK_ALIGNMENT) * AARCH64_STACK_ALIGNMENT;
-    asserte(stackSize % AARCH64_STACK_ALIGNMENT == 0, "stack size not aligned properly");
-    asserte(stackSize < 65536, "stack size too large to encode in a single instruction");
-    machinecode.push_back(arm64::encode_sub_immediate(arm64::SP, arm64::SP, uint16_t(stackSize), false, arm64::reg_size_t::SIZE_64BIT));
-  }
+  // create aligned stack and preamble (stack frame)
+  stackSize = assembler::createPreamble(stackSize, machinecode);
+  asserte(stackSize % AARCH64_STACK_ALIGNMENT == 0, "stack size not aligned properly");
 
   // arm64 stack is full descending; that means we start allocating from the top (higher addresses) and grow downwards (lower addresses)
   stackPosition = stackSize;
@@ -87,14 +78,12 @@ size_t WasmFunction::compile(const webassembly_t::func_t *func, const std::uniqu
   // save parameters to stack
   if (parameters.size() > 0) {
     // all parameters are the first n locals
-    auto paramBlock = assembler::saveParametersToStack(parameters, stackPosition, variables);
-    machinecode.insert(machinecode.end(), paramBlock.begin(), paramBlock.end());
+    stackPosition = assembler::saveParametersToStack(parameters, stackPosition, variables, machinecode);
   }
 
   // initialize locals on stack
   if (locals.size() > 0) {
-    auto localBlock = assembler::initLocals(locals, stackPosition, variables);
-    machinecode.insert(machinecode.end(), localBlock.begin(), localBlock.end());
+    stackPosition = assembler::initLocals(locals, stackPosition, variables, machinecode);
   }
 
   // Business logic
@@ -107,20 +96,10 @@ size_t WasmFunction::compile(const webassembly_t::func_t *func, const std::uniqu
   }
 
   if (results.size() > 0) {
-    auto resultBlock = assembler::loadResult(results, wasmStack);
-    machinecode.insert(machinecode.end(), resultBlock.begin(), resultBlock.end());
+    assembler::loadResult(results, wasmStack, machinecode);
   }
 
-  // deallocate stack memory (add sp, sp, #stackSize)
-  if (stackSize > 0) {
-    machinecode.push_back(arm64::encode_add_immediate(arm64::SP, arm64::SP, uint16_t(stackSize), false, arm64::reg_size_t::SIZE_64BIT));
-  }
-
-  // Epilogue: destroy stack frame (ldp fp, lr, [sp], #16)
-  machinecode.push_back(0xA8C17BFD);
-
-  // return (RET)
-  machinecode.push_back(arm64::encode_ret());
+  assembler::createEpilogue(stackSize, machinecode);
 
   return machinecode.size();
 }

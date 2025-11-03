@@ -20,8 +20,6 @@ private:
   std::map<webassembly_t::val_types_t, uint32_t> locals;
   std::vector<webassembly_t::val_types_t> results;
 
-  void serializeUint32LE(uint32_t value);
-
   std::string joinValTypes(const std::vector<webassembly_t::val_types_t> &valTypes);
 
 public:
@@ -53,10 +51,6 @@ public:
   void setName(const std::string newName) {
     name = newName;
   };
-
-  // const std::vector<uint8_t> &getBytecode() const {
-  //   return bytecode;
-  // }
 
   const std::vector<uint32_t> &getMachinecode() const {
     return machinecode;

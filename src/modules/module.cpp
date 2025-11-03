@@ -73,7 +73,6 @@ void WasmModule::compileModule() {
   auto export_section = getSectionContent<webassembly_t::export_section_t>(*(wasm->sections()), webassembly_t::SECTION_ID_EXPORT_SECTION);
   for (size_t j = 0; j < export_section->exports()->size(); ++j) {
     const auto &item = export_section->exports()->at(j);
-
     wasmFunctions.at(static_cast<size_t>(item->idx()->value()))->setName(item->name()->value());
   }
 }
