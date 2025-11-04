@@ -254,7 +254,7 @@ std::vector<uint32_t> assembleExpression(std::vector<uint8_t>::const_iterator &s
         }
 
         // assemble conditional branch
-        machinecode.push_back(arm64::encode_cbz(reg, int32_t(block.size() + block2.size() + 1) << 2, arm64::reg_size_t::SIZE_32BIT));
+        machinecode.push_back(arm64::encode_cbz(reg, int32_t(block.size() + 1) << 2, arm64::reg_size_t::SIZE_32BIT));
         machinecode.insert(machinecode.end(), block.begin(), block.end());
 
         // handle else block if present

@@ -29,6 +29,7 @@ Derived *WasmModule::getSectionContent(const std::vector<std::unique_ptr<Base>> 
       return dynamic_cast<Derived *>(section.get()->content());
     }
   }
+  asserte(false, "getSectionContent(): could not find section '" + std::to_string(section_id) + "'");
   return nullptr;
 }
 
@@ -38,6 +39,7 @@ const WasmFunction *WasmModule::getWasmFunction(std::string name) {
       return function;
     }
   }
+  asserte(false, "getWasmFunction(): could not find function '" + name + "'");
   return nullptr;
 }
 
