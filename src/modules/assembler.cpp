@@ -193,6 +193,25 @@ std::vector<uint32_t> assembleExpression(std::vector<uint8_t>::const_iterator &s
         registerPool.freeRegister(reg2);
         break;
       }
+    case 0x6d:
+    case 0x6e:
+    case 0x7f:
+    case 0x80:
+      /** i32.div_s, i32.div_u, i64.div_s, i64.div_u */
+      {
+        asserte(stack.size() >= 2, "insufficient operands on stack for mul");
+
+        auto reg2 = stack.at(stack.size() - 1);
+        auto reg1 = stack.at(stack.size() - 2);
+
+        // FIXME: use correct variant and size
+        // FIXME: trap on Division By Zero
+        machinecode.push_back(arm64::encode_div_register(reg1, reg1, reg2, arm64::signed_variant_t::SIGNED, arm64::reg_size_t::SIZE_64BIT));
+
+        stack.pop_back();
+        registerPool.freeRegister(reg2);
+        break;
+      }
     case 0x41:
     case 0x42:
       /** (i32|i64).const n:(i32|i64) */
@@ -201,7 +220,6 @@ std::vector<uint32_t> assembleExpression(std::vector<uint8_t>::const_iterator &s
         auto reg = registerPool.allocateRegister();
         stack.emplace_back(reg);
         auto constValue = decoder::LEB128Decoder::decodeSigned(stream, streamEnd); // n
-        printStack(stack);
 
         for (uint8_t i = 0; i < 4; i++) {
           uint16_t chunk = uint16_t((constValue >> (i << 4)) & 0xFFFF);
