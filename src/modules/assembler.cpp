@@ -89,6 +89,14 @@ void createEpilogue(const uint32_t stackSize, std::vector<uint32_t> &machinecode
   machinecode.push_back(arm64::encode_ret());
 }
 
+void printStack(const std::vector<arm64::reg_t> &stack) {
+  std::cout << "Stack (top -> bottom): ";
+  for (auto it = stack.rbegin(); it != stack.rend(); ++it) {
+    std::cout << (*it) << " ";
+  }
+  std::cout << std::endl;
+}
+
 /**
  * Assemble a WebAssembly expression (aka bytecode) into ARM64 machine code.
  */
@@ -193,6 +201,7 @@ std::vector<uint32_t> assembleExpression(std::vector<uint8_t>::const_iterator &s
         auto reg = registerPool.allocateRegister();
         stack.emplace_back(reg);
         auto constValue = decoder::LEB128Decoder::decodeSigned(stream, streamEnd); // n
+        printStack(stack);
 
         for (uint8_t i = 0; i < 4; i++) {
           uint16_t chunk = uint16_t((constValue >> (i << 4)) & 0xFFFF);
@@ -241,20 +250,27 @@ std::vector<uint32_t> assembleExpression(std::vector<uint8_t>::const_iterator &s
 
         // need an independent copy of the register pool for each branch
         RegisterPool conditionalRegisterPool(registerPool);
-        auto block = assembleExpression(stream, streamEnd, locals, conditionalRegisterPool, stack);
+
+        // create a copy of the stack for the conditional block
+        std::vector<arm64::reg_t> stackCopy = stack;
+        std::vector<arm64::reg_t> stackCopy2 = stack;
+
+        auto block = assembleExpression(stream, streamEnd, locals, conditionalRegisterPool, stackCopy);
 
         std::vector<uint32_t> block2;
         if (*(stream - 1) == 0x05) {
           RegisterPool conditionalElseRegisterPool(registerPool);
-          block2 = assembleExpression(stream, streamEnd, locals, conditionalElseRegisterPool, stack);
+          block2 = assembleExpression(stream, streamEnd, locals, conditionalElseRegisterPool, stackCopy2);
         }
 
         if (blocktype != 0) {
-          // FIXME: do something with this information
+          // get value from stackCopy and push it onto the stack
+          registerPool.allocateRegister();
+          stack.emplace_back(stackCopy.back());
         }
 
         // assemble conditional branch
-        machinecode.push_back(arm64::encode_cbz(reg, int32_t(block.size() + 1) << 2, arm64::reg_size_t::SIZE_32BIT));
+        machinecode.push_back(arm64::encode_cbz(reg, int32_t(block.size() + 2) << 2, arm64::reg_size_t::SIZE_32BIT));
         machinecode.insert(machinecode.end(), block.begin(), block.end());
 
         // handle else block if present

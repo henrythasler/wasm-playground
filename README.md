@@ -32,6 +32,8 @@ Progress:
 
 `sudo apt install g++-aarch64-linux-gnu clang-format clang-tidy wabt cmake qemu-user qemu-user-static gdb-multiarch lcov`
 
+Install the [Native Debug](https://marketplace.visualstudio.com/items?itemName=webfreak.debug) Visual Studio Code extension for debugging.
+
 ### Checkout Submodules
 
 `git submodule update --init --recursive`
