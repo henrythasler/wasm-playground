@@ -10,8 +10,8 @@ Progress:
 - Chapter01: ✅
 - Chapter02: ✅
 - Chapter03: ✅
-- Chapter04: 0%
-- Chapter05: 0%
+- Chapter04: ✅
+- Chapter05: 20%
 - Chapter06: 0%
 - Chapter07: 0%
 - Chapter08: 0%
@@ -25,6 +25,11 @@ Progress:
 
 - Uses Kaitai Struct to parse wasm-files
 - gtest is fetched on demand by cmake (no local installation required)
+
+## Limitations and Known Issues
+
+- Wasm-Stack can not exceed 7 items as the current design stores all stack elements in registers (X9-X15).
+- Stack and register allocation for branches (if-else) is expected to be the same after branch merge (end).
 
 ## Prerequisites
 

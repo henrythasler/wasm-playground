@@ -122,6 +122,8 @@ enum class branch_condition_t {
   NV = 0b1111, // Never executed
 };
 
+enum class signed_variant_t { UNSIGNED = 0x00, SIGNED = 0x01 };
+
 /** memory operations */
 uint32_t encode_ldr_unsigned_offset(reg_t rt, reg_t rn, uint16_t imm12, reg_size_t size);
 uint32_t encode_str_unsigned_offset(reg_t rt, reg_t rn, uint16_t imm12, reg_size_t size);
@@ -139,6 +141,7 @@ uint32_t encode_add_immediate(reg_t rd, reg_t rn, uint16_t imm12, bool shift12, 
 uint32_t encode_add_register(reg_t rd, reg_t rn, reg_t rm, uint8_t imm6, reg_shift_t shift, reg_size_t size);
 uint32_t encode_madd_register(reg_t rd, reg_t rn, reg_t rm, reg_t ra, reg_size_t size);
 uint32_t encode_mul_register(reg_t rd, reg_t rn, reg_t rm, reg_size_t size);
+uint32_t encode_div_register(reg_t rd, reg_t rn, reg_t rm, signed_variant_t variant, reg_size_t size);
 
 /** register handling */
 uint32_t encode_mov_register(reg_t rd, reg_t rm, reg_size_t size);

@@ -53,6 +53,17 @@ TEST(instruction, add) {
   EXPECT_EQ_HEX(encode_add_register(X2, X1, X0, 32, reg_shift_t::SHIFT_ASR, reg_size_t::SIZE_64BIT), 0x8B808022);
 }
 
+TEST(instruction, div) {
+  // sdiv x0, x1, x2
+  EXPECT_EQ_HEX(encode_div_register(X0, X1, X2, signed_variant_t::SIGNED, reg_size_t::SIZE_64BIT), 0x9AC20C20);
+  // udiv x0, x1, x2
+  EXPECT_EQ_HEX(encode_div_register(X0, X1, X2, signed_variant_t::UNSIGNED, reg_size_t::SIZE_64BIT), 0x9AC20820);
+  // sdiv w9, w10, w11
+  EXPECT_EQ_HEX(encode_div_register(W9, W10, W11, signed_variant_t::SIGNED, reg_size_t::SIZE_32BIT), 0x1ACB0D49);
+  // udiv w9, w10, w11
+  EXPECT_EQ_HEX(encode_div_register(W9, W10, W11, signed_variant_t::UNSIGNED, reg_size_t::SIZE_32BIT), 0x1ACB0949);
+}
+
 TEST(instruction, mov) {
   // mov fp, sp
   EXPECT_EQ_HEX(encode_mov_sp(FP, SP, reg_size_t::SIZE_64BIT), 0x910003FD);

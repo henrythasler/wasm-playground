@@ -396,6 +396,39 @@ uint32_t encode_mul_register(reg_t rd, reg_t rn, reg_t rm, reg_size_t size) {
 }
 
 /**
+ * This instruction divides the first (un)signed source register value by the second (un)signed source register value.
+ * Writes the result to the destination register. Dividing by zero writes the value zero to the destination register.
+ * UDIV rd, rn, rm
+ * SDIV rd, rn, rm
+ * @param rd destination register
+ * @param rn dividend source register
+ * @param rm divisor source register
+ * @return the encoded instruction
+ */
+uint32_t encode_div_register(reg_t rd, reg_t rn, reg_t rm, signed_variant_t variant, reg_size_t size) {
+  uint32_t instr = 0;
+
+  switch (size) {
+  case reg_size_t::SIZE_32BIT:
+    instr = 0x1ac00800;
+    break;
+  case reg_size_t::SIZE_64BIT:
+    instr = 0x9ac00800;
+    break;
+  default:
+    asserte(false, "encode_div_register(): invalid size value");
+    break;
+  }
+
+  instr |= (int32_t(variant) & 0x01) << 10;
+  instr |= (rm & 0x1F) << 16; // Rm (divisor source register)
+  instr |= (rn & 0x1F) << 5;  // Rn (dividend source register)
+  instr |= (rd & 0x1F);       // Rd (desination register)
+
+  return instr;
+}
+
+/**
  * This instruction copies the value in a source register to the destination register.
  * This is an alias for ORR Xd, XZR, Xm
  * MOV Xd, Xm
