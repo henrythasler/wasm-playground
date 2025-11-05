@@ -248,28 +248,29 @@ std::vector<uint32_t> assembleExpression(std::vector<uint8_t>::const_iterator &s
         auto rawBlocktype = *stream++;
         auto blocktype = (rawBlocktype == 0x40) ? webassembly_t::val_types_t(0) : webassembly_t::val_types_t(rawBlocktype);
 
-        // need an independent copy of the register pool for each branch
-        RegisterPool conditionalRegisterPool(registerPool);
+        // need an independent copy of the register pool for else branch
+        RegisterPool elseRegisterPool(registerPool);
+        // and a copy of the stack for the conditional block
+        std::vector<arm64::reg_t> elseStack = stack;
 
-        // create a copy of the stack for the conditional block
-        std::vector<arm64::reg_t> stackCopy = stack;
-        std::vector<arm64::reg_t> stackCopy2 = stack;
-
-        auto block = assembleExpression(stream, streamEnd, locals, conditionalRegisterPool, stackCopy);
+        auto block = assembleExpression(stream, streamEnd, locals, registerPool, stack);
 
         std::vector<uint32_t> block2;
         if (*(stream - 1) == 0x05) {
-          RegisterPool conditionalElseRegisterPool(registerPool);
-          block2 = assembleExpression(stream, streamEnd, locals, conditionalElseRegisterPool, stackCopy2);
+          block2 = assembleExpression(stream, streamEnd, locals, elseRegisterPool, elseStack);
+          // verify that stack sizes and registers match after else-block
+          asserte(stack.size() == elseStack.size(), "stack size mismatch after else-block");
+          if (stack.size() > 0 && elseStack.size() > 0) {
+            asserte(stack.back() == elseStack.back(), "stack register mismatch after else-block");
+          }
         }
 
         if (blocktype != 0) {
-          // get value from stackCopy and push it onto the stack
-          registerPool.allocateRegister();
-          stack.emplace_back(stackCopy.back());
+          // maybe do something here
         }
 
-        // assemble conditional branch
+        // insert cbz to jump over if block if condition is false (zero)
+        // include the size of the cbz instruction itself (4 bytes) and the jump instruction after the if block (4 bytes)
         machinecode.push_back(arm64::encode_cbz(reg, int32_t(block.size() + 2) << 2, arm64::reg_size_t::SIZE_32BIT));
         machinecode.insert(machinecode.end(), block.begin(), block.end());
 
