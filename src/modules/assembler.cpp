@@ -201,12 +201,19 @@ std::vector<uint32_t> assembleExpression(std::vector<uint8_t>::const_iterator &s
       {
         asserte(stack.size() >= 2, "insufficient operands on stack for mul");
 
+        auto registerSize = ((*(stream - 1) == 0x6d) || (*(stream - 1) == 0xe6)) ? arm64::reg_size_t::SIZE_32BIT : arm64::reg_size_t::SIZE_64BIT;
+        auto signedVariant =
+            ((*(stream - 1) == 0x6d) || (*(stream - 1) == 0x7f)) ? arm64::signed_variant_t::SIGNED : arm64::signed_variant_t::UNSIGNED;
+
         auto reg2 = stack.at(stack.size() - 1);
         auto reg1 = stack.at(stack.size() - 2);
 
-        // FIXME: use correct variant and size
-        // FIXME: trap on Division By Zero
-        machinecode.push_back(arm64::encode_div_register(reg1, reg1, reg2, arm64::signed_variant_t::SIGNED, arm64::reg_size_t::SIZE_64BIT));
+        // check for division by zero and trap if so
+        machinecode.push_back(arm64::encode_cbnz(reg2, 8, registerSize)); // skip next instruction if not zero
+        machinecode.push_back(arm64::encode_udf());                       // undefined instruction to trigger a trap
+
+        // encode division instruction
+        machinecode.push_back(arm64::encode_div_register(reg1, reg1, reg2, signedVariant, registerSize));
 
         stack.pop_back();
         registerPool.freeRegister(reg2);

@@ -17,6 +17,7 @@ TEST(division, signed32) {
   helper::dump("division.div_s32.bin", machinecode);
 
   EXPECT_EQ(wasmFunction(10, 1), 10);
+  // EXPECT_THROW(wasmFunction(10, 0), std::runtime_error);
 }
 
 } // namespace

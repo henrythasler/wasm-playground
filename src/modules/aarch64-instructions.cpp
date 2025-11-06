@@ -391,6 +391,15 @@ uint32_t encode_madd_register(reg_t rd, reg_t rn, reg_t rm, reg_t ra, reg_size_t
   return instr;
 }
 
+/**
+ * This instruction multiplies two register values and writes the result to the destination register.
+ * MUL rd, rn, rm
+ * @param rd destination register
+ * @param rn first source register
+ * @param rm second source register
+ * @param size 32-bit or 64-bit variant
+ * @return the encoded instruction
+ */
 uint32_t encode_mul_register(reg_t rd, reg_t rn, reg_t rm, reg_size_t size) {
   return encode_madd_register(rd, rn, rm, WZR, size);
 }
@@ -564,11 +573,16 @@ uint32_t encode_ret(reg_t rn) {
   return 0xD65F0000 | ((rn & 0x1F) << 5);
 }
 
+/**
+ * This instruction branches unconditionally to a label at a PC-relative offset.
+ *
+ * `B imm26`
+ * @param imm26 offset from the address of this instruction, in the range +/-128MB
+ * @return the encoded instruction
+ */
 uint32_t encode_branch(int32_t imm26) {
   uint32_t instr = 0x14000000;
-
   instr |= ((imm26 >> 2) & 0x3FFFFFF); // imm26 offset
-
   return instr;
 }
 
@@ -621,9 +635,47 @@ uint32_t encode_cbz(reg_t rt, int32_t imm19, reg_size_t size) {
 }
 
 /**
+ * This instruction compares the value in a register with zero, and conditionally branches to a label at a PC-relative offset if the comparison is
+ * not equal. This instruction provides a hint that this is not a subroutine call or return. This instruction does not affect condition flags.
+ *
+ * `CBNZ rt, imm19`
+ * @param rt register to be tested
+ * @param imm19 offset in bytes from the address of this instruction, in the range +/-1MB
+ * @return the encoded instruction
+ */
+uint32_t encode_cbnz(reg_t rt, int32_t imm19, reg_size_t size) {
+  uint32_t instr = 0;
+
+  switch (size) {
+  case reg_size_t::SIZE_32BIT:
+    instr = 0x35000000;
+    break;
+  case reg_size_t::SIZE_64BIT:
+    instr = 0xB5000000;
+    break;
+  default:
+    asserte(false, "encode_cbnz(): invalid size value");
+    break;
+  }
+
+  instr |= ((imm19 >> 2) & 0x7FFFF) << 5; // imm19 offset
+  instr |= (rt & 0x1F);                   // Rt (register to be tested)
+
+  return instr;
+}
+
+/**
  * This instruction does nothing, other than advance the value of the program counter by 4.
  */
 uint32_t encode_nop() {
   return 0xD503201F;
 }
+
+/**
+ * This instruction causes an undefined instruction exception.
+ */
+uint32_t encode_udf() {
+  return 0x00000000; // UDF #0
+}
+
 } // namespace arm64
