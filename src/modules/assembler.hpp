@@ -8,6 +8,7 @@
 #include "aarch64-instructions.hpp"
 #include "helper.hpp"
 #include "leb128.hpp"
+#include "wasm.hpp"
 #include "webassembly.h"
 
 // Global jmp_buf for trap handling

@@ -13,7 +13,7 @@ namespace {
 TEST(conditionals, lt_s) {
   auto wasmModule = helper::loadModule("compare.wasm");
   auto machinecode = wasmModule.getWasmFunction("lt_s")->getMachinecode();
-  auto wasmFunction = tiny::make_wasm_function<tiny::wasm_i32_t, tiny::wasm_i32_t, tiny::wasm_i32_t>(machinecode);
+  auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t, wasm::wasm_i32_t, wasm::wasm_i32_t>(machinecode);
   helper::dump("compare.lt_s.bin", machinecode);
 
   EXPECT_EQ(wasmFunction(0, 1), 1);

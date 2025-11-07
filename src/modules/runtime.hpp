@@ -13,11 +13,6 @@
 
 namespace tiny {
 
-using wasm_i32_t = int32_t;
-using wasm_i64_t = int64_t;
-using wasm_f32_t = float;
-using wasm_f64_t = double;
-
 /**
  * RAII wrapper for JIT-compiled executable memory
  * Handles allocation, permission management, and automatic cleanup
@@ -37,25 +32,7 @@ private:
     return reinterpret_cast<const uint8_t *>(code.data());
   }
 
-  void allocate_and_copy(const uint8_t *data, size_t byte_size) {
-    asserte(byte_size > 0, "Cannot allocate zero-sized memory");
-
-    // Allocate writable memory
-    mem_ = mmap(nullptr, byte_size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-    asserte(mem_ != MAP_FAILED, "mmap failed: " + std::string(strerror(errno)));
-
-    // Copy machine code
-    memcpy(mem_, data, byte_size);
-
-    // Clear instruction cache (critical for ARM/AArch64)
-    __builtin___clear_cache(mem_, static_cast<char *>(mem_) + byte_size);
-
-    // Make executable (remove write permission for W^X compliance)
-    if (mprotect(mem_, byte_size, PROT_READ | PROT_EXEC) != 0) {
-      munmap(mem_, byte_size);
-      asserte(false, "mprotect failed: " + std::string(strerror(errno)));
-    }
-  }
+  void allocate_and_copy(const uint8_t *data, size_t byte_size);
 
 public:
   // Constructor for uint8_t vector (byte array)
@@ -123,18 +100,18 @@ public:
 
   // Call operator - allows using the object like a function
   ReturnType operator()(Args... args) const {
-    return func_ptr_(args...);
+    return call(args...);
   }
 
   // Explicit call method
   ReturnType call(Args... args) const {
-    int error_code = _setjmp(g_jmpbuf);
-    if (error_code == 0) {
+    int trap_code = _setjmp(g_jmpbuf);
+    if (trap_code == 0) {
       // First time - call the JIT function
       return func_ptr_(args...);
     } else {
       // Returned via longjmp - handle the error
-      throw std::runtime_error("Trapcode " + std::to_string(error_code));
+      throw std::runtime_error("Trapcode " + std::to_string(trap_code));
     }
   }
 

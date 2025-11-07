@@ -13,7 +13,7 @@ namespace {
 TEST(arithmetic_i32, add) {
   auto wasmModule = helper::loadModule("arithmetic.0.wasm");
   auto machinecode = wasmModule.getWasmFunction("add")->getMachinecode();
-  auto wasmFunction = tiny::make_wasm_function<tiny::wasm_i32_t, tiny::wasm_i32_t, tiny::wasm_i32_t>(machinecode);
+  auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t, wasm::wasm_i32_t, wasm::wasm_i32_t>(machinecode);
   helper::dump("arithmetic.add32.bin", machinecode);
 
   EXPECT_EQ(wasmFunction(0, 0), 0);
@@ -33,7 +33,7 @@ TEST(arithmetic_i32, add) {
 TEST(arithmetic_i64, add) {
   auto wasmModule = helper::loadModule("arithmetic.1.wasm");
   auto machinecode = wasmModule.getWasmFunction("add")->getMachinecode();
-  auto wasmFunction = tiny::make_wasm_function<tiny::wasm_i64_t, tiny::wasm_i64_t, tiny::wasm_i64_t>(machinecode);
+  auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i64_t, wasm::wasm_i64_t, wasm::wasm_i64_t>(machinecode);
   helper::dump("arithmetic.add64.bin", machinecode);
 
   EXPECT_EQ(wasmFunction(0, 0), 0);
@@ -53,7 +53,7 @@ TEST(arithmetic_i64, add) {
 TEST(arithmetic_i32, sub) {
   auto wasmModule = helper::loadModule("arithmetic.0.wasm");
   auto machinecode = wasmModule.getWasmFunction("sub")->getMachinecode();
-  auto wasmFunction = tiny::make_wasm_function<tiny::wasm_i32_t, tiny::wasm_i32_t, tiny::wasm_i32_t>(machinecode);
+  auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t, wasm::wasm_i32_t, wasm::wasm_i32_t>(machinecode);
   helper::dump("arithmetic.sub32.bin", machinecode);
 
   EXPECT_EQ(wasmFunction(0, 0), 0);
@@ -74,7 +74,7 @@ TEST(arithmetic_i32, sub) {
 TEST(arithmetic_i64, sub) {
   auto wasmModule = helper::loadModule("arithmetic.1.wasm");
   auto machinecode = wasmModule.getWasmFunction("sub")->getMachinecode();
-  auto wasmFunction = tiny::make_wasm_function<tiny::wasm_i64_t, tiny::wasm_i64_t, tiny::wasm_i64_t>(machinecode);
+  auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i64_t, wasm::wasm_i64_t, wasm::wasm_i64_t>(machinecode);
   helper::dump("arithmetic.sub64.bin", machinecode);
 
   EXPECT_EQ(wasmFunction(0, 0), 0);
@@ -94,7 +94,7 @@ TEST(arithmetic_i64, sub) {
 TEST(arithmetic_i32, mul) {
   auto wasmModule = helper::loadModule("arithmetic.0.wasm");
   auto machinecode = wasmModule.getWasmFunction("mul")->getMachinecode();
-  auto wasmFunction = tiny::make_wasm_function<tiny::wasm_i32_t, tiny::wasm_i32_t, tiny::wasm_i32_t>(machinecode);
+  auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t, wasm::wasm_i32_t, wasm::wasm_i32_t>(machinecode);
   helper::dump("arithmetic.mul32.bin", machinecode);
 
   EXPECT_EQ(wasmFunction(0, 0), 0);
@@ -116,7 +116,7 @@ TEST(arithmetic_i32, mul) {
 TEST(arithmetic_i64, mul) {
   auto wasmModule = helper::loadModule("arithmetic.1.wasm");
   auto machinecode = wasmModule.getWasmFunction("mul")->getMachinecode();
-  auto wasmFunction = tiny::make_wasm_function<tiny::wasm_i64_t, tiny::wasm_i64_t, tiny::wasm_i64_t>(machinecode);
+  auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i64_t, wasm::wasm_i64_t, wasm::wasm_i64_t>(machinecode);
   helper::dump("arithmetic.mul64.bin", machinecode);
 
   EXPECT_EQ(wasmFunction(0, 0), 0);

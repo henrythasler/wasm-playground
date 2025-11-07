@@ -14,7 +14,7 @@ namespace {
 TEST(echo, echo32) {
   auto wasmModule = helper::loadModule("echo.wasm");
   auto machinecode = wasmModule.getWasmFunction("echo32")->getMachinecode();
-  auto wasmFunction = tiny::make_wasm_function<tiny::wasm_i32_t, tiny::wasm_i32_t>(machinecode);
+  auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t, wasm::wasm_i32_t>(machinecode);
   helper::dump("echo32.bin", machinecode);
 
   EXPECT_EQ(wasmFunction(-1), -1);
@@ -27,7 +27,7 @@ TEST(echo, echo32) {
 TEST(echo, echo64) {
   auto wasmModule = helper::loadModule("echo.wasm");
   auto machinecode = wasmModule.getWasmFunction("echo64")->getMachinecode();
-  auto wasmFunction = tiny::make_wasm_function<tiny::wasm_i64_t, tiny::wasm_i64_t>(machinecode);
+  auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i64_t, wasm::wasm_i64_t>(machinecode);
   helper::dump("echo64.bin", machinecode);
 
   EXPECT_EQ(wasmFunction(-1), -1);
@@ -44,7 +44,7 @@ TEST(echo, echo64) {
 TEST(echo, geti64) {
   auto wasmModule = helper::loadModule("echo.wasm");
   auto machinecode = wasmModule.getWasmFunction("geti64")->getMachinecode();
-  auto wasmFunction = tiny::make_wasm_function<tiny::wasm_i64_t>(machinecode);
+  auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i64_t>(machinecode);
   helper::dump("geti64.bin", machinecode);
 
   EXPECT_EQ(wasmFunction(), 0x123456789ABCDEF0);
@@ -53,7 +53,7 @@ TEST(echo, geti64) {
 TEST(echo, geti64max) {
   auto wasmModule = helper::loadModule("echo.wasm");
   auto machinecode = wasmModule.getWasmFunction("geti64max")->getMachinecode();
-  auto wasmFunction = tiny::make_wasm_function<tiny::wasm_i64_t>(machinecode);
+  auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i64_t>(machinecode);
   helper::dump("geti64max.bin", machinecode);
 
   EXPECT_EQ(wasmFunction(), 0x7fffffffffffffff);

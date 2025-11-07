@@ -581,11 +581,16 @@ uint32_t encode_ret(reg_t rn) {
  * @return the encoded instruction
  */
 uint32_t encode_branch(int32_t imm26) {
-  uint32_t instr = 0x14000000;
-  instr |= ((imm26 >> 2) & 0x3FFFFFF); // imm26 offset
-  return instr;
+  return 0x14000000 | ((imm26 >> 2) & 0x3FFFFFF); // imm26 offset
 }
 
+/**
+ * This instruction branches unconditionally to an address in a register.
+ *
+ * `BLR rn`
+ * @param rn register containing the target address
+ * @return the encoded instruction
+ */
 uint32_t encode_branch_register(reg_t rn) {
   return 0xD63F0000 | ((rn & 0x1F) << 5);
 }

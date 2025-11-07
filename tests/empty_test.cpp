@@ -13,7 +13,7 @@ namespace {
 TEST(local0, function0) {
   auto wasmModule = helper::loadModule("empty-fn.wasm");
   auto machinecode = wasmModule.getWasmFunction("foo")->getMachinecode();
-  auto wasmFunction = tiny::make_wasm_function<tiny::wasm_i32_t>(machinecode);
+  auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t>(machinecode);
   wasmFunction();
 }
 

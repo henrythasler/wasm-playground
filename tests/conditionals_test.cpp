@@ -13,7 +13,7 @@ namespace {
 TEST(conditionals, singular) {
   auto wasmModule = helper::loadModule("conditionals.0.wasm");
   auto machinecode = wasmModule.getWasmFunction("singular")->getMachinecode();
-  auto wasmFunction = tiny::make_wasm_function<tiny::wasm_i32_t, tiny::wasm_i32_t>(machinecode);
+  auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t, wasm::wasm_i32_t>(machinecode);
   helper::dump("conditionals.singular.bin", machinecode);
 
   EXPECT_EQ(wasmFunction(0), 8);
@@ -25,7 +25,7 @@ TEST(conditionals, singular) {
 TEST(conditionals, return_value) {
   auto wasmModule = helper::loadModule("conditionals.0.wasm");
   auto machinecode = wasmModule.getWasmFunction("as-return-value")->getMachinecode();
-  auto wasmFunction = tiny::make_wasm_function<tiny::wasm_i32_t, tiny::wasm_i32_t>(machinecode);
+  auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t, wasm::wasm_i32_t>(machinecode);
   helper::dump("conditionals.as-return-value.bin", machinecode);
 
   EXPECT_EQ(wasmFunction(0), 0);
@@ -35,7 +35,7 @@ TEST(conditionals, return_value) {
 TEST(conditionals, local_set) {
   auto wasmModule = helper::loadModule("conditionals.0.wasm");
   auto machinecode = wasmModule.getWasmFunction("as-local.set-value")->getMachinecode();
-  auto wasmFunction = tiny::make_wasm_function<tiny::wasm_i32_t, tiny::wasm_i32_t>(machinecode);
+  auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t, wasm::wasm_i32_t>(machinecode);
   helper::dump("conditionals.as-local.set-value.bin", machinecode);
 
   EXPECT_EQ(wasmFunction(0), 0);
@@ -45,7 +45,7 @@ TEST(conditionals, local_set) {
 TEST(conditionals, local_tee) {
   auto wasmModule = helper::loadModule("conditionals.0.wasm");
   auto machinecode = wasmModule.getWasmFunction("as-local.tee-value")->getMachinecode();
-  auto wasmFunction = tiny::make_wasm_function<tiny::wasm_i32_t, tiny::wasm_i32_t>(machinecode);
+  auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t, wasm::wasm_i32_t>(machinecode);
   helper::dump("conditionals.as-local.tee-value.bin", machinecode);
 
   EXPECT_EQ(wasmFunction(0), 0);
@@ -55,7 +55,7 @@ TEST(conditionals, local_tee) {
 TEST(conditionals, abs) {
   auto wasmModule = helper::loadModule("abs.wasm");
   auto machinecode = wasmModule.getWasmFunction("abs")->getMachinecode();
-  auto wasmFunction = tiny::make_wasm_function<tiny::wasm_i32_t, tiny::wasm_i32_t>(machinecode);
+  auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t, wasm::wasm_i32_t>(machinecode);
   helper::dump("conditionals.abs.bin", machinecode);
 
   EXPECT_EQ(wasmFunction(0), 0);
