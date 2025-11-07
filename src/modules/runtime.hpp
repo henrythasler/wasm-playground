@@ -1,12 +1,14 @@
 #pragma once
 
 #include <cerrno>
+#include <csetjmp>
 #include <cstdint>
 #include <cstring>
 #include <iomanip>
 #include <sys/mman.h>
 #include <vector>
 
+#include "assembler.hpp"
 #include "helper.hpp"
 
 namespace tiny {
@@ -126,7 +128,14 @@ public:
 
   // Explicit call method
   ReturnType call(Args... args) const {
-    return func_ptr_(args...);
+    int error_code = _setjmp(g_jmpbuf);
+    if (error_code == 0) {
+      // First time - call the JIT function
+      return func_ptr_(args...);
+    } else {
+      // Returned via longjmp - handle the error
+      throw std::runtime_error("Trapcode " + std::to_string(error_code));
+    }
   }
 
   // Get raw function pointer (for advanced usage)

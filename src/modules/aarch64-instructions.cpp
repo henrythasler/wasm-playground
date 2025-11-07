@@ -586,6 +586,10 @@ uint32_t encode_branch(int32_t imm26) {
   return instr;
 }
 
+uint32_t encode_branch_register(reg_t rn) {
+  return 0xD63F0000 | ((rn & 0x1F) << 5);
+}
+
 /**
  * This instruction branches conditionally to a label at a PC-relative offset. This instruction provides a hint that this is not a subroutine call or
  * return.
@@ -669,6 +673,13 @@ uint32_t encode_cbnz(reg_t rt, int32_t imm19, reg_size_t size) {
  */
 uint32_t encode_nop() {
   return 0xD503201F;
+}
+
+/**
+ * This instruction causes a breakpoint exception.
+ */
+uint32_t encode_brk(uint16_t imm16) {
+  return 0xD4200000 | (imm16 & 0xFFFF);
 }
 
 /**

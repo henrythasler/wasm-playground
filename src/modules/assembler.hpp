@@ -1,3 +1,5 @@
+#pragma once
+#include <csetjmp>
 #include <iomanip>
 #include <iostream>
 #include <map>
@@ -7,6 +9,9 @@
 #include "helper.hpp"
 #include "leb128.hpp"
 #include "webassembly.h"
+
+// Global jmp_buf for trap handling
+extern jmp_buf g_jmpbuf;
 
 namespace assembler {
 class RegisterPool {

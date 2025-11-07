@@ -16,8 +16,8 @@ TEST(division, signed32) {
   auto wasmFunction = tiny::make_wasm_function<tiny::wasm_i32_t, tiny::wasm_i32_t, tiny::wasm_i32_t>(machinecode);
   helper::dump("division.div_s32.bin", machinecode);
 
-  EXPECT_EQ(wasmFunction(10, 1), 10);
-  // EXPECT_THROW(wasmFunction(10, 0), std::runtime_error);
+  EXPECT_EQ(wasmFunction.call(10, 1), 10);
+  EXPECT_THROW(wasmFunction.call(10, 0), std::runtime_error);
 }
 
 } // namespace

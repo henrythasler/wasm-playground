@@ -72,7 +72,8 @@
         "format": "cpp",
         "bitset": "cpp",
         "complex": "cpp",
-        "typeindex": "cpp"
+        "typeindex": "cpp",
+        "csetjmp": "cpp"
     },
     "cmake.sourceDirectory": "/home/henry/dev/wasm-playground",
     "cmake.generator": "Unix Makefiles"

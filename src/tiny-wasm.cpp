@@ -95,10 +95,9 @@ int main(int argc, char const *argv[]) {
     /* execute machine code */
     if (!dry_run) {
       std::cout << "  Executing machine code (break *0x" << machinecode.data() << ")... ";
-      auto wasmFunction = tiny::make_wasm_function<tiny::wasm_i32_t, tiny::wasm_i32_t>(machinecode);
+      auto wasmFunction = tiny::make_wasm_function<tiny::wasm_i32_t, tiny::wasm_i32_t, tiny::wasm_i32_t>(machinecode);
       try {
-        // std::raise(SIGINT);
-        auto res = wasmFunction(-2);
+        auto res = wasmFunction.call(2, 0);
         std::cout << res << " ";
       } catch (const std::exception &e) {
         std::cerr << RED << "Execution failed: " << e.what() << RESET << std::endl;

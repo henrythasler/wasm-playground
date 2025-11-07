@@ -1,5 +1,11 @@
 #include "assembler.hpp"
 
+jmp_buf g_jmpbuf;
+
+extern "C" void wasmTrapHandler(int error_code) {
+  longjmp(g_jmpbuf, error_code);
+}
+
 namespace assembler {
 arm64::reg_size_t map_valtype_to_regsize(const webassembly_t::val_types_t type) {
   switch (type) {
@@ -209,8 +215,15 @@ std::vector<uint32_t> assembleExpression(std::vector<uint8_t>::const_iterator &s
         auto reg1 = stack.at(stack.size() - 2);
 
         // check for division by zero and trap if so
-        machinecode.push_back(arm64::encode_cbnz(reg2, 8, registerSize)); // skip next instruction if not zero
-        machinecode.push_back(arm64::encode_udf());                       // undefined instruction to trigger a trap
+        machinecode.push_back(arm64::encode_cbnz(reg2, 7 << 2, registerSize)); // skip next 6 instruction if not zero
+
+        uint64_t trap_addr = reinterpret_cast<uint64_t>(&wasmTrapHandler);
+        machinecode.push_back(arm64::encode_mov_immediate(arm64::X0, 0x01, 0, arm64::reg_size_t::SIZE_64BIT));
+        machinecode.push_back(arm64::encode_mov_immediate(arm64::X9, trap_addr & 0xFFFF, 0, arm64::reg_size_t::SIZE_64BIT));
+        machinecode.push_back(arm64::encode_movk(arm64::X9, uint16_t((trap_addr >> (1 << 4)) & 0xFFFF), 1 << 4, arm64::reg_size_t::SIZE_64BIT));
+        machinecode.push_back(arm64::encode_movk(arm64::X9, uint16_t((trap_addr >> (2 << 4)) & 0xFFFF), 2 << 4, arm64::reg_size_t::SIZE_64BIT));
+        machinecode.push_back(arm64::encode_movk(arm64::X9, uint16_t((trap_addr >> (3 << 4)) & 0xFFFF), 3 << 4, arm64::reg_size_t::SIZE_64BIT));
+        machinecode.push_back(arm64::encode_branch_register(arm64::X9));
 
         // encode division instruction
         machinecode.push_back(arm64::encode_div_register(reg1, reg1, reg2, signedVariant, registerSize));
