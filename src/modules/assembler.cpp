@@ -103,6 +103,17 @@ void printStack(const std::vector<arm64::reg_t> &stack) {
   std::cout << std::endl;
 }
 
+std::vector<uint32_t> encodeTrapHandler(uint64_t trapHandlerAddress, wasm::trap_code_t trapCode) {
+  std::vector<uint32_t> machinecode;
+  machinecode.push_back(arm64::encode_mov_immediate(arm64::X0, uint16_t(trapCode), 0, arm64::reg_size_t::SIZE_64BIT));
+  machinecode.push_back(arm64::encode_mov_immediate(arm64::X9, uint16_t(trapHandlerAddress & 0xFFFF), 0, arm64::reg_size_t::SIZE_64BIT));
+  machinecode.push_back(arm64::encode_movk(arm64::X9, uint16_t((trapHandlerAddress >> (1 << 4)) & 0xFFFF), 1 << 4, arm64::reg_size_t::SIZE_64BIT));
+  machinecode.push_back(arm64::encode_movk(arm64::X9, uint16_t((trapHandlerAddress >> (2 << 4)) & 0xFFFF), 2 << 4, arm64::reg_size_t::SIZE_64BIT));
+  machinecode.push_back(arm64::encode_movk(arm64::X9, uint16_t((trapHandlerAddress >> (3 << 4)) & 0xFFFF), 3 << 4, arm64::reg_size_t::SIZE_64BIT));
+  machinecode.push_back(arm64::encode_branch_register(arm64::X9));
+  return machinecode;
+}
+
 /**
  * Assemble a WebAssembly expression (aka bytecode) into ARM64 machine code.
  */
@@ -205,7 +216,7 @@ std::vector<uint32_t> assembleExpression(std::vector<uint8_t>::const_iterator &s
     case 0x80:
       /** i32.div_s, i32.div_u, i64.div_s, i64.div_u */
       {
-        asserte(stack.size() >= 2, "insufficient operands on stack for mul");
+        asserte(stack.size() >= 2, "insufficient operands on stack for div");
 
         auto registerSize = ((*(stream - 1) == 0x6d) || (*(stream - 1) == 0xe6)) ? arm64::reg_size_t::SIZE_32BIT : arm64::reg_size_t::SIZE_64BIT;
         auto signedVariant =
@@ -214,17 +225,13 @@ std::vector<uint32_t> assembleExpression(std::vector<uint8_t>::const_iterator &s
         auto reg2 = stack.at(stack.size() - 1);
         auto reg1 = stack.at(stack.size() - 2);
 
-        uint64_t trap_addr = reinterpret_cast<uint64_t>(&wasmTrapHandler);
+        auto trapSequenceDivByZero = encodeTrapHandler(reinterpret_cast<uint64_t>(&wasmTrapHandler), wasm::trap_code_t::IntegerDivisionByZero);
+        auto trapSequenceOverflow = encodeTrapHandler(reinterpret_cast<uint64_t>(&wasmTrapHandler), wasm::trap_code_t::IntegerOverflow);
 
         // check for division by zero and trap if so
-        machinecode.push_back(arm64::encode_cbnz(reg2, 7 << 2, registerSize)); // skip next 6 instruction if not zero
         machinecode.push_back(
-            arm64::encode_mov_immediate(arm64::X0, uint16_t(wasm::trap_code_t::IntegerDivisionByZero), 0, arm64::reg_size_t::SIZE_64BIT));
-        machinecode.push_back(arm64::encode_mov_immediate(arm64::X9, uint16_t(trap_addr & 0xFFFF), 0, arm64::reg_size_t::SIZE_64BIT));
-        machinecode.push_back(arm64::encode_movk(arm64::X9, uint16_t((trap_addr >> (1 << 4)) & 0xFFFF), 1 << 4, arm64::reg_size_t::SIZE_64BIT));
-        machinecode.push_back(arm64::encode_movk(arm64::X9, uint16_t((trap_addr >> (2 << 4)) & 0xFFFF), 2 << 4, arm64::reg_size_t::SIZE_64BIT));
-        machinecode.push_back(arm64::encode_movk(arm64::X9, uint16_t((trap_addr >> (3 << 4)) & 0xFFFF), 3 << 4, arm64::reg_size_t::SIZE_64BIT));
-        machinecode.push_back(arm64::encode_branch_register(arm64::X9));
+            arm64::encode_cbnz(reg2, int32_t(trapSequenceDivByZero.size() + 1) << 2, registerSize)); // skip trap handler jump sequence if not zero
+        machinecode.insert(machinecode.end(), trapSequenceDivByZero.begin(), trapSequenceDivByZero.end());
 
         // need to check for integer overflow (INT_MIN/-1)
         if (signedVariant == arm64::signed_variant_t::SIGNED) {
@@ -236,18 +243,12 @@ std::vector<uint32_t> assembleExpression(std::vector<uint8_t>::const_iterator &s
           auto tmp_reg = registerPool.allocateRegister();
           uint8_t shift = (registerSize == arm64::reg_size_t::SIZE_32BIT) ? 16 : 48;
           machinecode.push_back(arm64::encode_mov_immediate(tmp_reg, 0x8000, shift, registerSize));
-          machinecode.push_back(arm64::encode_cmp_extended_register(reg1, tmp_reg, arm64::extend_type_t::EXTEND_UXTW, 0, registerSize));
-          machinecode.push_back(arm64::encode_branch_cond(arm64::branch_condition_t::NE, 7 << 2));
+          machinecode.push_back(arm64::encode_cmp_shifted_register(reg1, tmp_reg, arm64::reg_shift_t::SHIFT_LSL, 0, registerSize));
+          machinecode.push_back(arm64::encode_branch_cond(arm64::branch_condition_t::NE, int32_t(trapSequenceOverflow.size() + 1) << 2));
           registerPool.freeRegister(tmp_reg);
 
-          // Also yes! Need to trap
-          machinecode.push_back(
-              arm64::encode_mov_immediate(arm64::X0, uint16_t(wasm::trap_code_t::IntegerOverflow), 0, arm64::reg_size_t::SIZE_64BIT));
-          machinecode.push_back(arm64::encode_mov_immediate(arm64::X9, uint16_t(trap_addr & 0xFFFF), 0, arm64::reg_size_t::SIZE_64BIT));
-          machinecode.push_back(arm64::encode_movk(arm64::X9, uint16_t((trap_addr >> (1 << 4)) & 0xFFFF), 1 << 4, arm64::reg_size_t::SIZE_64BIT));
-          machinecode.push_back(arm64::encode_movk(arm64::X9, uint16_t((trap_addr >> (2 << 4)) & 0xFFFF), 2 << 4, arm64::reg_size_t::SIZE_64BIT));
-          machinecode.push_back(arm64::encode_movk(arm64::X9, uint16_t((trap_addr >> (3 << 4)) & 0xFFFF), 3 << 4, arm64::reg_size_t::SIZE_64BIT));
-          machinecode.push_back(arm64::encode_branch_register(arm64::X9));
+          // Also yes! Insert jump to trap handler
+          machinecode.insert(machinecode.end(), trapSequenceOverflow.begin(), trapSequenceOverflow.end());
         }
 
         // all checks passed; encode division instruction
