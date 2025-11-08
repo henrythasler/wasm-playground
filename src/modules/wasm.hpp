@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <iostream>
 
 namespace wasm {
 using wasm_i32_t = int32_t;
@@ -8,8 +9,13 @@ using wasm_i64_t = int64_t;
 using wasm_f32_t = float;
 using wasm_f64_t = double;
 
+/**
+ * Enum representing various WebAssembly trap codes
+ * carry-over from wasi-libc for consistency
+ */
 enum class trap_code_t {
-  UnreachableCodeReached = 0x01,
+  None = 0,
+  UnreachableCodeReached,
   MemoryOutOfBounds,
   TableOutOfBounds,
   IndirectCallToNull,
@@ -21,4 +27,6 @@ enum class trap_code_t {
   OutOfFuel,
   GrowthOperationLimited,
 };
+
+std::string trapCodeToString(trap_code_t code);
 } // namespace wasm

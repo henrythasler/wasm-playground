@@ -6,9 +6,8 @@
 #include "../src/modules/loader.hpp"
 #include "../src/modules/module.hpp"
 #include "../src/modules/runtime.hpp"
-
 #include "helper.hpp"
-namespace {
+namespace testing {
 
 TEST(division, signed32) {
   auto wasmModule = helper::loadModule("division.wasm");
@@ -33,10 +32,29 @@ TEST(division, signed32) {
   EXPECT_EQ(wasmFunction(11, 5), 2);
   EXPECT_EQ(wasmFunction(17, 7), 2);
 
-  EXPECT_THROW(wasmFunction(1, 0), std::runtime_error);
-  EXPECT_THROW(wasmFunction(0, 0), std::runtime_error);
-  EXPECT_THROW(wasmFunction(0x80000000, 0), std::runtime_error);
-  // EXPECT_THROW(wasmFunction(0x80000000, -1), std::runtime_error);
+  EXPECT_THAT([&]{wasmFunction(1, 0);}, Throws<std::system_error>(
+    Property(&std::system_error::code,
+      Property(&std::error_code::value, Eq(int32_t(wasm::trap_code_t::IntegerDivisionByZero)))
+    )
+  ));
+
+  EXPECT_THAT([&]{wasmFunction(0, 0);}, Throws<std::system_error>(
+    Property(&std::system_error::code,
+      Property(&std::error_code::value, Eq(int32_t(wasm::trap_code_t::IntegerDivisionByZero)))
+    )
+  ));  
+
+  EXPECT_THAT([&]{wasmFunction(0x80000000, 0);}, Throws<std::system_error>(
+    Property(&std::system_error::code,
+      Property(&std::error_code::value, Eq(int32_t(wasm::trap_code_t::IntegerDivisionByZero)))
+    )
+  ));
+
+  EXPECT_THAT([&]{wasmFunction(0x80000000, -1);}, Throws<std::system_error>(
+    Property(&std::system_error::code,
+      Property(&std::error_code::value, Eq(int32_t(wasm::trap_code_t::IntegerOverflow)))
+    )
+  ));  
 }
 
-} // namespace
+} // namespace testing

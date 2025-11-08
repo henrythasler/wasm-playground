@@ -259,7 +259,9 @@ uint32_t encode_cmp_shifted_register(reg_t rn, reg_t rm, reg_shift_t shift, uint
 /**
  * This instruction subtracts a sign or zero-extended register value, followed by an optional left shift amount, from a register value, and writes
  * the result to the destination register. The argument that is extended from the <Rm> register can be a byte, halfword, word, or doubleword. It
- * updates the condition flags based on the result. SUBS rd, rn|SP, rm{, extend {#imm3}}
+ * updates the condition flags based on the result.
+ *
+ * `SUBS rd, rn|SP, rm{, extend {#imm3}}`
  * @param rd destination register
  * @param rn first source register
  * @param rm second source register
@@ -293,6 +295,23 @@ uint32_t encode_subs_extended_register(reg_t rd, reg_t rn, reg_t rm, extend_type
 }
 
 /**
+ * This instruction subtracts a sign or zero-extended register value, followed by an optional left shift amount, from a register value. The argument
+ * that is extended from the <Rm> register can be a byte, halfword, word, or doubleword. It updates the condition flags based on the result, and
+ * discards the result.
+ *
+ * `CMP rn|SP, rm{, extend {#imm3}}`
+ * @param rn first source register
+ * @param rm second source register
+ * @param option extension to be applied to the second source operand
+ * @param imm3 the left shift amount to be applied after extension in the range 0..4
+ * @param size 32-bit or 64-bit variant
+ * @return the encoded instruction
+ */
+uint32_t encode_cmp_extended_register(reg_t rn, reg_t rm, extend_type_t option, uint8_t imm3, reg_size_t size) {
+  return encode_subs_extended_register((size == reg_size_t::SIZE_64BIT) ? XZR : WZR, rn, rm, option, imm3, size);
+}
+
+/**
  * This instruction adds a register value and an optionally-shifted immediate value, and writes the result to the destination register.
  * ADD rd, rn, #imm12{, shift12}
  * @param rd destination register
@@ -322,6 +341,44 @@ uint32_t encode_add_immediate(reg_t rd, reg_t rn, uint16_t imm12, bool shift12, 
   instr |= (rd & 0x1F);              // Rd (desination register)
 
   return instr;
+}
+
+/**
+ * This instruction adds a register value and an optionally-shifted immediate value, and writes the result to the destination register. It updates the
+ * condition flags based on the result.
+ *
+ * `ADDS rd, rn|SP, #imm12{, shift}`
+ * @param rd destination register
+ * @param rn source register
+ * @param imm12 12-bit immediate value
+ * @param shift12 whether to left shift the immediate by 12 bits
+ * @param size 32-bit or 64-bit variant
+ */
+uint32_t encode_adds_immediate(reg_t rd, reg_t rn, uint16_t imm12, bool shift12, reg_size_t size) {
+  uint32_t instr = 0;
+
+  switch (size) {
+  case reg_size_t::SIZE_32BIT:
+    instr = 0x31000000;
+    break;
+  case reg_size_t::SIZE_64BIT:
+    instr = 0xb1000000;
+    break;
+  default:
+    asserte(false, "encode_adds_immediate(): invalid size value");
+    break;
+  }
+
+  instr |= (shift12) ? 0x400000 : 0; // optional left shift (LSL #12)
+  instr |= (imm12 & 0xFFF) << 10;    // imm12 field
+  instr |= (rn & 0x1F) << 5;         // Rn (source register)
+  instr |= (rd & 0x1F);              // Rd (desination register)
+
+  return instr;
+}
+
+uint32_t encode_cmn_immediate(reg_t rn, uint16_t imm12, bool shift12, reg_size_t size) {
+  return encode_adds_immediate((size == reg_size_t::SIZE_64BIT) ? XZR : WZR, rn, imm12, shift12, size);
 }
 
 /**

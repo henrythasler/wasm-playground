@@ -10,6 +10,7 @@
 
 #include "assembler.hpp"
 #include "helper.hpp"
+#include "wasm.hpp"
 
 namespace tiny {
 
@@ -105,13 +106,14 @@ public:
 
   // Explicit call method
   ReturnType call(Args... args) const {
-    int trap_code = _setjmp(g_jmpbuf);
-    if (trap_code == 0) {
+    auto trap_code = wasm::trap_code_t(_setjmp(g_jmpbuf));
+    if (trap_code == wasm::trap_code_t::None) {
       // First time - call the JIT function
       return func_ptr_(args...);
     } else {
       // Returned via longjmp - handle the error
-      throw std::runtime_error("Trapcode " + std::to_string(trap_code));
+      std::error_code ec(int32_t(trap_code), std::generic_category());
+      throw std::system_error(ec, wasm::trapCodeToString(trap_code));
     }
   }
 
