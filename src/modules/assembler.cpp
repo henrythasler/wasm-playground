@@ -277,6 +277,29 @@ std::vector<uint32_t> assembleExpression(std::vector<uint8_t>::const_iterator &s
         }
         break;
       }
+    case 0x1A:
+      /** drop - discard top-most value from the stack */
+      {
+        registerPool.freeRegister(stack.back());
+        stack.pop_back();
+        break;
+      }
+    case 0x45:
+    case 0x50:
+      /** (i32|i64).eqz - Return 1 if i is zero, 0 otherwise*/
+      {
+        // FIXME: Implementation missing
+        break;
+      }
+    case 0x4C:
+    case 0x4D:
+    case 0x57:
+    case 0x58:
+      /** (i32|i64).le_(u|s) */
+      {
+        // FIXME: Implementation missing
+        break;
+      }
     case 0x48:
     case 0x53:
       /** (i32|i64).lt_s */
@@ -299,6 +322,42 @@ std::vector<uint32_t> assembleExpression(std::vector<uint8_t>::const_iterator &s
         stack.pop_back();
         registerPool.freeRegister(reg2);
 
+        break;
+      }
+    case 0x68:
+    case 0x7A:
+      /** (i32|i64).ctz - Return the count of trailing zero bits */
+      {
+        // FIXME: Implementation missing
+        break;
+      }
+    case 0x02:
+      /** block */
+      {
+        auto rawBlocktype = *stream++;
+        auto blocktype = (rawBlocktype == 0x40) ? webassembly_t::val_types_t(0) : webassembly_t::val_types_t(rawBlocktype);
+
+        if (blocktype != 0) {
+          // maybe do something here
+        }
+        // FIXME: Implementation missing
+
+        break;
+      }
+    case 0x0c:
+      /** br */
+      {
+        auto labelidx = uint32_t(decoder::LEB128Decoder::decodeUnsigned(stream, streamEnd));
+        printf("labelidx=%X", labelidx);
+        // FIXME: Implementation missing
+        break;
+      }
+    case 0x0d:
+      /** br_if */
+      {
+        auto labelidx = uint32_t(decoder::LEB128Decoder::decodeUnsigned(stream, streamEnd));
+        printf("labelidx=%X", labelidx);
+        // FIXME: Implementation missing
         break;
       }
     case 0x04:
@@ -364,8 +423,9 @@ std::vector<uint32_t> assembleExpression(std::vector<uint8_t>::const_iterator &s
       /** end */
       { return machinecode; }
     default:
-      std::cout << "unsupported instruction: 0x" << std::hex << std::setw(2) << std::setfill('0') << int32_t(*(stream - 1)) << " " << std::endl;
-      asserte(false, "unsupported instruction");
+      std::stringstream message;
+      message << std::hex << std::setw(2) << std::setfill('0') << int32_t(*(stream - 1));
+      asserte(false, "unsupported instruction: 0x" + message.str());
       break;
     }
   }
