@@ -19,6 +19,8 @@ TEST(instructions, ldr) {
   EXPECT_EQ_HEX(encode_ldr_unsigned_offset(W0, SP, 24, reg_size_t::SIZE_32BIT), 0xB9401BE0);
   // ldr x1, [sp, 16]
   EXPECT_EQ_HEX(encode_ldr_unsigned_offset(X1, SP, 16, reg_size_t::SIZE_64BIT), 0xF9400BE1);
+
+  EXPECT_THROW(encode_ldr_unsigned_offset(X1, SP, 16, reg_size_t(12)), std::runtime_error);
 }
 
 TEST(instructions, str) {
@@ -30,6 +32,8 @@ TEST(instructions, str) {
   EXPECT_EQ_HEX(encode_str_unsigned_offset(W0, SP, 24, reg_size_t::SIZE_32BIT), 0xB9001BE0);
   // str x1, [sp, 16]
   EXPECT_EQ_HEX(encode_str_unsigned_offset(X1, SP, 16, reg_size_t::SIZE_64BIT), 0xF9000BE1);
+
+  EXPECT_THROW(encode_str_unsigned_offset(X1, SP, 16, reg_size_t(12)), std::runtime_error);
 }
 
 TEST(instruction, sub) {

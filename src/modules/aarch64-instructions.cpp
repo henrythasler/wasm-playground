@@ -3,6 +3,22 @@
 namespace arm64 {
 
 /**
+ * returns the correct instruction variant for 32-bit and 64-bit instructions
+ * throws an exception if an invalid variant was requested
+ */
+uint32_t select_instruction(reg_size_t variant, uint32_t instruction_32bit, uint32_t instruction_64bit, std::string name) {
+  switch (variant) {
+  case reg_size_t::SIZE_32BIT:
+    return instruction_32bit;
+  case reg_size_t::SIZE_64BIT:
+    return instruction_64bit;
+  default:
+    asserte(false, name + "(): invalid variant (" + std::to_string(int32_t(variant)) + ")");
+  }
+  return 0;
+}
+
+/**
  * This instruction loads a byte, halfword, word or doubleword from memory and writes it to a register using the unsigned offset addressing mode.
  * LDR rt, [rn], #imm12
  * LDRH rt, [rn], #imm12
@@ -97,25 +113,11 @@ uint32_t encode_str_unsigned_offset(reg_t rt, reg_t rn, uint16_t imm12, reg_size
  * @param size 32-bit or 64-bit variant
  */
 uint32_t encode_sub_immediate(reg_t rd, reg_t rn, uint16_t imm12, bool shift12, reg_size_t size) {
-  uint32_t instr = 0;
-
-  switch (size) {
-  case reg_size_t::SIZE_32BIT:
-    instr = 0x51000000;
-    break;
-  case reg_size_t::SIZE_64BIT:
-    instr = 0xD1000000;
-    break;
-  default:
-    asserte(false, "encode_sub_immediate(): invalid size value");
-    break;
-  }
-
+  uint32_t instr = select_instruction(size, 0x51000000, 0xD1000000, "encode_sub_immediate");
   instr |= (shift12) ? 0x400000 : 0; // optional left shift (LSL #12)
   instr |= (imm12 & 0xFFF) << 10;    // imm12 field
   instr |= (rn & 0x1F) << 5;         // Rn (source register)
   instr |= (rd & 0x1F);              // Rd (desination register)
-
   return instr;
 }
 
@@ -131,25 +133,11 @@ uint32_t encode_sub_immediate(reg_t rd, reg_t rn, uint16_t imm12, bool shift12, 
  * @param size 32-bit or 64-bit variant
  */
 uint32_t encode_subs_immediate(reg_t rd, reg_t rn, uint16_t imm12, bool shift12, reg_size_t size) {
-  uint32_t instr = 0;
-
-  switch (size) {
-  case reg_size_t::SIZE_32BIT:
-    instr = 0x71000000;
-    break;
-  case reg_size_t::SIZE_64BIT:
-    instr = 0xf1000000;
-    break;
-  default:
-    asserte(false, "encode_subs_immediate(): invalid size value");
-    break;
-  }
-
+  uint32_t instr = select_instruction(size, 0x71000000, 0xf1000000, "encode_subs_immediate");
   instr |= (shift12) ? 0x400000 : 0; // optional left shift (LSL #12)
   instr |= (imm12 & 0xFFF) << 10;    // imm12 field
   instr |= (rn & 0x1F) << 5;         // Rn (source register)
   instr |= (rd & 0x1F);              // Rd (desination register)
-
   return instr;
 }
 
@@ -181,26 +169,12 @@ uint32_t encode_cmp_immediate(reg_t rn, uint16_t imm12, bool shift12, reg_size_t
  * @return the encoded instruction
  */
 uint32_t encode_sub_register(reg_t rd, reg_t rn, reg_t rm, uint8_t imm6, reg_shift_t shift, reg_size_t size) {
-  uint32_t instr = 0;
-
-  switch (size) {
-  case reg_size_t::SIZE_32BIT:
-    instr = 0x4b000000;
-    break;
-  case reg_size_t::SIZE_64BIT:
-    instr = 0xcb000000;
-    break;
-  default:
-    asserte(false, "encode_sub_register(): invalid size value");
-    break;
-  }
-
+  uint32_t instr = select_instruction(size, 0x4b000000, 0xcb000000, "encode_sub_register");
   instr |= (uint32_t(shift) & 0x03) << 22; // shift operator on rm
   instr |= (imm6 & 0x3F) << 10;            // shift amount in imm6 field
   instr |= (rm & 0x1F) << 16;              // Rm (second source register)
   instr |= (rn & 0x1F) << 5;               // Rn (source register)
   instr |= (rd & 0x1F);                    // Rd (desination register)
-
   return instr;
 }
 
@@ -218,25 +192,12 @@ uint32_t encode_sub_register(reg_t rd, reg_t rn, reg_t rm, uint8_t imm6, reg_shi
  * @return the encoded instruction
  */
 uint32_t encode_subs_shifted_register(reg_t rd, reg_t rn, reg_t rm, reg_shift_t shift, uint8_t imm6, reg_size_t size) {
-  uint32_t instr = 0;
-  switch (size) {
-  case reg_size_t::SIZE_32BIT:
-    instr = 0x6B000000;
-    break;
-  case reg_size_t::SIZE_64BIT:
-    instr = 0xEB000000;
-    break;
-  default:
-    asserte(false, "encode_subs_shifted_register(): invalid size value");
-    break;
-  }
-
+  uint32_t instr = select_instruction(size, 0x6B000000, 0xEB000000, "encode_subs_shifted_register");
   instr |= (uint32_t(shift) & 0x3) << 22; // shift type
   instr |= (imm6 & 0x3F) << 10;           // shift amount (0-63 for 64-bit, 0-31 for 32-bit)
   instr |= (rm & 0x1F) << 16;             // Rm (operand register)
   instr |= (rn & 0x1F) << 5;              // Rn (source register)
   instr |= (rd & 0x1F);                   // Rd (destination register)
-
   return instr;
 }
 
@@ -271,26 +232,12 @@ uint32_t encode_cmp_shifted_register(reg_t rn, reg_t rm, reg_shift_t shift, uint
  * @return the encoded instruction
  */
 uint32_t encode_subs_extended_register(reg_t rd, reg_t rn, reg_t rm, extend_type_t option, uint8_t imm3, reg_size_t size) {
-  uint32_t instr = 0;
-
-  switch (size) {
-  case reg_size_t::SIZE_32BIT:
-    instr = 0x6b200000;
-    break;
-  case reg_size_t::SIZE_64BIT:
-    instr = 0xeb200000;
-    break;
-  default:
-    asserte(false, "encode_subs_extended_register(): invalid size value");
-    break;
-  }
-
+  uint32_t instr = select_instruction(size, 0x6b200000, 0xeb200000, "encode_subs_extended_register");
   instr |= (rm & 0x1F) << 16;              // Rm (operand register)
   instr |= (uint32_t(option) & 0x7) << 13; // extend type
   instr |= (imm3 & 0x7) << 10;             // shift amount (0-4)
   instr |= (rn & 0x1F) << 5;               // Rn (source register)
   instr |= (rd & 0x1F);                    // Rd (destination register)
-
   return instr;
 }
 
@@ -321,25 +268,11 @@ uint32_t encode_cmp_extended_register(reg_t rn, reg_t rm, extend_type_t option, 
  * @param size 32-bit or 64-bit variant
  */
 uint32_t encode_add_immediate(reg_t rd, reg_t rn, uint16_t imm12, bool shift12, reg_size_t size) {
-  uint32_t instr = 0;
-
-  switch (size) {
-  case reg_size_t::SIZE_32BIT:
-    instr = 0x11000000;
-    break;
-  case reg_size_t::SIZE_64BIT:
-    instr = 0x91000000;
-    break;
-  default:
-    asserte(false, "encode_add_immediate(): invalid size value");
-    break;
-  }
-
+  uint32_t instr = select_instruction(size, 0x11000000, 0x91000000, "encode_add_immediate");
   instr |= (shift12) ? 0x400000 : 0; // optional left shift (LSL #12)
   instr |= (imm12 & 0xFFF) << 10;    // imm12 field
   instr |= (rn & 0x1F) << 5;         // Rn (source register)
   instr |= (rd & 0x1F);              // Rd (desination register)
-
   return instr;
 }
 
@@ -355,25 +288,11 @@ uint32_t encode_add_immediate(reg_t rd, reg_t rn, uint16_t imm12, bool shift12, 
  * @param size 32-bit or 64-bit variant
  */
 uint32_t encode_adds_immediate(reg_t rd, reg_t rn, uint16_t imm12, bool shift12, reg_size_t size) {
-  uint32_t instr = 0;
-
-  switch (size) {
-  case reg_size_t::SIZE_32BIT:
-    instr = 0x31000000;
-    break;
-  case reg_size_t::SIZE_64BIT:
-    instr = 0xb1000000;
-    break;
-  default:
-    asserte(false, "encode_adds_immediate(): invalid size value");
-    break;
-  }
-
+  uint32_t instr = select_instruction(size, 0x31000000, 0xb1000000, "encode_add_immediate");
   instr |= (shift12) ? 0x400000 : 0; // optional left shift (LSL #12)
   instr |= (imm12 & 0xFFF) << 10;    // imm12 field
   instr |= (rn & 0x1F) << 5;         // Rn (source register)
   instr |= (rd & 0x1F);              // Rd (desination register)
-
   return instr;
 }
 
@@ -392,26 +311,12 @@ uint32_t encode_cmn_immediate(reg_t rn, uint16_t imm12, bool shift12, reg_size_t
  * @return the encoded instruction
  */
 uint32_t encode_add_register(reg_t rd, reg_t rn, reg_t rm, uint8_t imm6, reg_shift_t shift, reg_size_t size) {
-  uint32_t instr = 0;
-
-  switch (size) {
-  case reg_size_t::SIZE_32BIT:
-    instr = 0x0b000000;
-    break;
-  case reg_size_t::SIZE_64BIT:
-    instr = 0x8b000000;
-    break;
-  default:
-    asserte(false, "encode_add_register(): invalid size value");
-    break;
-  }
-
+  uint32_t instr = select_instruction(size, 0x0b000000, 0x8b000000, "encode_add_register");
   instr |= (uint32_t(shift) & 0x03) << 22; // shift operator on rm
   instr |= (imm6 & 0x3F) << 10;            // shift amount in imm6 field
   instr |= (rm & 0x1F) << 16;              // Rm (second source register)
   instr |= (rn & 0x1F) << 5;               // Rn (source register)
   instr |= (rd & 0x1F);                    // Rd (desination register)
-
   return instr;
 }
 
@@ -426,25 +331,11 @@ uint32_t encode_add_register(reg_t rd, reg_t rn, reg_t rm, uint8_t imm6, reg_shi
  * @return the encoded instruction
  */
 uint32_t encode_madd_register(reg_t rd, reg_t rn, reg_t rm, reg_t ra, reg_size_t size) {
-  uint32_t instr = 0;
-
-  switch (size) {
-  case reg_size_t::SIZE_32BIT:
-    instr = 0x1b000000;
-    break;
-  case reg_size_t::SIZE_64BIT:
-    instr = 0x9b000000;
-    break;
-  default:
-    asserte(false, "encode_madd_register(): invalid size value");
-    break;
-  }
-
+  uint32_t instr = select_instruction(size, 0x1b000000, 0x9b000000, "encode_madd_register");
   instr |= (rm & 0x1F) << 16; // Rm (multiplier source register)
   instr |= (ra & 0x1F) << 10; // Ra (addend source register)
   instr |= (rn & 0x1F) << 5;  // Rn (multiplicand source register)
   instr |= (rd & 0x1F);       // Rd (desination register)
-
   return instr;
 }
 
@@ -472,25 +363,11 @@ uint32_t encode_mul_register(reg_t rd, reg_t rn, reg_t rm, reg_size_t size) {
  * @return the encoded instruction
  */
 uint32_t encode_div_register(reg_t rd, reg_t rn, reg_t rm, signed_variant_t variant, reg_size_t size) {
-  uint32_t instr = 0;
-
-  switch (size) {
-  case reg_size_t::SIZE_32BIT:
-    instr = 0x1ac00800;
-    break;
-  case reg_size_t::SIZE_64BIT:
-    instr = 0x9ac00800;
-    break;
-  default:
-    asserte(false, "encode_div_register(): invalid size value");
-    break;
-  }
-
+  uint32_t instr = select_instruction(size, 0x1ac00800, 0x9ac00800, "encode_div_register");
   instr |= (int32_t(variant) & 0x01) << 10;
   instr |= (rm & 0x1F) << 16; // Rm (divisor source register)
   instr |= (rn & 0x1F) << 5;  // Rn (dividend source register)
   instr |= (rd & 0x1F);       // Rd (desination register)
-
   return instr;
 }
 
@@ -504,23 +381,9 @@ uint32_t encode_div_register(reg_t rd, reg_t rn, reg_t rm, signed_variant_t vari
  * @return the encoded instruction
  */
 uint32_t encode_mov_register(reg_t rd, reg_t rm, reg_size_t size) {
-  uint32_t instr = 0;
-
-  switch (size) {
-  case reg_size_t::SIZE_32BIT:
-    instr = 0x2A0003E0; // 32-bit ORR
-    break;
-  case reg_size_t::SIZE_64BIT:
-    instr = 0xAA0003E0; // 64-bit ORR
-    break;
-  default:
-    asserte(false, "encode_mov_register(): invalid size value");
-    break;
-  }
-
+  uint32_t instr = select_instruction(size, 0x2A0003E0, 0xAA0003E0, "encode_mov_register");
   instr |= (rm & 0x1F) << 16; // Rm (source register)
   instr |= (rd & 0x1F);       // Rd (destination register)
-
   return instr;
 }
 
@@ -549,27 +412,12 @@ uint32_t encode_mov_sp(reg_t rd, reg_t rn, reg_size_t size) {
  * @return the encoded instruction
  */
 uint32_t encode_mov_immediate(reg_t rd, uint16_t imm16, uint8_t shift, reg_size_t size) {
-  uint32_t instr = 0;
-
-  switch (size) {
-  case reg_size_t::SIZE_32BIT:
-    instr = 0x52800000;
-    break;
-  case reg_size_t::SIZE_64BIT:
-    instr = 0xD2800000;
-    break;
-  default:
-    asserte(false, "encode_mov_immediate(): invalid size value");
-    break;
-  }
-
+  uint32_t instr = select_instruction(size, 0x52800000, 0xD2800000, "encode_mov_immediate");
   // hw = shift / 16 (which 16-bit position)
   uint8_t hw = shift >> 4;
-
   instr |= (hw & 0x3) << 21;      // hw field (0-3 for 64-bit, 0-1 for 32-bit)
   instr |= (imm16 & 0xFFFF) << 5; // imm16 field
   instr |= (rd & 0x1F);           // Rd (destination register)
-
   return instr;
 }
 
@@ -596,26 +444,11 @@ uint32_t encode_movz(reg_t rd, uint16_t imm16, uint8_t shift, reg_size_t size) {
  * @return the encoded instruction
  */
 uint32_t encode_movk(reg_t rd, uint16_t imm16, uint8_t shift, reg_size_t size) {
-  uint32_t instr = 0;
-
-  switch (size) {
-  case reg_size_t::SIZE_32BIT:
-    instr = 0x72800000;
-    break;
-  case reg_size_t::SIZE_64BIT:
-    instr = 0xF2800000;
-    break;
-  default:
-    asserte(false, "encode_mov_immediate(): invalid size value");
-    break;
-  }
-
+  uint32_t instr = select_instruction(size, 0x72800000, 0xF2800000, "encode_movk");
   uint8_t hw = shift >> 4;
-
   instr |= (hw & 0x3) << 21;      // hw field
   instr |= (imm16 & 0xFFFF) << 5; // imm16 field
   instr |= (rd & 0x1F);           // Rd (destination register)
-
   return instr;
 }
 
@@ -663,10 +496,8 @@ uint32_t encode_branch_register(reg_t rn) {
  */
 uint32_t encode_branch_cond(branch_condition_t cond, int32_t imm19) {
   uint32_t instr = 0x54000000;
-
   instr |= ((imm19 >> 2) & 0x7FFFF) << 5; // imm19 offset
   instr |= uint32_t(cond);                // branch condition
-
   return instr;
 }
 
@@ -680,23 +511,9 @@ uint32_t encode_branch_cond(branch_condition_t cond, int32_t imm19) {
  * @return the encoded instruction
  */
 uint32_t encode_cbz(reg_t rt, int32_t imm19, reg_size_t size) {
-  uint32_t instr = 0;
-
-  switch (size) {
-  case reg_size_t::SIZE_32BIT:
-    instr = 0x34000000;
-    break;
-  case reg_size_t::SIZE_64BIT:
-    instr = 0xB4000000;
-    break;
-  default:
-    asserte(false, "encode_cbz(): invalid size value");
-    break;
-  }
-
+  uint32_t instr = select_instruction(size, 0x34000000, 0xB4000000, "encode_cbz");
   instr |= ((imm19 >> 2) & 0x7FFFF) << 5; // imm19 offset
   instr |= (rt & 0x1F);                   // Rt (register to be tested)
-
   return instr;
 }
 
@@ -710,23 +527,9 @@ uint32_t encode_cbz(reg_t rt, int32_t imm19, reg_size_t size) {
  * @return the encoded instruction
  */
 uint32_t encode_cbnz(reg_t rt, int32_t imm19, reg_size_t size) {
-  uint32_t instr = 0;
-
-  switch (size) {
-  case reg_size_t::SIZE_32BIT:
-    instr = 0x35000000;
-    break;
-  case reg_size_t::SIZE_64BIT:
-    instr = 0xB5000000;
-    break;
-  default:
-    asserte(false, "encode_cbnz(): invalid size value");
-    break;
-  }
-
+  uint32_t instr = select_instruction(size, 0x35000000, 0xB5000000, "encode_cbnz");
   instr |= ((imm19 >> 2) & 0x7FFFF) << 5; // imm19 offset
   instr |= (rt & 0x1F);                   // Rt (register to be tested)
-
   return instr;
 }
 

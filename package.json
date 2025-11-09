@@ -9,7 +9,7 @@
     "test": "npm run build && ASAN_OPTIONS=detect_leaks=0 ctest --test-dir build --output-on-failure --gtest_shuffle && npm run objdump",
     "objdump": "./objdump.sh",
     "wast2gtest": "cd spec-test && python3 wast_to_gtest.py div.wast div_test.cpp",
-    "coverage": "npm test && mkdir -p coverage && lcov -d build/ -c -o coverage/coverage.info && lcov -r coverage/coverage.info '*/build/*' '*/11/*' '*/extern/*' '*/tests/*' -o coverage/coverage.filtered.info && genhtml coverage/coverage.filtered.info --output-directory coverage",
+    "coverage": "npm test && mkdir -p coverage && lcov -d build/ -c -o coverage/coverage.info && lcov -r coverage/coverage.info '*/build/*' '*/11/*' '*/extern/*' '*/tests/*' -o coverage/coverage.filtered.info && genhtml coverage/coverage.filtered.info --output-directory coverage/report && lcov --summary coverage/coverage.filtered.info",
     "linter": "find src -regex '.*\\.\\(cpp\\|hpp\\|c\\|h\\)' -not -path '**/kaitai/**' | xargs clang-format -style=file:.clang-format --Werror --dry-run",
     "kaitai": "kaitai-struct-compiler --target cpp_stl --outdir src/kaitai src/kaitai/webassembly.ksy"
   },

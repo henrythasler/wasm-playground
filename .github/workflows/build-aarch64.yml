@@ -34,12 +34,24 @@ jobs:
       - name: checkout submodules
         run: git submodule update --init --recursive
       - name: Install dependencies
-        run: sudo apt-get install -y build-essential cmake wabt
+        run: sudo apt-get install -y build-essential cmake wabt lcov
       - name: Configure CMake
-        run: cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=cmake/aarch64-toolchain.cmake -DENABLE_ARM64_CROSSCOMPILE=OFF
+        run: cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=cmake/aarch64-toolchain.cmake -DENABLE_ARM64_CROSSCOMPILE=OFF -DENABLE_COVERAGE=ON
       - name: Build the project
         run: cmake --build build --parallel
       - name: Run unit tests
         run: ctest --test-dir build --output-on-failure
+      - name: Generate coverage report
+        run: |
+          lcov -d build/ -c -o coverage/coverage.info
+          lcov -r coverage/coverage.info '*/build/*' '*/11/*' '*/extern/*' '*/tests/*' -o coverage/coverage.filtered.info
+          genhtml coverage/coverage.filtered.info --output-directory coverage/report
+      - name: Coverage summary
+        run: lcov --summary coverage/coverage.filtered.info
+      - name: Upload coverage report as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage/report
       - name: Run executable
         run: ./build/src/tiny-wasm ./wasm/nop-fn.wasm
