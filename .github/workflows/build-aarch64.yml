@@ -44,7 +44,7 @@ jobs:
       - name: Generate coverage report
         run: |
           mkdir -p coverage
-          lcov -d build/ -c -o coverage/coverage.info
+          lcov -d build/ -c -o coverage/coverage.info --rc geninfo_auto_base=1 --ignore-errors mismatch
           lcov -r coverage/coverage.info '*/build/*' '*/11/*' '*/extern/*' '*/tests/*' -o coverage/coverage.filtered.info
           genhtml coverage/coverage.filtered.info --output-directory coverage/report
       - name: Coverage summary
