@@ -741,7 +741,7 @@ uint32_t encode_nop() {
  * This instruction causes a breakpoint exception.
  */
 uint32_t encode_brk(uint16_t imm16) {
-  return 0xD4200000 | (imm16 & 0xFFFF);
+  return 0xD4200000 | ((imm16 & 0xFFFF) << 5);
 }
 
 /**

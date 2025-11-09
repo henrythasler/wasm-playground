@@ -40,10 +40,27 @@ TEST(instruction, sub) {
 }
 
 TEST(instruction, add) {
-  // sub sp, sp, #0x40
+  // add sp, sp, #0x40
   EXPECT_EQ_HEX(encode_add_immediate(SP, SP, 0x40, false, reg_size_t::SIZE_64BIT), 0x910103FF);
-  // sub w0, w0, #1
+  // add w1, w0, #10
   EXPECT_EQ_HEX(encode_add_immediate(W1, W0, 0x0a, false, reg_size_t::SIZE_32BIT), 0x11002801);
+
+  // adds X1, X10, #0x10
+  EXPECT_EQ_HEX(encode_adds_immediate(X1, X10, 0x10, false, reg_size_t::SIZE_64BIT), 0xB1004141);
+  // adds w1, w10, #0x10, LSL #12
+  EXPECT_EQ_HEX(encode_adds_immediate(W1, W10, 0x10, true, reg_size_t::SIZE_32BIT), 0x31404141);
+  EXPECT_THROW(encode_adds_immediate(W1, W10, 0x10, true, reg_size_t::SIZE_8BIT), std::runtime_error);
+
+  // MADD w3, w4, w5, w6
+  EXPECT_EQ_HEX(encode_madd_register(W3, W4, W5, W6, reg_size_t::SIZE_32BIT), 0x1B051883);
+  // MADD X3, x4, x5, x6
+  EXPECT_EQ_HEX(encode_madd_register(X3, X4, X5, X6, reg_size_t::SIZE_64BIT), 0x9B051883);
+  EXPECT_THROW(encode_madd_register(X3, X4, X5, X6, reg_size_t::SIZE_8BIT), std::runtime_error);
+  // MUL x3, x4, x5
+  EXPECT_EQ_HEX(encode_mul_register(X3, X4, X5, reg_size_t::SIZE_64BIT), 0x9B057C83);
+
+  // CMN X8, #255, LSL #12
+  EXPECT_EQ_HEX(encode_cmn_immediate(X8, 0xff, true, reg_size_t::SIZE_64BIT), 0xB143FD1F);
 
   // add w0, w1, w0
   EXPECT_EQ_HEX(encode_add_register(W0, W1, W0, 0, reg_shift_t::SHIFT_LSL, reg_size_t::SIZE_32BIT), 0x0b000020);
@@ -86,16 +103,39 @@ TEST(instruction, mov) {
   EXPECT_EQ_HEX(encode_mov_immediate(X3, 0x1234, 16, reg_size_t::SIZE_64BIT), 0xD2A24683);
   // MOVZ X7, 0xABCD, LSL #48
   EXPECT_EQ_HEX(encode_mov_immediate(X7, 0xABCD, 48, reg_size_t::SIZE_64BIT), 0xD2F579A7);
+  EXPECT_EQ_HEX(encode_movz(X7, 0xABCD, 48, reg_size_t::SIZE_64BIT), 0xD2F579A7);
+
+  // MOVK X15, #0xffff, LSL #32
+  EXPECT_EQ_HEX(encode_movk(X15, 0xFFFF, 32, reg_size_t::SIZE_64BIT), 0xF2DFFFEF);
+  // MOVK W0, #0x80, LSL #16
+  EXPECT_EQ_HEX(encode_movk(W0, 0x80, 16, reg_size_t::SIZE_32BIT), 0x72A01000);
+  EXPECT_THROW(encode_movk(X15, 0xFFFF, 32, reg_size_t::SIZE_8BIT), std::runtime_error);
 }
 
 TEST(instruction, subs) {
   // SUBS X0, X1, #100
   EXPECT_EQ_HEX(encode_subs_immediate(X0, X1, 100, false, reg_size_t::SIZE_64BIT), 0xF1019020);
+  // SUBS W1, W2, #10
+  EXPECT_EQ_HEX(encode_subs_immediate(W1, X2, 10, false, reg_size_t::SIZE_32BIT), 0x71002841);
+
+  // SUB X10, X10, X11
+  EXPECT_EQ_HEX(encode_sub_register(X10, X10, X11, 0, reg_shift_t::SHIFT_LSL, reg_size_t::SIZE_64BIT), 0xCB0B014A);
+  // SUB w10, w10, w11, LSL 8
+  EXPECT_EQ_HEX(encode_sub_register(X10, X10, X11, 8, reg_shift_t::SHIFT_LSL, reg_size_t::SIZE_32BIT), 0x4B0B214A);
+  EXPECT_THROW(encode_sub_register(X10, X10, X11, 8, reg_shift_t::SHIFT_LSL, reg_size_t::SIZE_8BIT), std::runtime_error);
 
   // SUBS X0, X1, W2, UXTW
   EXPECT_EQ_HEX(encode_subs_extended_register(X0, X1, W2, extend_type_t::EXTEND_UXTW, 0, reg_size_t::SIZE_64BIT), 0xEB224020);
   // SUBS X5, X6, W7, SXTW #2
   EXPECT_EQ_HEX(encode_subs_extended_register(X5, X6, W7, extend_type_t::EXTEND_SXTW, 2, reg_size_t::SIZE_64BIT), 0xEB27C8C5);
+  // SUBS W5, W6, W7, SXTB #2
+  EXPECT_EQ_HEX(encode_subs_extended_register(W5, W6, W7, extend_type_t::EXTEND_SXTB, 2, reg_size_t::SIZE_32BIT), 0x6B2788C5);
+  EXPECT_THROW(encode_subs_extended_register(W5, W6, W7, extend_type_t::EXTEND_SXTB, 2, reg_size_t::SIZE_8BIT), std::runtime_error);
+
+  // cmp w6, w7, sxtb #2
+  EXPECT_EQ_HEX(encode_cmp_extended_register(W6, W7, extend_type_t::EXTEND_SXTB, 2, reg_size_t::SIZE_32BIT), 0x6B2788DF);
+  // cmp x6, x7, uxtx #2
+  EXPECT_EQ_HEX(encode_cmp_extended_register(X6, X7, extend_type_t::EXTEND_UXTX, 2, reg_size_t::SIZE_64BIT), 0xEB2768DF);
 
   // SUBS X0, X1, X2
   EXPECT_EQ_HEX(encode_subs_shifted_register(X0, X1, X2, reg_shift_t::SHIFT_LSL, 0, reg_size_t::SIZE_64BIT), 0xEB020020);
@@ -122,10 +162,36 @@ TEST(instruction, branch) {
   EXPECT_EQ_HEX(encode_branch_cond(branch_condition_t::EQ, 36), 0x54000120);
   // b.eq #-36 // jump 9 instructions back
   EXPECT_EQ_HEX(encode_branch_cond(branch_condition_t::EQ, -36), 0x54fffee0);
+
+  // b #8
+  EXPECT_EQ_HEX(encode_branch(8), 0x14000002);
+  // BLR X16
+  EXPECT_EQ_HEX(encode_branch_register(X16), 0xD63F0200);
+
+  // CBZ X7, #32
+  EXPECT_EQ_HEX(encode_cbz(X7, 0x10, reg_size_t::SIZE_64BIT), 0xB4000087);
+  // CBZ W7, #32
+  EXPECT_EQ_HEX(encode_cbz(W7, 0x10, reg_size_t::SIZE_32BIT), 0x34000087);
+  EXPECT_THROW(encode_cbz(W7, 0x10, reg_size_t::SIZE_8BIT), std::runtime_error);
+
+  // CBNZ X7, #32
+  EXPECT_EQ_HEX(encode_cbnz(X7, 0x80, reg_size_t::SIZE_64BIT), 0xB5000407);
+  // CBNZ W7, #32
+  EXPECT_EQ_HEX(encode_cbnz(W7, 0x10, reg_size_t::SIZE_32BIT), 0x35000087);
+  EXPECT_THROW(encode_cbnz(W7, 0x10, reg_size_t::SIZE_8BIT), std::runtime_error);  
 }
 
 TEST(instruction, ret) {
   // ret
   EXPECT_EQ_HEX(encode_ret(), 0xD65F03C0);
   EXPECT_EQ_HEX(encode_ret(X8), 0xD65F0100);
+}
+
+TEST(instruction, misc) {
+  // nop
+  EXPECT_EQ_HEX(encode_nop(), 0xD503201F);
+  // BRK #1
+  EXPECT_EQ_HEX(encode_brk(1), 0xD4200020);
+  // UDF
+  EXPECT_EQ_HEX(encode_udf(), 0x0);
 }
