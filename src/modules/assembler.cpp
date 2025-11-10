@@ -332,15 +332,19 @@ std::vector<uint32_t> assembleExpression(std::vector<uint8_t>::const_iterator &s
         break;
       }
     case 0x02:
-      /** block */
+      /** block, followed by: blocktype (u8) either describing an empty result (0x40) or the type of the single result */
       {
         auto rawBlocktype = *stream++;
         auto blocktype = (rawBlocktype == 0x40) ? webassembly_t::val_types_t(0) : webassembly_t::val_types_t(rawBlocktype);
 
+        std::vector<arm64::reg_t> blockStack;
+        auto block = assembleExpression(stream, streamEnd, locals, registerPool, blockStack);
+        machinecode.insert(machinecode.end(), block.begin(), block.end());
+
         if (blocktype != 0) {
-          // maybe do something here
+          asserte(blockStack.size() == 1, "Stack size mismatch on block exit");
+          stack.emplace_back(blockStack.back());
         }
-        // FIXME: Implementation missing
 
         break;
       }
@@ -422,6 +426,13 @@ std::vector<uint32_t> assembleExpression(std::vector<uint8_t>::const_iterator &s
     case 0x0b:
       /** end */
       { return machinecode; }
+    case 0x00:
+      /** unreachable */
+      {
+        auto trapSequenceUnreachable = encodeTrapHandler(reinterpret_cast<uint64_t>(&wasmTrapHandler), wasm::trap_code_t::UnreachableCodeReached);
+        machinecode.insert(machinecode.end(), trapSequenceUnreachable.begin(), trapSequenceUnreachable.end());
+        break;
+      }
     default:
       std::stringstream message;
       message << std::hex << std::setw(2) << std::setfill('0') << int32_t(*(stream - 1));

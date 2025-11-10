@@ -116,6 +116,10 @@ Set breakpoint in source code. Start Debugging (F5).
 - [WebAssembly on developer.mozilla.org](https://developer.mozilla.org/en-US/docs/WebAssembly)
 - [WebAssembly parser for Kaitai.io](https://github.com/evacchi/kaitai-webassembly)
 
+### WebAssembly Online Tools
+
+- [WebAssembly Code Explorer](https://wasdk.github.io/wasmcodeexplorer/)
+
 ### WebAssembly Runtimes
 
 - [Wasmi - WebAssembly (Wasm) Interpreter](https://github.com/wasmi-labs/wasmi)

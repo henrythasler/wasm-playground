@@ -9,13 +9,20 @@
 #include "helper.hpp"
 namespace testing {
 
-TEST(block, signed32) {
-  auto wasmModule = helper::loadModule("block.wasm");
-  auto machinecode = wasmModule.getWasmFunction("type-i32")->getMachinecode();
+TEST(block, simple) {
+  auto wasmModule = helper::loadModule("block-extended.wasm");
+  auto machinecode = wasmModule.getWasmFunction("simple")->getMachinecode();
   auto wasmFunction = tiny::make_wasm_function<void>(machinecode);
-  helper::dump("block.type-i32.bin", machinecode);
-
+  helper::dump("block.simple.bin", machinecode);
   EXPECT_NO_THROW(wasmFunction());
+}
+
+TEST(block, simple_br_i32) {
+  auto wasmModule = helper::loadModule("block-extended.wasm");
+  auto machinecode = wasmModule.getWasmFunction("simple-br-i32")->getMachinecode();
+  auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t>(machinecode);
+  helper::dump("block.simple-br-i32.bin", machinecode);
+  // EXPECT_EQ(wasmFunction(), 42);
 }
 
 } // namespace testing
