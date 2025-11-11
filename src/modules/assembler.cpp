@@ -117,9 +117,11 @@ std::vector<uint32_t> encodeTrapHandler(uint64_t trapHandlerAddress, wasm::trap_
 /**
  * Assemble a WebAssembly expression (aka bytecode) into ARM64 machine code.
  */
-std::vector<uint32_t> assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vector<uint8_t>::const_iterator streamEnd,
+BlockResult assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vector<uint8_t>::const_iterator streamEnd,
                                          Variables &locals, RegisterPool &registerPool, std::vector<arm64::reg_t> &stack) {
   std::vector<uint32_t> machinecode;
+  int32_t labelDepth = 0;
+
   while (stream != streamEnd) {
     switch (*stream++) {
     case 0x20:
@@ -262,10 +264,10 @@ std::vector<uint32_t> assembleExpression(std::vector<uint8_t>::const_iterator &s
     case 0x42:
       /** (i32|i64).const n:(i32|i64) */
       {
+        auto constValue = decoder::LEB128Decoder::decodeSigned(stream, streamEnd); // n
         auto registerSize = (*(stream - 1) == 0x41) ? arm64::reg_size_t::SIZE_32BIT : arm64::reg_size_t::SIZE_64BIT;
         auto reg = registerPool.allocateRegister();
         stack.emplace_back(reg);
-        auto constValue = decoder::LEB128Decoder::decodeSigned(stream, streamEnd); // n
 
         for (uint8_t i = 0; i < 4; i++) {
           uint16_t chunk = uint16_t((constValue >> (i << 4)) & 0xFFFF);
@@ -339,7 +341,8 @@ std::vector<uint32_t> assembleExpression(std::vector<uint8_t>::const_iterator &s
 
         std::vector<arm64::reg_t> blockStack;
         auto block = assembleExpression(stream, streamEnd, locals, registerPool, blockStack);
-        machinecode.insert(machinecode.end(), block.begin(), block.end());
+        machinecode.insert(machinecode.end(), block.machinecode.begin(), block.machinecode.end());
+        labelDepth = block.targetDepth;
 
         if (blocktype != 0) {
           asserte(blockStack.size() == 1, "Stack size mismatch on block exit");
@@ -351,10 +354,9 @@ std::vector<uint32_t> assembleExpression(std::vector<uint8_t>::const_iterator &s
     case 0x0c:
       /** br */
       {
-        auto labelidx = uint32_t(decoder::LEB128Decoder::decodeUnsigned(stream, streamEnd));
-        printf("labelidx=%X", labelidx);
-        // FIXME: Implementation missing
-        break;
+        auto labelidx = int32_t(decoder::LEB128Decoder::decodeUnsigned(stream, streamEnd));
+        // indicate that we need to exit at least one block before we can emit new instructions
+        return BlockResult{machinecode, labelidx + 1};
       }
     case 0x0d:
       /** br_if */
@@ -382,7 +384,7 @@ std::vector<uint32_t> assembleExpression(std::vector<uint8_t>::const_iterator &s
 
         auto block = assembleExpression(stream, streamEnd, locals, registerPool, stack);
 
-        std::vector<uint32_t> block2;
+        BlockResult block2;
         if (*(stream - 1) == 0x05) {
           block2 = assembleExpression(stream, streamEnd, locals, elseRegisterPool, elseStack);
           // verify that stack sizes and registers match after else-block
@@ -398,22 +400,22 @@ std::vector<uint32_t> assembleExpression(std::vector<uint8_t>::const_iterator &s
 
         // insert cbz to jump over if block if condition is false (zero)
         // include the size of the cbz instruction itself (4 bytes) and the jump instruction after the if block (4 bytes)
-        machinecode.push_back(arm64::encode_cbz(reg, int32_t(block.size() + 2) << 2, arm64::reg_size_t::SIZE_32BIT));
-        machinecode.insert(machinecode.end(), block.begin(), block.end());
+        machinecode.push_back(arm64::encode_cbz(reg, int32_t(block.machinecode.size() + 2) << 2, arm64::reg_size_t::SIZE_32BIT));
+        machinecode.insert(machinecode.end(), block.machinecode.begin(), block.machinecode.end());
 
         // handle else block if present
-        if (block2.size() > 0) {
+        if (block2.machinecode.size() > 0) {
           // jump over else block after if block
-          machinecode.push_back(arm64::encode_branch(int32_t(block2.size() + 1) << 2));
+          machinecode.push_back(arm64::encode_branch(int32_t(block2.machinecode.size() + 1) << 2));
           // insert else block
-          machinecode.insert(machinecode.end(), block2.begin(), block2.end());
+          machinecode.insert(machinecode.end(), block2.machinecode.begin(), block2.machinecode.end());
         }
 
         break;
       }
     case 0x05:
       /** else */
-      { return machinecode; }
+      { return BlockResult{machinecode, 0}; }
     case 0x01:
       /** nop */
       {
@@ -422,10 +424,10 @@ std::vector<uint32_t> assembleExpression(std::vector<uint8_t>::const_iterator &s
       }
     case 0x0f:
       /** return */
-      { return machinecode; }
+      { return BlockResult{machinecode, 0}; }
     case 0x0b:
       /** end */
-      { return machinecode; }
+      { return BlockResult{machinecode, std::max(0, labelDepth - 1)}; }
     case 0x00:
       /** unreachable */
       {
@@ -440,6 +442,6 @@ std::vector<uint32_t> assembleExpression(std::vector<uint8_t>::const_iterator &s
       break;
     }
   }
-  return machinecode;
+  return BlockResult{machinecode, 0};
 }
 } // namespace assembler

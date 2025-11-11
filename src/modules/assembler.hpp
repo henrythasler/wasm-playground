@@ -72,6 +72,11 @@ public:
   };
 };
 
+struct BlockResult {
+  std::vector<uint32_t> machinecode;
+  int32_t targetDepth;
+};
+
 arm64::reg_size_t map_valtype_to_regsize(const webassembly_t::val_types_t type);
 uint32_t mapWasmValTypeToArm64Size(webassembly_t::val_types_t valType);
 uint32_t saveParametersToStack(const std::vector<webassembly_t::val_types_t> &parameters, uint32_t offset, assembler::Variables &variables,
@@ -82,6 +87,6 @@ void loadResult(const std::vector<webassembly_t::val_types_t> &results, const st
                 std::vector<uint32_t> &machinecode);
 uint32_t createPreamble(uint32_t stackSize, std::vector<uint32_t> &machinecode);
 void createEpilogue(const uint32_t stackSize, std::vector<uint32_t> &machinecode);
-std::vector<uint32_t> assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vector<uint8_t>::const_iterator streamEnd,
+BlockResult assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vector<uint8_t>::const_iterator streamEnd,
                                          Variables &locals, RegisterPool &registerPool, std::vector<arm64::reg_t> &stack);
 } // namespace assembler

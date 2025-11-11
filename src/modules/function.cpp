@@ -47,6 +47,9 @@ size_t WasmFunction::compile(const webassembly_t::func_t *func, const std::uniqu
   // this keeps track of the current position in the stack frame relative to fp
   uint32_t stackPosition = 0;
 
+  // holds the current depth of the block (for now); 
+  std::vector<uint32_t> controlStack;
+
   // evaluate parameters to determine initial stack size
   auto parameterTypes = *funcType->parameters()->valtype();
   for (auto valtype : parameterTypes) {
@@ -92,7 +95,7 @@ size_t WasmFunction::compile(const webassembly_t::func_t *func, const std::uniqu
     std::vector<uint8_t> expr(exprStr.begin(), exprStr.end());
     auto it = expr.cbegin();
     auto block = assembler::assembleExpression(it, expr.end(), variables, registerPool, wasmStack);
-    machinecode.insert(machinecode.end(), block.begin(), block.end());
+    machinecode.insert(machinecode.end(), block.machinecode.begin(), block.machinecode.end());
   }
 
   if (results.size() > 0) {

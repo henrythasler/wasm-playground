@@ -22,7 +22,7 @@ TEST(block, simple_br_i32) {
   auto machinecode = wasmModule.getWasmFunction("simple-br-i32")->getMachinecode();
   auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t>(machinecode);
   helper::dump("block.simple-br-i32.bin", machinecode);
-  // EXPECT_EQ(wasmFunction(), 42);
+  EXPECT_EQ(wasmFunction(), 42);
 }
 
 } // namespace testing

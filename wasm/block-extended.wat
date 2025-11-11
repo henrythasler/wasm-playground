@@ -10,7 +10,20 @@
     block (result i32)
       i32.const 42
       br 0
-      unreachable
+      drop
+      i32.const 11
     end
   )
+
+  (func (export "simple-br_if") (result i32)
+    block (result i32)
+      i32.const 42
+      i32.const 0
+      br_if 0
+      i32.const 1
+      br_if 0
+      drop
+      i32.const 11
+    end
+  )  
 )
