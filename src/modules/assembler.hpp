@@ -75,8 +75,9 @@ public:
 struct ControlBlock {
   enum Type { BLOCK, LOOP, IF, ELSE };
   Type type;
-  size_t start;
-  std::vector<size_t> placeholders;
+  size_t startIndex;
+  RegisterPool registerPoolState;
+  std::vector<arm64::reg_t> stackState;
 };
 
 arm64::reg_size_t map_valtype_to_regsize(const webassembly_t::val_types_t type);

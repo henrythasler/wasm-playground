@@ -396,53 +396,41 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
         auto blocktype = (rawBlocktype == 0x40) ? webassembly_t::val_types_t(0) : webassembly_t::val_types_t(rawBlocktype);
 
         // insert cbz to jump over if block if condition is false (zero)
-        // include the size of the cbz instruction itself (4 bytes) and the jump instruction after the if block (4 bytes)
-        controlStack.push_back(ControlBlock{ControlBlock::Type::IF, machinecode.size(), {}});
+        controlStack.push_back(ControlBlock{ControlBlock::Type::IF, machinecode.size(), registerPool, stack});
         machinecode.push_back(arm64::encode_cbz(reg, getTraphandlerOffset(wasm::trap_code_t::AssemblerAddressPatchError, trapHandler, machinecode),
                                                 arm64::reg_size_t::SIZE_32BIT));
 
         if (blocktype != 0) {
           // maybe do something here
         }
-        /*
-                // need an independent copy of the register pool for else branch
-                RegisterPool elseRegisterPool(registerPool);
-                // and a copy of the stack for the conditional block
-                std::vector<arm64::reg_t> elseStack = stack;
-
-                auto block = assembleExpression(stream, streamEnd, locals, registerPool, stack);
-
-                std::vector<uint32_t> block2;
-                if (*(stream - 1) == 0x05) {
-                  block2 = assembleExpression(stream, streamEnd, locals, elseRegisterPool, elseStack);
-                  // verify that stack sizes and registers match after else-block
-                  asserte(stack.size() == elseStack.size(), "stack size mismatch after else-block");
-                  if (stack.size() > 0 && elseStack.size() > 0) {
-                    asserte(stack.back() == elseStack.back(), "stack register mismatch after else-block");
-                  }
-                }
-
-
-
-                // insert cbz to jump over if block if condition is false (zero)
-                // include the size of the cbz instruction itself (4 bytes) and the jump instruction after the if block (4 bytes)
-                machinecode.push_back(arm64::encode_cbz(reg, int32_t(machinecode.size() + 2) << 2, arm64::reg_size_t::SIZE_32BIT));
-                machinecode.insert(machinecode.end(), machinecode.begin(), machinecode.end());
-
-                // handle else block if present
-                if (machinecode.size() > 0) {
-                  // jump over else block after if block
-                  machinecode.push_back(arm64::encode_branch(int32_t(machinecode.size() + 1) << 2));
-                  // insert else block
-                  machinecode.insert(machinecode.end(), machinecode.begin(), machinecode.end());
-                }
-        */
         break;
       }
     case 0x05:
       /** else */
       {
-        // FIXME: update control stack
+        asserte(controlStack.size() > 0, "Control Stack is malformed");
+        switch (controlStack.back().type) {
+        case ControlBlock::IF: {
+          auto idx = controlStack.back().startIndex;
+          auto offset = (machinecode.size() - idx + 1) << 2;
+
+          // patch CBZ (Compare and branch on zero) instruction
+          machinecode[idx] &= 0xff00001f;                     // clear current jump offset
+          machinecode[idx] |= ((offset >> 2) & 0x7FFFF) << 5; // insert new jump offset
+
+          registerPool = controlStack.back().registerPoolState;
+          stack = controlStack.back().stackState;
+
+          controlStack.pop_back();
+          controlStack.push_back(ControlBlock{ControlBlock::Type::ELSE, machinecode.size(), registerPool, stack});
+          machinecode.push_back(arm64::encode_branch(getTraphandlerOffset(wasm::trap_code_t::AssemblerAddressPatchError, trapHandler, machinecode)));
+          break;
+        }
+        default: {
+          asserte(false, "ControlBlock.type undefined");
+          break;
+        }
+        }
         break;
       }
     case 0x01:
@@ -460,10 +448,21 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
         if (controlStack.size() > 0) {
           switch (controlStack.back().type) {
           case ControlBlock::IF: {
-            for (auto pos : controlStack.back().placeholders) {
-              auto offset = (machinecode.size() - pos) << 2;
-              machinecode[pos] |= ((offset >> 2) & 0x7FFFF) << 5;
-            }
+            auto idx = controlStack.back().startIndex;
+            auto offset = (machinecode.size() - idx) << 2;
+
+            // patch CBZ (Compare and branch on zero) instruction
+            machinecode[idx] &= 0xff00001f;                     // clear current jump offset
+            machinecode[idx] |= ((offset >> 2) & 0x7FFFF) << 5; // insert new jump offset
+            break;
+          }
+          case ControlBlock::ELSE: {
+            auto idx = controlStack.back().startIndex;
+            auto offset = (machinecode.size() - idx) << 2;
+
+            // patch B (branch) instruction
+            machinecode[idx] &= 0xfc000000;                  // clear current jump offset
+            machinecode[idx] |= ((offset >> 2) & 0x3FFFFFF); // insert new jump offset
             break;
           }
           default: {
