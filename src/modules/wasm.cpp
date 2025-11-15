@@ -26,6 +26,8 @@ std::string trapCodeToString(trap_code_t code) {
     return "Out of fuel";
   case trap_code_t::GrowthOperationLimited:
     return "Growth operation limited";
+  case trap_code_t::AssemblerAddressPatchError:
+    return "AssemblerAddressPatchError";
   default:
     return "Unknown trap code";
   };

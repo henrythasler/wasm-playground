@@ -47,7 +47,7 @@ size_t WasmFunction::compile(const webassembly_t::func_t *func, const std::uniqu
   // this keeps track of the current position in the stack frame relative to fp
   uint32_t stackPosition = 0;
 
-  // holds the current depth of the block (for now); 
+  // holds the current depth of the block (for now);
   std::vector<uint32_t> controlStack;
 
   // evaluate parameters to determine initial stack size
@@ -89,13 +89,21 @@ size_t WasmFunction::compile(const webassembly_t::func_t *func, const std::uniqu
     stackPosition = assembler::initLocals(locals, stackPosition, variables, machinecode);
   }
 
+  auto trapHandler = assembler::createTrapHandler(
+      {
+          wasm::trap_code_t::UnreachableCodeReached,
+          wasm::trap_code_t::IntegerDivisionByZero,
+          wasm::trap_code_t::IntegerOverflow,
+          wasm::trap_code_t::AssemblerAddressPatchError,
+      },
+      machinecode);
+
   // Business logic
   if (func->expr().size() > 0) {
     auto exprStr = func->expr();
     std::vector<uint8_t> expr(exprStr.begin(), exprStr.end());
     auto it = expr.cbegin();
-    auto block = assembler::assembleExpression(it, expr.end(), variables, registerPool, wasmStack);
-    machinecode.insert(machinecode.end(), block.machinecode.begin(), block.machinecode.end());
+    assembler::assembleExpression(it, expr.end(), variables, registerPool, wasmStack, trapHandler, machinecode);
   }
 
   if (results.size() > 0) {

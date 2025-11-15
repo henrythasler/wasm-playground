@@ -72,9 +72,11 @@ public:
   };
 };
 
-struct BlockResult {
-  std::vector<uint32_t> machinecode;
-  int32_t targetDepth;
+struct ControlBlock {
+  enum Type { BLOCK, LOOP, IF, ELSE };
+  Type type;
+  size_t start;
+  std::vector<size_t> placeholders;
 };
 
 arm64::reg_size_t map_valtype_to_regsize(const webassembly_t::val_types_t type);
@@ -87,6 +89,12 @@ void loadResult(const std::vector<webassembly_t::val_types_t> &results, const st
                 std::vector<uint32_t> &machinecode);
 uint32_t createPreamble(uint32_t stackSize, std::vector<uint32_t> &machinecode);
 void createEpilogue(const uint32_t stackSize, std::vector<uint32_t> &machinecode);
-BlockResult assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vector<uint8_t>::const_iterator streamEnd,
-                                         Variables &locals, RegisterPool &registerPool, std::vector<arm64::reg_t> &stack);
+std::map<wasm::trap_code_t, int32_t> createTrapHandler(const std::vector<wasm::trap_code_t> trapCodes, std::vector<uint32_t> &machinecode);
+
+inline int32_t getTraphandlerOffset(wasm::trap_code_t trapCode, const std::map<wasm::trap_code_t, int32_t> &trapHandler,
+                                    const std::vector<uint32_t> &machinecode);
+
+void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vector<uint8_t>::const_iterator streamEnd, Variables &locals,
+                        RegisterPool &registerPool, std::vector<arm64::reg_t> &stack, const std::map<wasm::trap_code_t, int32_t> &trapHandler,
+                        std::vector<uint32_t> &machinecode);
 } // namespace assembler

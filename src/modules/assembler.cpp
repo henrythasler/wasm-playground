@@ -103,25 +103,46 @@ void printStack(const std::vector<arm64::reg_t> &stack) {
   std::cout << std::endl;
 }
 
-std::vector<uint32_t> encodeTrapHandler(uint64_t trapHandlerAddress, wasm::trap_code_t trapCode) {
-  std::vector<uint32_t> machinecode;
+size_t encodeTrapHandler(uint64_t trapHandlerAddress, wasm::trap_code_t trapCode, std::vector<uint32_t> &machinecode) {
+  size_t offset = machinecode.size() << 2;
   machinecode.push_back(arm64::encode_mov_immediate(arm64::X0, uint16_t(trapCode), 0, arm64::reg_size_t::SIZE_64BIT));
   machinecode.push_back(arm64::encode_mov_immediate(arm64::X9, uint16_t(trapHandlerAddress & 0xFFFF), 0, arm64::reg_size_t::SIZE_64BIT));
   machinecode.push_back(arm64::encode_movk(arm64::X9, uint16_t((trapHandlerAddress >> (1 << 4)) & 0xFFFF), 1 << 4, arm64::reg_size_t::SIZE_64BIT));
   machinecode.push_back(arm64::encode_movk(arm64::X9, uint16_t((trapHandlerAddress >> (2 << 4)) & 0xFFFF), 2 << 4, arm64::reg_size_t::SIZE_64BIT));
   machinecode.push_back(arm64::encode_movk(arm64::X9, uint16_t((trapHandlerAddress >> (3 << 4)) & 0xFFFF), 3 << 4, arm64::reg_size_t::SIZE_64BIT));
   machinecode.push_back(arm64::encode_branch_register(arm64::X9));
-  return machinecode;
+  return offset;
+}
+
+std::map<wasm::trap_code_t, int32_t> createTrapHandler(const std::vector<wasm::trap_code_t> trapCodes, std::vector<uint32_t> &machinecode) {
+  std::map<wasm::trap_code_t, int32_t> trapcodeOffsets;
+
+  auto trapHandlerPosition = machinecode.size();
+
+  // this instruction requires address patching after all handlers are emitted; for now, just jump to the next instruction
+  machinecode.push_back(arm64::encode_branch(4));
+
+  for (auto trapcode : trapCodes) {
+    trapcodeOffsets[trapcode] = int32_t(encodeTrapHandler(reinterpret_cast<uint64_t>(&wasmTrapHandler), trapcode, machinecode));
+  }
+
+  // patch forward jump over all trap handlers
+  machinecode[trapHandlerPosition] |= (uint32_t(machinecode.size() - trapHandlerPosition) & 0x3FFFFFF);
+  return trapcodeOffsets;
+}
+
+inline int32_t getTraphandlerOffset(wasm::trap_code_t trapCode, const std::map<wasm::trap_code_t, int32_t> &trapHandler,
+                                    const std::vector<uint32_t> &machinecode) {
+  return trapHandler.at(trapCode) - int32_t(machinecode.size() << 2);
 }
 
 /**
  * Assemble a WebAssembly expression (aka bytecode) into ARM64 machine code.
  */
-BlockResult assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vector<uint8_t>::const_iterator streamEnd,
-                                         Variables &locals, RegisterPool &registerPool, std::vector<arm64::reg_t> &stack) {
-  std::vector<uint32_t> machinecode;
-  int32_t labelDepth = 0;
-
+void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vector<uint8_t>::const_iterator streamEnd, Variables &locals,
+                        RegisterPool &registerPool, std::vector<arm64::reg_t> &stack, const std::map<wasm::trap_code_t, int32_t> &trapHandler,
+                        std::vector<uint32_t> &machinecode) {
+  std::vector<ControlBlock> controlStack;
   while (stream != streamEnd) {
     switch (*stream++) {
     case 0x20:
@@ -227,30 +248,24 @@ BlockResult assembleExpression(std::vector<uint8_t>::const_iterator &stream, std
         auto reg2 = stack.at(stack.size() - 1);
         auto reg1 = stack.at(stack.size() - 2);
 
-        auto trapSequenceDivByZero = encodeTrapHandler(reinterpret_cast<uint64_t>(&wasmTrapHandler), wasm::trap_code_t::IntegerDivisionByZero);
-        auto trapSequenceOverflow = encodeTrapHandler(reinterpret_cast<uint64_t>(&wasmTrapHandler), wasm::trap_code_t::IntegerOverflow);
-
         // check for division by zero and trap if so
-        machinecode.push_back(
-            arm64::encode_cbnz(reg2, int32_t(trapSequenceDivByZero.size() + 1) << 2, registerSize)); // skip trap handler jump sequence if not zero
-        machinecode.insert(machinecode.end(), trapSequenceDivByZero.begin(), trapSequenceDivByZero.end());
+        machinecode.push_back(arm64::encode_cbz(reg2, getTraphandlerOffset(wasm::trap_code_t::IntegerDivisionByZero, trapHandler, machinecode),
+                                                registerSize)); // skip trap handler jump sequence if not zero
 
         // need to check for integer overflow (INT_MIN/-1)
         if (signedVariant == arm64::signed_variant_t::SIGNED) {
           // check if divisor is -1
           machinecode.push_back(arm64::encode_cmn_immediate(reg2, 1, false, registerSize));
-          machinecode.push_back(arm64::encode_branch_cond(arm64::branch_condition_t::NE, 10 << 2));
+          machinecode.push_back(arm64::encode_branch_cond(arm64::branch_condition_t::NE, 4 << 2));
 
           // Yes! Now check if dividend is INT(32|64)_MIN
           auto tmp_reg = registerPool.allocateRegister();
           uint8_t shift = (registerSize == arm64::reg_size_t::SIZE_32BIT) ? 16 : 48;
           machinecode.push_back(arm64::encode_mov_immediate(tmp_reg, 0x8000, shift, registerSize));
           machinecode.push_back(arm64::encode_cmp_shifted_register(reg1, tmp_reg, arm64::reg_shift_t::SHIFT_LSL, 0, registerSize));
-          machinecode.push_back(arm64::encode_branch_cond(arm64::branch_condition_t::NE, int32_t(trapSequenceOverflow.size() + 1) << 2));
+          machinecode.push_back(arm64::encode_branch_cond(arm64::branch_condition_t::EQ,
+                                                          getTraphandlerOffset(wasm::trap_code_t::IntegerOverflow, trapHandler, machinecode)));
           registerPool.freeRegister(tmp_reg);
-
-          // Also yes! Insert jump to trap handler
-          machinecode.insert(machinecode.end(), trapSequenceOverflow.begin(), trapSequenceOverflow.end());
         }
 
         // all checks passed; encode division instruction
@@ -338,16 +353,18 @@ BlockResult assembleExpression(std::vector<uint8_t>::const_iterator &stream, std
       {
         auto rawBlocktype = *stream++;
         auto blocktype = (rawBlocktype == 0x40) ? webassembly_t::val_types_t(0) : webassembly_t::val_types_t(rawBlocktype);
-
-        std::vector<arm64::reg_t> blockStack;
-        auto block = assembleExpression(stream, streamEnd, locals, registerPool, blockStack);
-        machinecode.insert(machinecode.end(), block.machinecode.begin(), block.machinecode.end());
-        labelDepth = block.targetDepth;
-
         if (blocktype != 0) {
-          asserte(blockStack.size() == 1, "Stack size mismatch on block exit");
-          stack.emplace_back(blockStack.back());
+          // maybe do something here
         }
+
+        // std::vector<arm64::reg_t> blockStack;
+        // auto block = assembleExpression(stream, streamEnd, locals, registerPool, blockStack);
+        // machinecode.insert(machinecode.end(), machinecode.begin(), machinecode.end());
+
+        // if (blocktype != 0) {
+        //   asserte(blockStack.size() == 1, "Stack size mismatch on block exit");
+        //   stack.emplace_back(blockStack.back());
+        // }
 
         break;
       }
@@ -355,8 +372,9 @@ BlockResult assembleExpression(std::vector<uint8_t>::const_iterator &stream, std
       /** br */
       {
         auto labelidx = int32_t(decoder::LEB128Decoder::decodeUnsigned(stream, streamEnd));
+        printf("labelidx=%X", labelidx);
         // indicate that we need to exit at least one block before we can emit new instructions
-        return BlockResult{machinecode, labelidx + 1};
+        break;
       }
     case 0x0d:
       /** br_if */
@@ -377,45 +395,56 @@ BlockResult assembleExpression(std::vector<uint8_t>::const_iterator &stream, std
         auto rawBlocktype = *stream++;
         auto blocktype = (rawBlocktype == 0x40) ? webassembly_t::val_types_t(0) : webassembly_t::val_types_t(rawBlocktype);
 
-        // need an independent copy of the register pool for else branch
-        RegisterPool elseRegisterPool(registerPool);
-        // and a copy of the stack for the conditional block
-        std::vector<arm64::reg_t> elseStack = stack;
-
-        auto block = assembleExpression(stream, streamEnd, locals, registerPool, stack);
-
-        BlockResult block2;
-        if (*(stream - 1) == 0x05) {
-          block2 = assembleExpression(stream, streamEnd, locals, elseRegisterPool, elseStack);
-          // verify that stack sizes and registers match after else-block
-          asserte(stack.size() == elseStack.size(), "stack size mismatch after else-block");
-          if (stack.size() > 0 && elseStack.size() > 0) {
-            asserte(stack.back() == elseStack.back(), "stack register mismatch after else-block");
-          }
-        }
+        // insert cbz to jump over if block if condition is false (zero)
+        // include the size of the cbz instruction itself (4 bytes) and the jump instruction after the if block (4 bytes)
+        controlStack.push_back(ControlBlock{ControlBlock::Type::IF, machinecode.size(), {}});
+        machinecode.push_back(arm64::encode_cbz(reg, getTraphandlerOffset(wasm::trap_code_t::AssemblerAddressPatchError, trapHandler, machinecode),
+                                                arm64::reg_size_t::SIZE_32BIT));
 
         if (blocktype != 0) {
           // maybe do something here
         }
+        /*
+                // need an independent copy of the register pool for else branch
+                RegisterPool elseRegisterPool(registerPool);
+                // and a copy of the stack for the conditional block
+                std::vector<arm64::reg_t> elseStack = stack;
 
-        // insert cbz to jump over if block if condition is false (zero)
-        // include the size of the cbz instruction itself (4 bytes) and the jump instruction after the if block (4 bytes)
-        machinecode.push_back(arm64::encode_cbz(reg, int32_t(block.machinecode.size() + 2) << 2, arm64::reg_size_t::SIZE_32BIT));
-        machinecode.insert(machinecode.end(), block.machinecode.begin(), block.machinecode.end());
+                auto block = assembleExpression(stream, streamEnd, locals, registerPool, stack);
 
-        // handle else block if present
-        if (block2.machinecode.size() > 0) {
-          // jump over else block after if block
-          machinecode.push_back(arm64::encode_branch(int32_t(block2.machinecode.size() + 1) << 2));
-          // insert else block
-          machinecode.insert(machinecode.end(), block2.machinecode.begin(), block2.machinecode.end());
-        }
+                std::vector<uint32_t> block2;
+                if (*(stream - 1) == 0x05) {
+                  block2 = assembleExpression(stream, streamEnd, locals, elseRegisterPool, elseStack);
+                  // verify that stack sizes and registers match after else-block
+                  asserte(stack.size() == elseStack.size(), "stack size mismatch after else-block");
+                  if (stack.size() > 0 && elseStack.size() > 0) {
+                    asserte(stack.back() == elseStack.back(), "stack register mismatch after else-block");
+                  }
+                }
 
+
+
+                // insert cbz to jump over if block if condition is false (zero)
+                // include the size of the cbz instruction itself (4 bytes) and the jump instruction after the if block (4 bytes)
+                machinecode.push_back(arm64::encode_cbz(reg, int32_t(machinecode.size() + 2) << 2, arm64::reg_size_t::SIZE_32BIT));
+                machinecode.insert(machinecode.end(), machinecode.begin(), machinecode.end());
+
+                // handle else block if present
+                if (machinecode.size() > 0) {
+                  // jump over else block after if block
+                  machinecode.push_back(arm64::encode_branch(int32_t(machinecode.size() + 1) << 2));
+                  // insert else block
+                  machinecode.insert(machinecode.end(), machinecode.begin(), machinecode.end());
+                }
+        */
         break;
       }
     case 0x05:
       /** else */
-      { return BlockResult{machinecode, 0}; }
+      {
+        // FIXME: update control stack
+        break;
+      }
     case 0x01:
       /** nop */
       {
@@ -424,15 +453,32 @@ BlockResult assembleExpression(std::vector<uint8_t>::const_iterator &stream, std
       }
     case 0x0f:
       /** return */
-      { return BlockResult{machinecode, 0}; }
+      { break; }
     case 0x0b:
       /** end */
-      { return BlockResult{machinecode, std::max(0, labelDepth - 1)}; }
+      {
+        if (controlStack.size() > 0) {
+          switch (controlStack.back().type) {
+          case ControlBlock::IF: {
+            for (auto pos : controlStack.back().placeholders) {
+              auto offset = (machinecode.size() - pos) << 2;
+              machinecode[pos] |= ((offset >> 2) & 0x7FFFF) << 5;
+            }
+            break;
+          }
+          default: {
+            asserte(false, "ControlBlock.type undefined");
+            break;
+          }
+          }
+          controlStack.pop_back();
+        }
+        break;
+      }
     case 0x00:
       /** unreachable */
       {
-        auto trapSequenceUnreachable = encodeTrapHandler(reinterpret_cast<uint64_t>(&wasmTrapHandler), wasm::trap_code_t::UnreachableCodeReached);
-        machinecode.insert(machinecode.end(), trapSequenceUnreachable.begin(), trapSequenceUnreachable.end());
+        machinecode.push_back(arm64::encode_branch(getTraphandlerOffset(wasm::trap_code_t::UnreachableCodeReached, trapHandler, machinecode)));
         break;
       }
     default:
@@ -442,6 +488,5 @@ BlockResult assembleExpression(std::vector<uint8_t>::const_iterator &stream, std
       break;
     }
   }
-  return BlockResult{machinecode, 0};
 }
 } // namespace assembler
