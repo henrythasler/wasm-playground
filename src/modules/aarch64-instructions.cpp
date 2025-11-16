@@ -474,6 +474,11 @@ uint32_t encode_branch(int32_t imm26) {
   return 0x14000000 | ((imm26 >> 2) & 0x3FFFFFF); // imm26 offset
 }
 
+void patch_branch(uint32_t &offset, int32_t imm26) {
+  offset &= 0xfc000000;                 // clear current jump offset
+  offset |= ((imm26 >> 2) & 0x3FFFFFF); // insert new jump offset
+}
+
 /**
  * This instruction branches unconditionally to an address in a register.
  *
@@ -515,6 +520,11 @@ uint32_t encode_cbz(reg_t rt, int32_t imm19, reg_size_t size) {
   instr |= ((imm19 >> 2) & 0x7FFFF) << 5; // imm19 offset
   instr |= (rt & 0x1F);                   // Rt (register to be tested)
   return instr;
+}
+
+void patch_cbz(uint32_t &offset, int32_t imm19) {
+  offset &= 0xff00001f;                    // clear current jump offset
+  offset |= ((imm19 >> 2) & 0x7FFFF) << 5; // insert new jump offset
 }
 
 /**

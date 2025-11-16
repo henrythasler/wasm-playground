@@ -353,27 +353,15 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
       {
         auto rawBlocktype = *stream++;
         auto blocktype = (rawBlocktype == 0x40) ? webassembly_t::val_types_t(0) : webassembly_t::val_types_t(rawBlocktype);
-        if (blocktype != 0) {
-          // maybe do something here
-        }
-
-        // std::vector<arm64::reg_t> blockStack;
-        // auto block = assembleExpression(stream, streamEnd, locals, registerPool, blockStack);
-        // machinecode.insert(machinecode.end(), machinecode.begin(), machinecode.end());
-
-        // if (blocktype != 0) {
-        //   asserte(blockStack.size() == 1, "Stack size mismatch on block exit");
-        //   stack.emplace_back(blockStack.back());
-        // }
-
+        controlStack.push_back(ControlBlock{ControlBlock::Type::BLOCK, {}, blocktype, registerPool, stack});
         break;
       }
     case 0x0c:
       /** br */
       {
-        auto labelidx = int32_t(decoder::LEB128Decoder::decodeUnsigned(stream, streamEnd));
-        printf("labelidx=%X", labelidx);
-        // indicate that we need to exit at least one block before we can emit new instructions
+        auto labelidx = size_t(decoder::LEB128Decoder::decodeUnsigned(stream, streamEnd));
+        controlStack.at(controlStack.size() - 1 - labelidx).patchIndices.push_back(machinecode.size());
+        machinecode.push_back(arm64::encode_cbz(arm64::reg_t::XZR, getTraphandlerOffset(wasm::trap_code_t::AssemblerAddressPatchError, trapHandler, machinecode), arm64::reg_size_t::SIZE_64BIT));
         break;
       }
     case 0x0d:
@@ -396,13 +384,9 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
         auto blocktype = (rawBlocktype == 0x40) ? webassembly_t::val_types_t(0) : webassembly_t::val_types_t(rawBlocktype);
 
         // insert cbz to jump over if block if condition is false (zero)
-        controlStack.push_back(ControlBlock{ControlBlock::Type::IF, machinecode.size(), registerPool, stack});
+        controlStack.push_back(ControlBlock{ControlBlock::Type::IF, {machinecode.size()}, blocktype, registerPool, stack});
         machinecode.push_back(arm64::encode_cbz(reg, getTraphandlerOffset(wasm::trap_code_t::AssemblerAddressPatchError, trapHandler, machinecode),
                                                 arm64::reg_size_t::SIZE_32BIT));
-
-        if (blocktype != 0) {
-          // maybe do something here
-        }
         break;
       }
     case 0x05:
@@ -411,18 +395,18 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
         asserte(controlStack.size() > 0, "Control Stack is malformed");
         switch (controlStack.back().type) {
         case ControlBlock::IF: {
-          auto idx = controlStack.back().startIndex;
-          auto offset = (machinecode.size() - idx + 1) << 2;
+          for (auto idx : controlStack.back().patchIndices) {
+            auto offset = (machinecode.size() - idx + 1) << 2;
+            // patch CBZ (Compare and branch on zero) instruction
+            arm64::patch_cbz(machinecode[idx], int32_t(offset));
+          }
 
-          // patch CBZ (Compare and branch on zero) instruction
-          machinecode[idx] &= 0xff00001f;                     // clear current jump offset
-          machinecode[idx] |= ((offset >> 2) & 0x7FFFF) << 5; // insert new jump offset
-
+          // restore previous state
           registerPool = controlStack.back().registerPoolState;
           stack = controlStack.back().stackState;
+          auto blocktype = controlStack.back().resultType;
 
-          controlStack.pop_back();
-          controlStack.push_back(ControlBlock{ControlBlock::Type::ELSE, machinecode.size(), registerPool, stack});
+          controlStack.push_back(ControlBlock{ControlBlock::Type::ELSE, {machinecode.size()}, blocktype, registerPool, stack});
           machinecode.push_back(arm64::encode_branch(getTraphandlerOffset(wasm::trap_code_t::AssemblerAddressPatchError, trapHandler, machinecode)));
           break;
         }
@@ -448,21 +432,35 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
         if (controlStack.size() > 0) {
           switch (controlStack.back().type) {
           case ControlBlock::IF: {
-            auto idx = controlStack.back().startIndex;
-            auto offset = (machinecode.size() - idx) << 2;
+            for (auto idx : controlStack.back().patchIndices) {
+              auto offset = (machinecode.size() - idx) << 2;
+              // patch CBZ (Compare and branch on zero) instruction
+              arm64::patch_cbz(machinecode[idx], int32_t(offset));
+            }
 
-            // patch CBZ (Compare and branch on zero) instruction
-            machinecode[idx] &= 0xff00001f;                     // clear current jump offset
-            machinecode[idx] |= ((offset >> 2) & 0x7FFFF) << 5; // insert new jump offset
+            controlStack.pop_back();
             break;
           }
           case ControlBlock::ELSE: {
-            auto idx = controlStack.back().startIndex;
-            auto offset = (machinecode.size() - idx) << 2;
+            for (auto idx : controlStack.back().patchIndices) {
+              auto offset = (machinecode.size() - idx) << 2;
+              // patch B (branch) instruction
+              arm64::patch_branch(machinecode[idx], int32_t(offset));
+            }
 
-            // patch B (branch) instruction
-            machinecode[idx] &= 0xfc000000;                  // clear current jump offset
-            machinecode[idx] |= ((offset >> 2) & 0x3FFFFFF); // insert new jump offset
+            controlStack.pop_back();
+            // also pop IF element
+            controlStack.pop_back();
+            break;
+          }
+          case ControlBlock::BLOCK: {
+            for (auto idx : controlStack.back().patchIndices) {
+              auto offset = (machinecode.size() - idx) << 2;
+              // patch CBZ (Compare and branch on zero) instruction
+              arm64::patch_cbz(machinecode[idx], int32_t(offset));
+            }
+
+            controlStack.pop_back();
             break;
           }
           default: {
@@ -470,7 +468,6 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
             break;
           }
           }
-          controlStack.pop_back();
         }
         break;
       }

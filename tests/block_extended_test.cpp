@@ -25,4 +25,12 @@ TEST(block, simple_br_i32) {
   EXPECT_EQ(wasmFunction(), 42);
 }
 
+// TEST(block, simple_br_if) {
+//   auto wasmModule = helper::loadModule("block-extended.wasm");
+//   auto machinecode = wasmModule.getWasmFunction("simple-br_if")->getMachinecode();
+//   auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t>(machinecode);
+//   helper::dump("block.simple-br_if.bin", machinecode);
+//   EXPECT_EQ(wasmFunction(), 42);
+// }
+
 } // namespace testing

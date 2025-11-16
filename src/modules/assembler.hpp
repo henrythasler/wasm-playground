@@ -75,7 +75,8 @@ public:
 struct ControlBlock {
   enum Type { BLOCK, LOOP, IF, ELSE };
   Type type;
-  size_t startIndex;
+  std::vector<size_t> patchIndices;
+  webassembly_t::val_types_t resultType;
   RegisterPool registerPoolState;
   std::vector<arm64::reg_t> stackState;
 };

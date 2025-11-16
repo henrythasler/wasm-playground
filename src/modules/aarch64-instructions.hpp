@@ -161,6 +161,10 @@ uint32_t encode_branch_cond(branch_condition_t cond, int32_t imm19);
 uint32_t encode_cbz(reg_t rt, int32_t imm19, reg_size_t size);
 uint32_t encode_cbnz(reg_t rt, int32_t imm19, reg_size_t size);
 
+/** address back patching */
+void patch_branch(uint32_t &offset, int32_t imm26);
+void patch_cbz(uint32_t &offset, int32_t imm19);
+
 /** misc */
 uint32_t encode_nop();
 uint32_t encode_brk(uint16_t imm16 = 0);

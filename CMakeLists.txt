@@ -24,36 +24,6 @@ function(CLANG_TIDY ENABLED)
   endif()
 endfunction()
 
-# Find wat2wasm tool
-find_program(WAT2WASM_EXECUTABLE wat2wasm)
-if(NOT WAT2WASM_EXECUTABLE)
-  message(FATAL_ERROR "wat2wasm not found. Please install wabt tools.")
-else()
-  message(STATUS "Found wat2wasm: ${WAT2WASM_EXECUTABLE}")
-endif()
-
-# compile all wat-files in wasm-folder to wasm using wat2wasm if not already done
-file(GLOB WAT_FILES "${CMAKE_CURRENT_SOURCE_DIR}/wasm/*.wat")
-foreach(WAT_FILE ${WAT_FILES})
-  get_filename_component(WAT_FILENAME ${WAT_FILE} NAME_WE)
-  set(WASM_FILE "${CMAKE_CURRENT_SOURCE_DIR}/wasm/${WAT_FILENAME}.wasm")
-  if(NOT EXISTS ${WASM_FILE} OR ${WAT_FILE} IS_NEWER_THAN ${WASM_FILE})
-    add_custom_command(
-      OUTPUT ${WASM_FILE}
-      COMMAND ${WAT2WASM_EXECUTABLE} ${WAT_FILE} -o ${WASM_FILE}
-      DEPENDS ${WAT_FILE}
-      COMMENT "Compiling ${WAT_FILE} to ${WASM_FILE}"
-      VERBATIM
-    )
-    list(APPEND GENERATED_WASM_FILES ${WASM_FILE})
-  endif()
-endforeach()
-
-if(GENERATED_WASM_FILES)
-  add_custom_target(generate_wasm_files ALL DEPENDS ${GENERATED_WASM_FILES})
-  message(STATUS "Added custom target to generate wasm files: ${GENERATED_WASM_FILES}")
-endif()
-
 option(ENABLE_CLANG_TIDY "Enable clang-tidy static analysis" ON)
 option(ENABLE_UNITTEST "Enable unit tests" ON)
 option(ENABLE_COVERAGE "Enable code coverage reporting" ON)

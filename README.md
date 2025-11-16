@@ -114,7 +114,10 @@ Set breakpoint in source code. Start Debugging (F5).
 
 - [WebAssembly 1.0 Core Specification](https://www.w3.org/TR/wasm-core-1/)
 - [WebAssembly on developer.mozilla.org](https://developer.mozilla.org/en-US/docs/WebAssembly)
+- [Human-readable WebAssembly Reference Manual](https://github.com/sunfishcode/wasm-reference-manual/blob/master/WebAssembly.md)
 - [WebAssembly parser for Kaitai.io](https://github.com/evacchi/kaitai-webassembly)
+- [Nish Tahir: The WebAssembly Text Format](https://nishtahir.com/the-wasm-text-format/)
+- [Stack machines and assembly](https://stanford-cs242.github.io/f18/lectures/04-1-webassembly-practice.html)
 
 ### WebAssembly Online Tools
 
