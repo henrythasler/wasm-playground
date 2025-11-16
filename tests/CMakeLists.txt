@@ -95,11 +95,13 @@ add_executable(all_tests
   arithmetic_test.cpp
   conditionals_test.cpp
   division_test.cpp
+  block_test.cpp
   # additional test cases
   echo_test.cpp
   compare_test.cpp
   branch_test.cpp
   block_extended_test.cpp
+  bit_test.cpp
 )
 
 # GoogleTest requires at least C++17

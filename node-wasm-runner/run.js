@@ -2,7 +2,7 @@
 import fs from 'node:fs/promises';
 
 // Use readFile to read contents of the "add.wasm" file
-const wasmBuffer = await fs.readFile('wasm/n_sum.wasm');
+const wasmBuffer = await fs.readFile('tests/assets/block.wasm');
 
 function log(msg) {
     console.log(msg);
@@ -14,8 +14,8 @@ const imports = { env: { log } };
 const wasmModule = await WebAssembly.instantiate(wasmBuffer, imports);
 
 // Exported function lives under instance.exports object
-const { run } = wasmModule.instance.exports;
+const exports = wasmModule.instance.exports;
+console.log(exports);
 
-const sum = run(10);
-
-// console.log(sum); // Outputs: 10
+const res = exports['type-i64-value']();
+console.log(res);

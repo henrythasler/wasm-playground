@@ -345,7 +345,17 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
     case 0x7A:
       /** (i32|i64).ctz - Return the count of trailing zero bits */
       {
-        // FIXME: Implementation missing
+        auto registerSize = (*(stream - 1) == 0x68) ? arm64::reg_size_t::SIZE_32BIT : arm64::reg_size_t::SIZE_64BIT;
+
+        auto reg1 = stack.back();
+        auto reg2 = registerPool.allocateRegister();
+
+        arm64::emit_ctz(reg2, reg1, registerSize, machinecode);
+
+        stack.pop_back();
+        registerPool.freeRegister(reg1);
+        stack.emplace_back(reg2);
+
         break;
       }
     case 0x02:
@@ -361,15 +371,24 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
       {
         auto labelidx = size_t(decoder::LEB128Decoder::decodeUnsigned(stream, streamEnd));
         controlStack.at(controlStack.size() - 1 - labelidx).patchIndices.push_back(machinecode.size());
-        machinecode.push_back(arm64::encode_cbz(arm64::reg_t::XZR, getTraphandlerOffset(wasm::trap_code_t::AssemblerAddressPatchError, trapHandler, machinecode), arm64::reg_size_t::SIZE_64BIT));
+        machinecode.push_back(arm64::encode_cbz(arm64::reg_t::XZR,
+                                                getTraphandlerOffset(wasm::trap_code_t::AssemblerAddressPatchError, trapHandler, machinecode),
+                                                arm64::reg_size_t::SIZE_64BIT));
         break;
       }
     case 0x0d:
       /** br_if */
       {
         auto labelidx = uint32_t(decoder::LEB128Decoder::decodeUnsigned(stream, streamEnd));
-        printf("labelidx=%X", labelidx);
-        // FIXME: Implementation missing
+
+        auto reg = stack.back();
+        stack.pop_back();
+        registerPool.freeRegister(reg);
+
+        controlStack.at(controlStack.size() - 1 - labelidx).patchIndices.push_back(machinecode.size());
+        // FIXME: find a way to indicate the opcode to avoid using the wrong patch later
+        machinecode.push_back(arm64::encode_cbnz(reg, getTraphandlerOffset(wasm::trap_code_t::AssemblerAddressPatchError, trapHandler, machinecode),
+                                                 arm64::reg_size_t::SIZE_32BIT));
         break;
       }
     case 0x04:

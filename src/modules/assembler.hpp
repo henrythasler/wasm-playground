@@ -5,6 +5,7 @@
 #include <map>
 #include <vector>
 
+#include "aarch64-compounds.hpp"
 #include "aarch64-instructions.hpp"
 #include "helper.hpp"
 #include "leb128.hpp"

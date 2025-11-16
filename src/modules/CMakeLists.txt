@@ -10,7 +10,9 @@ add_library(tiny_modules STATIC
     runtime.cpp
     leb128.cpp
     wasm-dissector.cpp
+    aarch64-compounds.cpp
     aarch64-instructions.cpp
+    aarch64-instructions-bit.cpp
 )
 
 # set compiler options for warnings and treat warnings as errors

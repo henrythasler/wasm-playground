@@ -124,6 +124,9 @@ enum class branch_condition_t {
 
 enum class signed_variant_t { UNSIGNED = 0x00, SIGNED = 0x01 };
 
+/** helper functions */
+uint32_t select_instruction(reg_size_t variant, uint32_t instruction_32bit, uint32_t instruction_64bit, std::string name);
+
 /** memory operations */
 uint32_t encode_ldr_unsigned_offset(reg_t rt, reg_t rn, uint16_t imm12, reg_size_t size);
 uint32_t encode_str_unsigned_offset(reg_t rt, reg_t rn, uint16_t imm12, reg_size_t size);
@@ -145,6 +148,10 @@ uint32_t encode_add_register(reg_t rd, reg_t rn, reg_t rm, uint8_t imm6, reg_shi
 uint32_t encode_madd_register(reg_t rd, reg_t rn, reg_t rm, reg_t ra, reg_size_t size);
 uint32_t encode_mul_register(reg_t rd, reg_t rn, reg_t rm, reg_size_t size);
 uint32_t encode_div_register(reg_t rd, reg_t rn, reg_t rm, signed_variant_t variant, reg_size_t size);
+
+/** bit handling */
+uint32_t encode_clz(reg_t rd, reg_t rn, reg_size_t size);
+uint32_t encode_rbit(reg_t rd, reg_t rn, reg_size_t size);
 
 /** register handling */
 uint32_t encode_mov_register(reg_t rd, reg_t rm, reg_size_t size);
