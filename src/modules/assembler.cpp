@@ -348,13 +348,13 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
         auto registerSize = (*(stream - 1) == 0x68) ? arm64::reg_size_t::SIZE_32BIT : arm64::reg_size_t::SIZE_64BIT;
 
         auto reg1 = stack.back();
-        auto reg2 = registerPool.allocateRegister();
+        // auto reg2 = registerPool.allocateRegister();
 
-        arm64::emit_ctz(reg2, reg1, registerSize, machinecode);
+        arm64::emit_ctz(reg1, reg1, registerSize, machinecode);
 
-        stack.pop_back();
-        registerPool.freeRegister(reg1);
-        stack.emplace_back(reg2);
+        // stack.pop_back();
+        // registerPool.freeRegister(reg1);
+        // stack.emplace_back(reg2);
 
         break;
       }
@@ -386,7 +386,6 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
         registerPool.freeRegister(reg);
 
         controlStack.at(controlStack.size() - 1 - labelidx).patchIndices.push_back(machinecode.size());
-        // FIXME: find a way to indicate the opcode to avoid using the wrong patch later
         machinecode.push_back(arm64::encode_cbnz(reg, getTraphandlerOffset(wasm::trap_code_t::AssemblerAddressPatchError, trapHandler, machinecode),
                                                  arm64::reg_size_t::SIZE_32BIT));
         break;
@@ -444,7 +443,14 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
       }
     case 0x0f:
       /** return */
-      { break; }
+      {
+        // controlStack.at(controlStack.size() - 1 - labelidx).patchIndices.push_back(machinecode.size());
+        // machinecode.push_back(arm64::encode_cbnz(reg, getTraphandlerOffset(wasm::trap_code_t::AssemblerAddressPatchError, trapHandler,
+        // machinecode),
+        //                                          arm64::reg_size_t::SIZE_32BIT));
+
+        break;
+      }
     case 0x0b:
       /** end */
       {
@@ -477,6 +483,21 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
               auto offset = (machinecode.size() - idx) << 2;
               // patch CBZ (Compare and branch on zero) instruction
               arm64::patch_cbz(machinecode[idx], int32_t(offset));
+            }
+
+            if (controlStack.back().resultType > 0) {
+              auto reg = stack.back();
+
+              for (int32_t i = 0; i < int32_t(stack.size()) - int32_t(controlStack.back().stackState.size()); i++) {
+                registerPool.freeRegister(stack.back());
+                stack.pop_back();
+              }
+              stack.push_back(reg);
+            } else {
+              for (int32_t i = 0; i < int32_t(stack.size()) - int32_t(controlStack.back().stackState.size()); i++) {
+                registerPool.freeRegister(stack.back());
+                stack.pop_back();
+              }
             }
 
             controlStack.pop_back();

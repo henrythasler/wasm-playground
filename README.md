@@ -12,7 +12,7 @@ Progress:
 - Chapter03: ✅
 - Chapter04: ✅
 - Chapter05: ✅
-- Chapter06: 10%
+- Chapter06: 90%
 - Chapter07: 0%
 - Chapter08: 0%
 - Chapter09: 0%
@@ -51,6 +51,8 @@ $ cmake --build build --parallel
 ```
 
 This will build the project in the `build` folder.
+
+Run unit-tests with: `npm test`
 
 ## Execution
 
