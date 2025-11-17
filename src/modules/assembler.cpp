@@ -103,6 +103,10 @@ void printStack(const std::vector<arm64::reg_t> &stack) {
   std::cout << std::endl;
 }
 
+/**
+ * Encodes a trap handler that sets up the parameters and branches to the actual trap handler.
+ * @return the offset in bytes of the first instruction of the trap handler in the machinecode vector.
+ */
 size_t encodeTrapHandler(uint64_t trapHandlerAddress, wasm::trap_code_t trapCode, std::vector<uint32_t> &machinecode) {
   size_t offset = machinecode.size() << 2;
   machinecode.push_back(arm64::encode_mov_immediate(arm64::X0, uint16_t(trapCode), 0, arm64::reg_size_t::SIZE_64BIT));
