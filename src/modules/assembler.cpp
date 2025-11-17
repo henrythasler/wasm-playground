@@ -144,9 +144,8 @@ inline int32_t getTraphandlerOffset(wasm::trap_code_t trapCode, const std::map<w
  * Assemble a WebAssembly expression (aka bytecode) into ARM64 machine code.
  */
 void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vector<uint8_t>::const_iterator streamEnd, Variables &locals,
-                        RegisterPool &registerPool, std::vector<arm64::reg_t> &stack, const std::map<wasm::trap_code_t, int32_t> &trapHandler,
-                        std::vector<uint32_t> &machinecode) {
-  std::vector<ControlBlock> controlStack;
+                        RegisterPool &registerPool, std::vector<ControlBlock> &controlStack, std::vector<arm64::reg_t> &stack,
+                        const std::map<wasm::trap_code_t, int32_t> &trapHandler, std::vector<uint32_t> &machinecode) {
   while (stream != streamEnd) {
     switch (*stream++) {
     case 0x20:
@@ -414,7 +413,7 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
     case 0x05:
       /** else */
       {
-        asserte(controlStack.size() > 0, "Control Stack is malformed");
+        asserte(controlStack.size() > 1, "Control Stack is malformed");
         switch (controlStack.back().type) {
         case ControlBlock::IF: {
           for (auto idx : controlStack.back().patchIndices) {
@@ -448,11 +447,10 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
     case 0x0f:
       /** return */
       {
-        // controlStack.at(controlStack.size() - 1 - labelidx).patchIndices.push_back(machinecode.size());
-        // machinecode.push_back(arm64::encode_cbnz(reg, getTraphandlerOffset(wasm::trap_code_t::AssemblerAddressPatchError, trapHandler,
-        // machinecode),
-        //                                          arm64::reg_size_t::SIZE_32BIT));
-
+        // controlStack.at(0).patchIndices.push_back(machinecode.size());
+        // machinecode.push_back(arm64::encode_cbz(arm64::reg_t::XZR,
+        //                                         getTraphandlerOffset(wasm::trap_code_t::AssemblerAddressPatchError, trapHandler, machinecode),
+        //                                         arm64::reg_size_t::SIZE_64BIT));
         break;
       }
     case 0x0b:
@@ -480,6 +478,11 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
             controlStack.pop_back();
             // also pop IF element
             controlStack.pop_back();
+            break;
+          }
+          case ControlBlock::FUNCTION:
+          {
+            asserte(false, "Unexpected end of function block");
             break;
           }
           case ControlBlock::BLOCK: {

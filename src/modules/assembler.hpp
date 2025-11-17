@@ -74,7 +74,7 @@ public:
 };
 
 struct ControlBlock {
-  enum Type { BLOCK, LOOP, IF, ELSE };
+  enum Type { FUNCTION, BLOCK, LOOP, IF, ELSE };
   Type type;
   std::vector<size_t> patchIndices;
   webassembly_t::val_types_t resultType;
@@ -98,6 +98,6 @@ inline int32_t getTraphandlerOffset(wasm::trap_code_t trapCode, const std::map<w
                                     const std::vector<uint32_t> &machinecode);
 
 void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vector<uint8_t>::const_iterator streamEnd, Variables &locals,
-                        RegisterPool &registerPool, std::vector<arm64::reg_t> &stack, const std::map<wasm::trap_code_t, int32_t> &trapHandler,
+                        RegisterPool &registerPool, std::vector<ControlBlock> &controlStack, std::vector<arm64::reg_t> &stack, const std::map<wasm::trap_code_t, int32_t> &trapHandler,
                         std::vector<uint32_t> &machinecode);
 } // namespace assembler
