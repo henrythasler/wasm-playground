@@ -41,13 +41,38 @@ TEST(block, type_i64_value) {
   EXPECT_EQ(wasmFunction(), 2);
 }
 
-// TEST(block, as_block_first) {
+TEST(block, as_block_first) {
+  auto wasmModule = helper::loadModule("block.0.wasm");
+  auto machinecode = wasmModule.getWasmFunction("as-block-first")->getMachinecode();
+  auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t, wasm::wasm_i32_t>(machinecode);
+  helper::dump("block.as-block-first.bin", machinecode);
+  EXPECT_EQ(wasmFunction(0), 2);
+  EXPECT_EQ(wasmFunction(1), 3);
+}
+
+TEST(block, as_block_first_value) {
+  auto wasmModule = helper::loadModule("block.0.wasm");
+  auto machinecode = wasmModule.getWasmFunction("as-block-first-value")->getMachinecode();
+  auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t, wasm::wasm_i32_t>(machinecode);
+  helper::dump("block.as-block-first-value.bin", machinecode);
+  EXPECT_EQ(wasmFunction(0), 11);
+  EXPECT_EQ(wasmFunction(1), 10);
+}
+
+TEST(block, binary_left) {
+  auto wasmModule = helper::loadModule("block.0.wasm");
+  auto machinecode = wasmModule.getWasmFunction("as-binary-left")->getMachinecode();
+  auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t>(machinecode);
+  helper::dump("block.as-binary-left.bin", machinecode);
+  EXPECT_EQ(wasmFunction(), 1);
+}
+
+// TEST(block, binary_right) {
 //   auto wasmModule = helper::loadModule("block.0.wasm");
-//   auto machinecode = wasmModule.getWasmFunction("as-block-first")->getMachinecode();
-//   auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t, wasm::wasm_i32_t>(machinecode);
-//   helper::dump("block.as-block-first.bin", machinecode);
-//   EXPECT_EQ(wasmFunction(0), 2);
-//   EXPECT_EQ(wasmFunction(1), 3);
+//   auto machinecode = wasmModule.getWasmFunction("as-binary-right")->getMachinecode();
+//   auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t>(machinecode);
+//   helper::dump("block.as-binary-right.bin", machinecode);
+//   EXPECT_EQ(wasmFunction(), 1);
 // }
 
 } // namespace testing

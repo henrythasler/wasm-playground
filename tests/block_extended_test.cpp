@@ -52,12 +52,21 @@ TEST(block, nested_br_if) {
   EXPECT_EQ(wasmFunction(), 42);
 }
 
-// TEST(block, simple_return_i32) {
-//   auto wasmModule = helper::loadModule("block-extended.wasm");
-//   auto machinecode = wasmModule.getWasmFunction("simple-return-i32")->getMachinecode();
-//   auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t>(machinecode);
-//   helper::dump("block.simple-return-i32.bin", machinecode);
-//   EXPECT_EQ(wasmFunction(), 42);
-// }
+TEST(block, simple_return) {
+  auto wasmModule = helper::loadModule("block-extended.wasm");
+  auto machinecode = wasmModule.getWasmFunction("simple-return")->getMachinecode();
+  auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t>(machinecode);
+  helper::dump("block.simple-return.bin", machinecode);
+  EXPECT_EQ(wasmFunction(), 42);
+}
+
+TEST(block, parameter_nested_return) {
+  auto wasmModule = helper::loadModule("block-extended.wasm");
+  auto machinecode = wasmModule.getWasmFunction("parameter-nested-return")->getMachinecode();
+  auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t, wasm::wasm_i32_t>(machinecode);
+  helper::dump("block.parameter-nested-return.bin", machinecode);
+  EXPECT_EQ(wasmFunction(1), 42);
+  EXPECT_EQ(wasmFunction(0), -4);
+}
 
 } // namespace testing

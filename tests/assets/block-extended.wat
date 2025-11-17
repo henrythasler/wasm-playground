@@ -15,7 +15,7 @@
     end
   )
 
-  (func (export "simple-return-i32") (result i32)
+  (func (export "simple-return") (result i32)
     block (result i32)
       i32.const 42
       return
@@ -53,6 +53,19 @@
       drop
     end
   )
+
+  (func (export "parameter-nested-return") (param i32) (result i32)
+    block (result i32)
+      i32.const 40
+      local.get 0
+      br_if 0
+      drop
+      i32.const -4
+      return
+    end
+    i32.const 2
+    i32.add
+  )  
 
   (func (export "nested-br_if") (result i32)
     block (result i32)

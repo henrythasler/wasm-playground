@@ -447,10 +447,10 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
     case 0x0f:
       /** return */
       {
-        // controlStack.at(0).patchIndices.push_back(machinecode.size());
-        // machinecode.push_back(arm64::encode_cbz(arm64::reg_t::XZR,
-        //                                         getTraphandlerOffset(wasm::trap_code_t::AssemblerAddressPatchError, trapHandler, machinecode),
-        //                                         arm64::reg_size_t::SIZE_64BIT));
+        controlStack.front().patchIndices.push_back(machinecode.size());
+        machinecode.push_back(arm64::encode_cbz(arm64::reg_t::XZR,
+                                                getTraphandlerOffset(wasm::trap_code_t::AssemblerAddressPatchError, trapHandler, machinecode),
+                                                arm64::reg_size_t::SIZE_64BIT));
         break;
       }
     case 0x0b:
@@ -481,10 +481,6 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
             break;
           }
           case ControlBlock::FUNCTION:
-          {
-            asserte(false, "Unexpected end of function block");
-            break;
-          }
           case ControlBlock::BLOCK: {
             for (auto idx : controlStack.back().patchIndices) {
               auto offset = (machinecode.size() - idx) << 2;
@@ -492,11 +488,14 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
               arm64::patch_cbz(machinecode[idx], int32_t(offset));
             }
 
+            // FIXME: this is horrible! Find a better solution
             if (controlStack.back().resultType > 0) {
               auto reg = stack.back();
 
               for (int32_t i = 0; i < int32_t(stack.size()) - int32_t(controlStack.back().stackState.size()); i++) {
-                registerPool.freeRegister(stack.back());
+                if (i > 0) {
+                  registerPool.freeRegister(stack.back());
+                }
                 stack.pop_back();
               }
               stack.push_back(reg);
