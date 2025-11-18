@@ -73,13 +73,19 @@ public:
   };
 };
 
+struct PatchLocation {
+  size_t offset;
+  size_t stackSize;
+};
+
 struct ControlBlock {
   enum Type { FUNCTION, BLOCK, LOOP, IF, ELSE };
   Type type;
-  std::vector<size_t> patchIndices;
-  webassembly_t::val_types_t resultType;
+  std::vector<PatchLocation> patchLocations;
   RegisterPool registerPoolState;
   std::vector<arm64::reg_t> stackState;
+  webassembly_t::val_types_t resultType;
+  arm64::reg_t resultRegister = arm64::reg_t::XZR;
 };
 
 arm64::reg_size_t map_valtype_to_regsize(const webassembly_t::val_types_t type);

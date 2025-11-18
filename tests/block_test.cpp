@@ -67,12 +67,12 @@ TEST(block, binary_left) {
   EXPECT_EQ(wasmFunction(), 1);
 }
 
-// TEST(block, binary_right) {
-//   auto wasmModule = helper::loadModule("block.0.wasm");
-//   auto machinecode = wasmModule.getWasmFunction("as-binary-right")->getMachinecode();
-//   auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t>(machinecode);
-//   helper::dump("block.as-binary-right.bin", machinecode);
-//   EXPECT_EQ(wasmFunction(), 1);
-// }
+TEST(block, binary_right) {
+  auto wasmModule = helper::loadModule("block.0.wasm");
+  auto machinecode = wasmModule.getWasmFunction("as-binary-right")->getMachinecode();
+  auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t>(machinecode);
+  helper::dump("block.as-binary-right.bin", machinecode);
+  EXPECT_EQ(wasmFunction(), 1);
+}
 
 } // namespace testing
