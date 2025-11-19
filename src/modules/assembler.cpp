@@ -282,13 +282,13 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
     case 0x42:
       /** (i32|i64).const n:(i32|i64) */
       {
-        auto constValue = decoder::LEB128Decoder::decodeSigned(stream, streamEnd); // n
-        // FIXME: handle 32-bit size correctly
         auto registerSize = (*(stream - 1) == 0x41) ? arm64::reg_size_t::SIZE_32BIT : arm64::reg_size_t::SIZE_64BIT;
+        auto constValue = decoder::LEB128Decoder::decodeSigned(stream, streamEnd); // n
         auto reg = registerPool.allocateRegister();
         stack.emplace_back(reg);
 
-        for (uint8_t i = 0; i < 4; i++) {
+        auto chunkLimit = (registerSize == arm64::reg_size_t::SIZE_32BIT) ? 2 : 4;
+        for (uint8_t i = 0; i < chunkLimit; i++) {
           uint16_t chunk = uint16_t((constValue >> (i << 4)) & 0xFFFF);
           if (i == 0) {
             machinecode.push_back(arm64::encode_mov_immediate(reg, chunk, 0, registerSize));

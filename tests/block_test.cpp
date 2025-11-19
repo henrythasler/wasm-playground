@@ -75,4 +75,60 @@ TEST(block, binary_right) {
   EXPECT_EQ(wasmFunction(), 1);
 }
 
+TEST(block, as_test_operand) {
+  auto wasmModule = helper::loadModule("block.0.wasm");
+  auto machinecode = wasmModule.getWasmFunction("as-test-operand")->getMachinecode();
+  auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t>(machinecode);
+  helper::dump("block.as-test-operand.bin", machinecode);
+  EXPECT_EQ(wasmFunction(), 0);
+}
+
+TEST(block, as_compare_left) {
+  auto wasmModule = helper::loadModule("block.0.wasm");
+  auto machinecode = wasmModule.getWasmFunction("as-compare-left")->getMachinecode();
+  auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t>(machinecode);
+  helper::dump("block.as-compare-left.bin", machinecode);
+  EXPECT_EQ(wasmFunction(), 1);
+}
+
+TEST(block, as_compare_right) {
+  auto wasmModule = helper::loadModule("block.0.wasm");
+  auto machinecode = wasmModule.getWasmFunction("as-compare-right")->getMachinecode();
+  auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t>(machinecode);
+  helper::dump("block.as-compare-right.bin", machinecode);
+  EXPECT_EQ(wasmFunction(), 1);
+}
+
+TEST(block, as_br_if_value) {
+  auto wasmModule = helper::loadModule("block.0.wasm");
+  auto machinecode = wasmModule.getWasmFunction("as-br_if-value")->getMachinecode();
+  auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t>(machinecode);
+  helper::dump("block.as-br_if-value.bin", machinecode);
+  EXPECT_EQ(wasmFunction(), 8);
+}
+
+TEST(block, as_br_if_value_cond) {
+  auto wasmModule = helper::loadModule("block.0.wasm");
+  auto machinecode = wasmModule.getWasmFunction("as-br_if-value-cond")->getMachinecode();
+  auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t>(machinecode);
+  helper::dump("block.as-br_if-value-cond.bin", machinecode);
+  EXPECT_EQ(wasmFunction(), 9);
+}
+
+TEST(block, nested_br_value) {
+  auto wasmModule = helper::loadModule("block.0.wasm");
+  auto machinecode = wasmModule.getWasmFunction("nested-br-value")->getMachinecode();
+  auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t>(machinecode);
+  helper::dump("block.nested-br-value.bin", machinecode);
+  EXPECT_EQ(wasmFunction(), 9);
+}
+
+TEST(block, nested_br_if_value) {
+  auto wasmModule = helper::loadModule("block.0.wasm");
+  auto machinecode = wasmModule.getWasmFunction("nested-br_if-value")->getMachinecode();
+  auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t>(machinecode);
+  helper::dump("block.nested-br_if-value.bin", machinecode);
+  EXPECT_EQ(wasmFunction(), 9);
+}
+
 } // namespace testing
