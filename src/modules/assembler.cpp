@@ -321,30 +321,37 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
         // FIXME: Implementation missing
         break;
       }
-    case 0x48:
-    case 0x53:
-      /** (i32|i64).lt_s */
-      {
-        asserte(stack.size() >= 2, "insufficient operands on stack for lt_s");
-        auto registerSize = (*(stream - 1) == 0x48) ? arm64::reg_size_t::SIZE_32BIT : arm64::reg_size_t::SIZE_64BIT;
+    case 0x48: // i32.lt_s
+    case 0x49: // i32.lt_u
+    case 0x53: // i64.lt_s
+    case 0x54: // i64.lt_u
+    {
+      asserte(stack.size() >= 2, "insufficient operands on stack for lt_s");
+      auto registerSize = ((*(stream - 1) == 0x48) || (*(stream - 1) == 0x49)) ? arm64::reg_size_t::SIZE_32BIT : arm64::reg_size_t::SIZE_64BIT;
+      auto signedVariant = ((*(stream - 1) == 0x48) || (*(stream - 1) == 0x53)) ? arm64::signed_variant_t::SIGNED : arm64::signed_variant_t::UNSIGNED;
 
-        auto reg2 = stack.at(stack.size() - 1);
-        auto reg1 = stack.at(stack.size() - 2);
+      auto reg2 = stack.at(stack.size() - 1);
+      auto reg1 = stack.at(stack.size() - 2);
 
-        machinecode.push_back(arm64::encode_cmp_shifted_register(reg1, reg2, arm64::reg_shift_t::SHIFT_LSL, 0, registerSize));
+      machinecode.push_back(arm64::encode_cmp_shifted_register(reg1, reg2, arm64::reg_shift_t::SHIFT_LSL, 0, registerSize));
 
+      if (signedVariant == arm64::signed_variant_t::SIGNED) {
         machinecode.push_back(arm64::encode_branch_cond(arm64::branch_condition_t::LT, 3 * 4));
-        // // load 0
-        machinecode.push_back(arm64::encode_mov_immediate(reg1, 0, 0, arm64::reg_size_t::SIZE_32BIT));
-        machinecode.push_back(arm64::encode_branch(2 * 4));
-        // // load 1
-        machinecode.push_back(arm64::encode_mov_immediate(reg1, 1, 0, arm64::reg_size_t::SIZE_32BIT));
-
-        stack.pop_back();
-        registerPool.freeRegister(reg2);
-
-        break;
+      } else {
+        machinecode.push_back(arm64::encode_branch_cond(arm64::branch_condition_t::LO, 3 * 4));
       }
+
+      // // load 0
+      machinecode.push_back(arm64::encode_mov_immediate(reg1, 0, 0, arm64::reg_size_t::SIZE_32BIT));
+      machinecode.push_back(arm64::encode_branch(2 * 4));
+      // // load 1
+      machinecode.push_back(arm64::encode_mov_immediate(reg1, 1, 0, arm64::reg_size_t::SIZE_32BIT));
+
+      stack.pop_back();
+      registerPool.freeRegister(reg2);
+
+      break;
+    }
     case 0x68:
     case 0x7A:
       /** (i32|i64).ctz - Return the count of trailing zero bits */
