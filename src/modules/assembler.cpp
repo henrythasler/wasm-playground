@@ -373,7 +373,7 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
       /** br */
       {
         auto labelidx = size_t(decoder::LEB128Decoder::decodeUnsigned(stream, streamEnd));
-        auto controlBlock = controlStack.at(controlStack.size() - 1 - labelidx);
+        auto &controlBlock = controlStack.at(controlStack.size() - 1 - labelidx);
 
         if (controlBlock.resultRegister != arm64::reg_t::XZR) {
           // move result to correct register before branching
@@ -399,7 +399,7 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
         stack.pop_back();
         registerPool.freeRegister(reg);
 
-        auto controlBlock = controlStack.at(controlStack.size() - 1 - labelidx);
+        auto &controlBlock = controlStack.at(controlStack.size() - 1 - labelidx);
 
         if (controlBlock.resultRegister != arm64::reg_t::XZR) {
           // move result to correct register before branching
@@ -409,6 +409,7 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
           // set result register for the block
           controlBlock.resultRegister = stack.back();
         }
+
         controlBlock.patchLocations.push_back({machinecode.size(), stack.size()});
         machinecode.push_back(arm64::encode_cbnz(reg, getTraphandlerOffset(wasm::trap_code_t::AssemblerAddressPatchError, trapHandler, machinecode),
                                                  arm64::reg_size_t::SIZE_32BIT));
