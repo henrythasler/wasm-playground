@@ -38,6 +38,9 @@ public:
   void freeRegister(arm64::reg_t reg) {
     registers[reg] = true;
   }
+  void lockRegister(arm64::reg_t reg) {
+    registers[reg] = false;
+  }
 };
 
 class Variables {

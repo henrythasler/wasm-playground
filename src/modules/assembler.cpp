@@ -283,6 +283,7 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
       /** (i32|i64).const n:(i32|i64) */
       {
         auto constValue = decoder::LEB128Decoder::decodeSigned(stream, streamEnd); // n
+        // FIXME: handle 32-bit size correctly
         auto registerSize = (*(stream - 1) == 0x41) ? arm64::reg_size_t::SIZE_32BIT : arm64::reg_size_t::SIZE_64BIT;
         auto reg = registerPool.allocateRegister();
         stack.emplace_back(reg);
@@ -375,13 +376,15 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
         auto labelidx = size_t(decoder::LEB128Decoder::decodeUnsigned(stream, streamEnd));
         auto &controlBlock = controlStack.at(controlStack.size() - 1 - labelidx);
 
-        if (controlBlock.resultRegister != arm64::reg_t::XZR) {
-          // move result to correct register before branching
-          machinecode.push_back(
-              arm64::encode_mov_register(controlBlock.resultRegister, stack.back(), map_valtype_to_regsize(controlBlock.resultType)));
-        } else {
-          // set result register for the block
-          controlBlock.resultRegister = stack.back();
+        if (controlBlock.resultType != webassembly_t::val_types_t(0)) {
+          if (controlBlock.resultRegister != arm64::reg_t::XZR) {
+            // move result to correct register before branching
+            machinecode.push_back(
+                arm64::encode_mov_register(controlBlock.resultRegister, stack.back(), map_valtype_to_regsize(controlBlock.resultType)));
+          } else {
+            // set result register for the block
+            controlBlock.resultRegister = stack.back();
+          }
         }
 
         controlBlock.patchLocations.push_back({machinecode.size(), stack.size()});
@@ -401,13 +404,15 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
 
         auto &controlBlock = controlStack.at(controlStack.size() - 1 - labelidx);
 
-        if (controlBlock.resultRegister != arm64::reg_t::XZR) {
-          // move result to correct register before branching
-          machinecode.push_back(
-              arm64::encode_mov_register(controlBlock.resultRegister, stack.back(), map_valtype_to_regsize(controlBlock.resultType)));
-        } else {
-          // set result register for the block
-          controlBlock.resultRegister = stack.back();
+        if (controlBlock.resultType != webassembly_t::val_types_t(0)) {
+          if (controlBlock.resultRegister != arm64::reg_t::XZR) {
+            // move result to correct register before branching
+            machinecode.push_back(
+                arm64::encode_mov_register(controlBlock.resultRegister, stack.back(), map_valtype_to_regsize(controlBlock.resultType)));
+          } else {
+            // set result register for the block
+            controlBlock.resultRegister = stack.back();
+          }
         }
 
         controlBlock.patchLocations.push_back({machinecode.size(), stack.size()});
@@ -504,17 +509,19 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
           }
           case ControlBlock::FUNCTION:
           case ControlBlock::BLOCK: {
-            // int32_t stackAlignmentBlocks = 0;
+            if (controlStack.back().resultType != webassembly_t::val_types_t(0)) {
+              if (controlStack.back().resultRegister != arm64::reg_t::XZR && controlStack.back().resultRegister != stack.back()) {
+                // move result to correct register before branching
+                auto srcReg = stack.back();
+                registerPool.freeRegister(srcReg);
+                machinecode.push_back(
+                    arm64::encode_mov_register(controlStack.back().resultRegister, srcReg, map_valtype_to_regsize(controlStack.back().resultType)));
+                stack.push_back(controlStack.back().resultRegister);
+              }
+            }
 
             for (auto idx : controlStack.back().patchLocations) {
               auto offset = (machinecode.size() - idx.offset) << 2;
-              // patch CBZ (Compare and branch on zero) instruction
-
-              // if(controlStack.back().resultType != webassembly_t::val_types_t(0)) {
-              //   // pick correct value from stack
-              //   auto reg = stack.at(idx.stackSize - 1);
-              //   // move it to the top of the stack
-              // }
               arm64::patch_cbz(machinecode[idx.offset], int32_t(offset));
             }
 
@@ -522,38 +529,12 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
               auto reg = stack.back();
               stack = controlStack.back().stackState;
               registerPool = controlStack.back().registerPoolState;
+              registerPool.lockRegister(reg);
               stack.push_back(reg);
             } else {
               stack = controlStack.back().stackState;
               registerPool = controlStack.back().registerPoolState;
             }
-
-            // mov	w0, w9
-            // b #end
-            // mov	w0, w10
-            // b #end
-            // mov	w0, w11
-            // b #end
-            // end:
-            // (epilog)
-
-            // FIXME: this is horrible! Find a better solution
-            // if (controlStack.back().resultType > 0) {
-            //   auto reg = stack.back();
-
-            //   for (int32_t i = 0; i < int32_t(stack.size()) - int32_t(controlStack.back().stackState.size()); i++) {
-            //     if (i > 0) {
-            //       registerPool.freeRegister(stack.back());
-            //     }
-            //     stack.pop_back();
-            //   }
-            //   stack.push_back(reg);
-            // } else {
-            //   for (int32_t i = 0; i < int32_t(stack.size()) - int32_t(controlStack.back().stackState.size()); i++) {
-            //     registerPool.freeRegister(stack.back());
-            //     stack.pop_back();
-            //   }
-            // }
 
             controlStack.pop_back();
             break;
