@@ -313,7 +313,7 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
       /** Return 1 if i is zero, 0 otherwise*/
       {
         asserte(stack.size() >= 1, "insufficient operands on stack for eqz");
-        auto registerSize = ((*(stream - 1) == 0x4c) || (*(stream - 1) == 0x4d)) ? arm64::reg_size_t::SIZE_32BIT : arm64::reg_size_t::SIZE_64BIT;
+        auto registerSize = (*(stream - 1) == 0x45) ? arm64::reg_size_t::SIZE_32BIT : arm64::reg_size_t::SIZE_64BIT;
         auto reg = stack.back();
 
         machinecode.push_back(arm64::encode_cbz(reg, 3 * 4, registerSize));
@@ -323,6 +323,28 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
         machinecode.push_back(arm64::encode_branch(2 * 4));
         // // load 1
         machinecode.push_back(arm64::encode_mov_immediate(reg, 1, 0, arm64::reg_size_t::SIZE_32BIT));
+        break;
+      }
+    case 0x46: // i32.eq
+    case 0x51: // i64.eq
+      /** Return 1 if i is zero, 0 otherwise*/
+      {
+        asserte(stack.size() >= 1, "insufficient operands on stack for eqz");
+        auto registerSize = (*(stream - 1) == 0x46) ? arm64::reg_size_t::SIZE_32BIT : arm64::reg_size_t::SIZE_64BIT;
+
+        auto reg2 = stack.at(stack.size() - 1);
+        auto reg1 = stack.at(stack.size() - 2);
+
+        machinecode.push_back(arm64::encode_cmp_shifted_register(reg1, reg2, arm64::reg_shift_t::SHIFT_LSL, 0, registerSize));
+
+        // // load 0
+        machinecode.push_back(arm64::encode_mov_immediate(reg1, 0, 0, arm64::reg_size_t::SIZE_32BIT));
+        machinecode.push_back(arm64::encode_branch(2 * 4));
+        // // load 1
+        machinecode.push_back(arm64::encode_mov_immediate(reg1, 1, 0, arm64::reg_size_t::SIZE_32BIT));
+
+        stack.pop_back();
+        registerPool.freeRegister(reg2);
         break;
       }
     case 0x4C: // i32.le_s
@@ -404,6 +426,14 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
         controlStack.push_back(ControlBlock{ControlBlock::Type::BLOCK, {}, registerPool, stack, blocktype});
         break;
       }
+    case 0x03:
+      /** loop, followed by: blocktype (u8) either describing an empty result (0x40) or the type of the single result */
+      {
+        auto rawBlocktype = *stream++;
+        auto blocktype = (rawBlocktype == 0x40) ? webassembly_t::val_types_t(0) : webassembly_t::val_types_t(rawBlocktype);
+        controlStack.push_back(ControlBlock{ControlBlock::Type::LOOP, {{machinecode.size(), stack.size()}}, registerPool, stack, blocktype});
+        break;
+      }
     case 0x0c:
       /** br */
       {
@@ -421,10 +451,15 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
           }
         }
 
-        controlBlock.patchLocations.push_back({machinecode.size(), stack.size()});
-        machinecode.push_back(arm64::encode_cbz(arm64::reg_t::XZR,
-                                                getTraphandlerOffset(wasm::trap_code_t::AssemblerAddressPatchError, trapHandler, machinecode),
-                                                arm64::reg_size_t::SIZE_64BIT));
+        if (controlBlock.type == ControlBlock::LOOP) {
+          int32_t offset = (int32_t(controlBlock.patchLocations.back().offset) - int32_t(machinecode.size()) + 1) << 2;
+          machinecode.push_back(arm64::encode_branch(offset));
+        } else if (controlBlock.type == ControlBlock::BLOCK) {
+          controlBlock.patchLocations.push_back({machinecode.size(), stack.size()});
+          machinecode.push_back(arm64::encode_cbz(arm64::reg_t::XZR,
+                                                  getTraphandlerOffset(wasm::trap_code_t::AssemblerAddressPatchError, trapHandler, machinecode),
+                                                  arm64::reg_size_t::SIZE_64BIT));
+        }
         break;
       }
     case 0x0d:
@@ -540,6 +575,10 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
 
             controlStack.pop_back();
             // also pop IF element
+            controlStack.pop_back();
+            break;
+          }
+          case ControlBlock::LOOP: {
             controlStack.pop_back();
             break;
           }

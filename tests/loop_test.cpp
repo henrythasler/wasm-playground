@@ -7,6 +7,8 @@ TEST(loop, loop_while) {
     // auto wasmModule = helper::loadModule("loop.0.wasm");
     // auto machinecode_0 = wasmModule.getWasmFunction("while")->getMachinecode();
     // auto wasmFunction_0 = tiny::make_wasm_function<wasm::wasm_i64_t, wasm::wasm_i64_t>(machinecode_0);
+    // helper::dump("loop.while.bin", machinecode_0);
+
     // EXPECT_EQ(wasmFunction_0(0LL), 1LL);
     // EXPECT_EQ(wasmFunction_0(1LL), 1LL);
     // EXPECT_EQ(wasmFunction_0(2LL), 2LL);
@@ -19,6 +21,8 @@ TEST(loop, loop_for) {
     // auto wasmModule = helper::loadModule("loop.0.wasm");
     // auto machinecode_6 = wasmModule.getWasmFunction("for")->getMachinecode();
     // auto wasmFunction_6 = tiny::make_wasm_function<wasm::wasm_i64_t, wasm::wasm_i64_t>(machinecode_6);
+    // helper::dump("loop.for.bin", machinecode_6);
+
     // EXPECT_EQ(wasmFunction_6(0LL), 1LL);
     // EXPECT_EQ(wasmFunction_6(1LL), 1LL);
     // EXPECT_EQ(wasmFunction_6(2LL), 2LL);
