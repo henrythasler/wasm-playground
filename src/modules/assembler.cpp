@@ -161,6 +161,7 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
     case 0x21:
       /** local.set localidx:u32 */
       {
+        asserte(stack.size() >= 1, "insufficient operands on stack for local.set");
         auto reg = stack.back();
         auto idx = uint32_t(decoder::LEB128Decoder::decodeUnsigned(stream, streamEnd));
         auto registerSize = map_valtype_to_regsize(locals.getType(idx));
@@ -173,6 +174,7 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
     case 0x22:
       /** local.tee localidx:u32 */
       {
+        asserte(stack.size() >= 1, "insufficient operands on stack for tee");
         auto reg = stack.back();
         auto idx = uint32_t(decoder::LEB128Decoder::decodeUnsigned(stream, streamEnd));
         auto registerSize = map_valtype_to_regsize(locals.getType(idx));
@@ -301,26 +303,58 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
     case 0x1A:
       /** drop - discard top-most value from the stack */
       {
+        asserte(stack.size() >= 1, "insufficient operands on stack for drop");
         registerPool.freeRegister(stack.back());
         stack.pop_back();
         break;
       }
-    case 0x45:
-    case 0x50:
-      /** (i32|i64).eqz - Return 1 if i is zero, 0 otherwise*/
+    case 0x45: // i32.eqz
+    case 0x50: // i64.eqz
+      /** Return 1 if i is zero, 0 otherwise*/
       {
-        // FIXME: Implementation missing
+        asserte(stack.size() >= 1, "insufficient operands on stack for eqz");
+        auto registerSize = ((*(stream - 1) == 0x4c) || (*(stream - 1) == 0x4d)) ? arm64::reg_size_t::SIZE_32BIT : arm64::reg_size_t::SIZE_64BIT;
+        auto reg = stack.back();
+
+        machinecode.push_back(arm64::encode_cbz(reg, 3 * 4, registerSize));
+
+        // // load 0
+        machinecode.push_back(arm64::encode_mov_immediate(reg, 0, 0, arm64::reg_size_t::SIZE_32BIT));
+        machinecode.push_back(arm64::encode_branch(2 * 4));
+        // // load 1
+        machinecode.push_back(arm64::encode_mov_immediate(reg, 1, 0, arm64::reg_size_t::SIZE_32BIT));
         break;
       }
-    case 0x4C:
-    case 0x4D:
-    case 0x57:
-    case 0x58:
-      /** (i32|i64).le_(u|s) */
-      {
-        // FIXME: Implementation missing
-        break;
+    case 0x4C: // i32.le_s
+    case 0x4D: // i32.le_u
+    case 0x57: // i64.le_s
+    case 0x58: // i64.le_u
+    {
+      asserte(stack.size() >= 2, "insufficient operands on stack for le_s");
+      auto registerSize = ((*(stream - 1) == 0x4c) || (*(stream - 1) == 0x4d)) ? arm64::reg_size_t::SIZE_32BIT : arm64::reg_size_t::SIZE_64BIT;
+      auto signedVariant = ((*(stream - 1) == 0x4c) || (*(stream - 1) == 0x57)) ? arm64::signed_variant_t::SIGNED : arm64::signed_variant_t::UNSIGNED;
+
+      auto reg2 = stack.at(stack.size() - 1);
+      auto reg1 = stack.at(stack.size() - 2);
+
+      machinecode.push_back(arm64::encode_cmp_shifted_register(reg1, reg2, arm64::reg_shift_t::SHIFT_LSL, 0, registerSize));
+
+      if (signedVariant == arm64::signed_variant_t::SIGNED) {
+        machinecode.push_back(arm64::encode_branch_cond(arm64::branch_condition_t::LE, 3 * 4));
+      } else {
+        machinecode.push_back(arm64::encode_branch_cond(arm64::branch_condition_t::LS, 3 * 4));
       }
+
+      // // load 0
+      machinecode.push_back(arm64::encode_mov_immediate(reg1, 0, 0, arm64::reg_size_t::SIZE_32BIT));
+      machinecode.push_back(arm64::encode_branch(2 * 4));
+      // // load 1
+      machinecode.push_back(arm64::encode_mov_immediate(reg1, 1, 0, arm64::reg_size_t::SIZE_32BIT));
+
+      stack.pop_back();
+      registerPool.freeRegister(reg2);
+      break;
+    }
     case 0x48: // i32.lt_s
     case 0x49: // i32.lt_u
     case 0x53: // i64.lt_s
@@ -352,21 +386,14 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
 
       break;
     }
-    case 0x68:
-    case 0x7A:
-      /** (i32|i64).ctz - Return the count of trailing zero bits */
+    case 0x68: // i32.ctz
+    case 0x7A: // i64.ctz
+      /** Return the count of trailing zero bits */
       {
+        asserte(stack.size() >= 1, "insufficient operands on stack for ctz");
         auto registerSize = (*(stream - 1) == 0x68) ? arm64::reg_size_t::SIZE_32BIT : arm64::reg_size_t::SIZE_64BIT;
-
-        auto reg1 = stack.back();
-        // auto reg2 = registerPool.allocateRegister();
-
-        arm64::emit_ctz(reg1, reg1, registerSize, machinecode);
-
-        // stack.pop_back();
-        // registerPool.freeRegister(reg1);
-        // stack.emplace_back(reg2);
-
+        auto reg = stack.back();
+        arm64::emit_ctz(reg, reg, registerSize, machinecode);
         break;
       }
     case 0x02:
@@ -403,6 +430,7 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
     case 0x0d:
       /** br_if */
       {
+        asserte(stack.size() >= 1, "insufficient operands on stack for br_if");
         auto labelidx = uint32_t(decoder::LEB128Decoder::decodeUnsigned(stream, streamEnd));
 
         auto reg = stack.back();
@@ -430,6 +458,7 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
     case 0x04:
       /** if */
       {
+        asserte(stack.size() >= 1, "insufficient operands on stack for if");
         auto reg = stack.back();
         // remove register from stack and mark it as free; make sure to assemble the block so that this register is used before other blocks
         stack.pop_back();
