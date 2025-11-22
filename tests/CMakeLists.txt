@@ -96,6 +96,7 @@ add_executable(all_tests
   conditionals_test.cpp
   division_test.cpp
   block_test.cpp
+  loop_test.cpp
   # additional test cases
   echo_test.cpp
   compare_test.cpp

@@ -8,7 +8,8 @@ import re
 import sys
 from pathlib import Path
 from typing import List, Dict, Tuple
-
+import pprint
+pp = pprint.PrettyPrinter(indent=2)
 
 class WASTParser:
     def __init__(self, content: str):
@@ -81,7 +82,9 @@ class WASTParser:
             # Extract expected result
             expected = None
             if result_match:
-                expected = result_match.group(1).strip()
+                result_element = re.match(r'(\w+)\.const\s+(.+)', result_match.group(1).strip())
+                if result_element:
+                    expected = (result_element.group(1), result_element.group(2))
 
             # print(func_name, params_str, params, expected)
             
@@ -89,6 +92,7 @@ class WASTParser:
                 'type': 'assert_return',
                 'function': func_name,
                 'params': params,
+                'error': None,
                 'expected': expected
             }
         return None
@@ -109,7 +113,8 @@ class WASTParser:
                 'type': 'assert_trap',
                 'function': func_name,
                 'params': params,
-                'error': error_msg
+                'error': error_msg,
+                'expected': []
             }
         return None
     
@@ -145,26 +150,15 @@ class GTestGenerator:
         for module in self.modules:
             code += self._generate_test_case(module)
         
-        code += self._generate_main()
+        # code += self._generate_main()
         return code
     
     def _generate_header(self) -> str:
         """Generate C++ header includes and setup."""
-        return '''#include <gtest/gtest.h>
-#include <cmath>
-#include <limits>
-
-// WebAssembly module interface - implement these functions
-// based on your actual WASM runtime/implementation
-
-namespace wasm {
-    // Add your WASM module execution functions here
-    // Example:
-    // int32_t invoke_i32(const char* func_name, ...);
-    // float invoke_f32(const char* func_name, ...);
-    // double invoke_f64(const char* func_name, ...);
-}
-
+        return '''#include <gmock/gmock.h> // This is the key include for EXPECT_THAT
+#include <gtest/gtest.h>
+#include "../src/modules/runtime.hpp"
+#include "helper.hpp"\n
 '''
     
     def _generate_test_case(self, module: Dict) -> str:
@@ -174,25 +168,40 @@ namespace wasm {
         
         if not module['assertions']:
             code += "    // No assertions for this module\n"
+        else:
+            # load module
+            code += f'    auto wasmModule = helper::loadModule("{module["name"]}");\n\n'
         
         for i, assertion in enumerate(module['assertions']):
-            if i > 0:
-                code += "\n"
-            code += self._generate_assertion(assertion)
+            fn_name = assertion["function"]
+            code += f'    auto machinecode_{i} = wasmModule.getWasmFunction("{fn_name}")->getMachinecode();\n'
+            
+            function_signature: List = []
+            expected = assertion.get('expected')
+            if expected:
+                function_signature.append(f"wasm::wasm_{expected[0]}_t")
+            else:
+                function_signature.append("void")
+
+            for param in assertion.get('params'):
+                function_signature.append(f"wasm::wasm_{param[0]}_t")
+
+            code += f'    auto wasmFunction_{i} = tiny::make_wasm_function<{", ".join(function_signature)}>(machinecode_{i});\n'
+            code += self._generate_assertion(assertion, i) + '\n'
         
         code += "}\n\n"
         return code
     
-    def _generate_assertion(self, assertion: Dict) -> str:
+    def _generate_assertion(self, assertion: Dict, id: int) -> str:
         """Generate C++ code for a single assertion."""
         if assertion['type'] == 'assert_return':
-            return self._generate_assert_return(assertion)
+            return self._generate_assert_return(assertion, id)
         elif assertion['type'] == 'assert_trap':
-            return self._generate_assert_trap(assertion)
+            return self._generate_assert_trap(assertion, id)
         else:
-            return self._generate_assert_invalid(assertion)
+            return self._generate_assert_invalid(assertion, id)
     
-    def _generate_assert_return(self, assertion: Dict) -> str:
+    def _generate_assert_return(self, assertion: Dict, id: int) -> str:
         """Generate code for assert_return."""
         func = assertion['function']
         params = assertion['params']
@@ -202,33 +211,35 @@ namespace wasm {
         param_list = ', '.join([self._convert_value(t, v) for t, v in params])
         
         # Determine the function call
-        func_call = f'wasm::invoke_{params[0][0] if params else "void"}("{func}"'
+        # func_call = f'wasm_function{params[0][0] if params else "void"}("{func}"'
+        func_call = f'wasmFunction_{id}('
         if param_list:
-            func_call += f', {param_list}'
+            func_call += f'{param_list}'
         func_call += ')'
         
         if expected:
-            exp_type, exp_val = self._parse_expected(expected)
+            exp_type, exp_val = expected
             expected_value = self._convert_value(exp_type, exp_val)
             return f'    EXPECT_EQ({func_call}, {expected_value});\n'
         else:
             return f'    {func_call};  // No return value expected\n'
     
-    def _generate_assert_trap(self, assertion: Dict) -> str:
+    def _generate_assert_trap(self, assertion: Dict, id: int) -> str:
         """Generate code for assert_trap."""
         func = assertion['function']
         params = assertion['params']
         error = assertion['error']
         
         param_list = ', '.join([self._convert_value(t, v) for t, v in params])
-        func_call = f'wasm::invoke_{params[0][0] if params else "void"}("{func}"'
+        # func_call = f'wasm_function{params[0][0] if params else "void"}("{func}"'
+        func_call = f'wasmFunction_{id}('
         if param_list:
-            func_call += f', {param_list}'
+            func_call += f'{param_list}'
         func_call += ')'
         
         return f'    EXPECT_THROW({func_call}, std::runtime_error);  // {error}\n'
     
-    def _generate_assert_invalid(self, assertion: Dict) -> str:
+    def _generate_assert_invalid(self, assertion: Dict, id: int) -> str:
         """Generate code for assert_invalid/assert_malformed."""
         error = assertion['error']
         return f'    // {assertion["type"]}: {error}\n    // Module validation should fail\n'
@@ -259,7 +270,7 @@ namespace wasm {
                 return 'std::numeric_limits<double>::quiet_NaN()'
             elif 'inf' in value.lower():
                 return 'std::numeric_limits<double>::infinity()'
-            return value
+            return f'{value}'
         return value
     
     def _sanitize_name(self, name: str) -> str:
@@ -290,7 +301,7 @@ def convert_wast_to_gtest(wast_file: Path, output_file: Path = None, test_suite_
     parser = WASTParser(content)
     modules = parser.parse()
 
-    # print(modules)
+    # pp.pprint(modules)
     
     # Generate GTest code
     generator = GTestGenerator(modules, test_suite_name)
@@ -312,12 +323,12 @@ if __name__ == '__main__':
         print("Usage: python wast_to_gtest.py <input.wast> [output.cpp] [test_suite_name]")
         sys.exit(1)
     
-    input_file = Path(sys.argv[1])
-    output_file = Path(sys.argv[2]) if len(sys.argv) > 2 else None
-    test_suite = sys.argv[3] if len(sys.argv) > 3 else "WasmTest"
+    test_suite = sys.argv[3] if len(sys.argv) > 3 else "SpecTest"
     
-    if not input_file.exists():
-        print(f"Error: Input file '{input_file}' not found")
-        sys.exit(1)
-    
-    convert_wast_to_gtest(input_file, output_file, test_suite)
+    # find all wast files
+    for input_file in Path(sys.argv[1]).rglob('*.wast'):
+        # extract filename without extension
+        output_file = Path(sys.argv[2]) / (input_file.stem + '_test.cpp') if len(sys.argv) > 2 else None
+        print(input_file, output_file)
+        if output_file:
+            convert_wast_to_gtest(input_file, output_file, test_suite)    
