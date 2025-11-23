@@ -59,4 +59,42 @@
     local.get $x
     i64.eqz
   )
+
+  ;; Return 1 if i1​ equals i2​, 0 otherwise.
+  (func (export "eq_i32") (param $x i32) (param $y i32) (result i32)
+    local.get $x
+    local.get $y
+    i32.eq
+  )
+
+  (func (export "eq_i64") (param $x i64) (param $y i64) (result i32)
+    local.get $x
+    local.get $y
+    i64.eq
+  )
+
+  ;; Return 1 if i1​ equals i2​, 0 otherwise.
+  (func (export "gt_s32") (param $x i32) (param $y i32) (result i32)
+    local.get $x
+    local.get $y
+    i32.gt_s
+  )
+
+  (func (export "gt_u32") (param $x i32) (param $y i32) (result i32)
+    local.get $x
+    local.get $y
+    i32.gt_u
+  )
+
+  (func (export "gt_s64") (param $x i64) (param $y i64) (result i32)
+    local.get $x
+    local.get $y
+    i64.gt_s
+  )
+
+  (func (export "gt_u64") (param $x i64) (param $y i64) (result i32)
+    local.get $x
+    local.get $y
+    i64.gt_u
+  )
 )
