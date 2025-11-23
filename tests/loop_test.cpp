@@ -3,6 +3,51 @@
 #include "../src/modules/runtime.hpp"
 #include "helper.hpp"
 
+TEST(loop, loop_if_then) {
+    auto wasmModule = helper::loadModule("loop.0.wasm");
+    auto machinecode_0 = wasmModule.getWasmFunction("as-if-then")->getMachinecode();
+    auto wasmFunction_0 = tiny::make_wasm_function<wasm::wasm_i32_t>(machinecode_0);
+    helper::dump("loop.as-if-then.bin", machinecode_0);
+
+    EXPECT_EQ(wasmFunction_0(), 1);
+}
+
+TEST(loop, loop_if_else) {
+    auto wasmModule = helper::loadModule("loop.0.wasm");
+    auto machinecode_0 = wasmModule.getWasmFunction("as-if-else")->getMachinecode();
+    auto wasmFunction_0 = tiny::make_wasm_function<wasm::wasm_i32_t>(machinecode_0);
+    helper::dump("loop.as-if-else.bin", machinecode_0);
+
+    EXPECT_EQ(wasmFunction_0(), 2);
+}
+
+TEST(loop, loop_as_br_if_first) {
+    auto wasmModule = helper::loadModule("loop.0.wasm");
+    auto machinecode_0 = wasmModule.getWasmFunction("as-br_if-first")->getMachinecode();
+    auto wasmFunction_0 = tiny::make_wasm_function<wasm::wasm_i32_t>(machinecode_0);
+    helper::dump("loop.as-br_if-first.bin", machinecode_0);
+
+    EXPECT_EQ(wasmFunction_0(), 1);
+}
+
+TEST(loop, loop_as_br_if_last) {
+    auto wasmModule = helper::loadModule("loop.0.wasm");
+    auto machinecode_0 = wasmModule.getWasmFunction("as-br_if-last")->getMachinecode();
+    auto wasmFunction_0 = tiny::make_wasm_function<wasm::wasm_i32_t>(machinecode_0);
+    helper::dump("loop.as-br_if-last.bin", machinecode_0);
+
+    EXPECT_EQ(wasmFunction_0(), 2);
+}
+
+TEST(loop, loop_effects) {
+    auto wasmModule = helper::loadModule("loop.0.wasm");
+    auto machinecode_0 = wasmModule.getWasmFunction("effects")->getMachinecode();
+    auto wasmFunction_0 = tiny::make_wasm_function<wasm::wasm_i32_t>(machinecode_0);
+    helper::dump("loop.effects.bin", machinecode_0);
+
+    EXPECT_EQ(wasmFunction_0(), 1);
+}
+
 TEST(loop, loop_while) {
     auto wasmModule = helper::loadModule("loop.0.wasm");
     auto machinecode_0 = wasmModule.getWasmFunction("while")->getMachinecode();

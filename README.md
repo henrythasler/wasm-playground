@@ -13,7 +13,7 @@ Progress:
 - Chapter04: ✅
 - Chapter05: ✅
 - Chapter06: ✅
-- Chapter07: 80%
+- Chapter07: ✅
 - Chapter08: 0%
 - Chapter09: 0%
 - Chapter10: 0%
@@ -29,7 +29,6 @@ Progress:
 ## Limitations and Known Issues
 
 - Wasm-Stack can not exceed 7 items as the current design stores all stack elements in registers (X9-X15).
-- Stack and register allocation for branches (if-else) is expected to be the same after branch merge (end).
 
 ## Prerequisites
 
