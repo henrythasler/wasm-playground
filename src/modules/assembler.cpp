@@ -103,35 +103,34 @@ void printStack(const std::vector<arm64::reg_t> &stack) {
   std::cout << std::endl;
 }
 
-/**
- * Encodes a trap handler that sets up the parameters and branches to the actual trap handler.
- * @return the offset in bytes of the first instruction of the trap handler in the machinecode vector.
- */
-size_t encodeTrapHandler(uint64_t trapHandlerAddress, wasm::trap_code_t trapCode, std::vector<uint32_t> &machinecode) {
-  size_t offset = machinecode.size() << 2;
-  machinecode.push_back(arm64::encode_mov_immediate(arm64::X0, uint16_t(trapCode), 0, arm64::reg_size_t::SIZE_64BIT));
+std::map<wasm::trap_code_t, int32_t> createTrapHandler(const std::vector<wasm::trap_code_t> trapCodes, std::vector<uint32_t> &machinecode) {
+  std::map<wasm::trap_code_t, int32_t> trapcodeOffsets;
+
+  auto trapHandlerAddress = reinterpret_cast<uint64_t>(&wasmTrapHandler);
+
+  // this instruction requires address patching after all handlers are emitted; for now, just jump to the next instruction
+  auto trapHandlerStart = machinecode.size();
+  machinecode.push_back(arm64::encode_branch(4));
+
+  int32_t idx = 1;
+  for (auto trapcode : trapCodes) {
+    // record offset of this trapcode handler
+    trapcodeOffsets[trapcode] = int32_t(machinecode.size() << 2);
+    // load trap code into X0 and branch to actual trap handler
+    machinecode.push_back(arm64::encode_mov_immediate(arm64::X0, uint16_t(trapcode), 0, arm64::reg_size_t::SIZE_64BIT));
+    machinecode.push_back(arm64::encode_branch(((int32_t(trapCodes.size()) - idx) * 2 + 1) << 2));
+    idx++;
+  }
+
+  /** actual trap handler */
   machinecode.push_back(arm64::encode_mov_immediate(arm64::X9, uint16_t(trapHandlerAddress & 0xFFFF), 0, arm64::reg_size_t::SIZE_64BIT));
   machinecode.push_back(arm64::encode_movk(arm64::X9, uint16_t((trapHandlerAddress >> (1 << 4)) & 0xFFFF), 1 << 4, arm64::reg_size_t::SIZE_64BIT));
   machinecode.push_back(arm64::encode_movk(arm64::X9, uint16_t((trapHandlerAddress >> (2 << 4)) & 0xFFFF), 2 << 4, arm64::reg_size_t::SIZE_64BIT));
   machinecode.push_back(arm64::encode_movk(arm64::X9, uint16_t((trapHandlerAddress >> (3 << 4)) & 0xFFFF), 3 << 4, arm64::reg_size_t::SIZE_64BIT));
   machinecode.push_back(arm64::encode_branch_register(arm64::X9));
-  return offset;
-}
-
-std::map<wasm::trap_code_t, int32_t> createTrapHandler(const std::vector<wasm::trap_code_t> trapCodes, std::vector<uint32_t> &machinecode) {
-  std::map<wasm::trap_code_t, int32_t> trapcodeOffsets;
-
-  auto trapHandlerPosition = machinecode.size();
-
-  // this instruction requires address patching after all handlers are emitted; for now, just jump to the next instruction
-  machinecode.push_back(arm64::encode_branch(4));
-
-  for (auto trapcode : trapCodes) {
-    trapcodeOffsets[trapcode] = int32_t(encodeTrapHandler(reinterpret_cast<uint64_t>(&wasmTrapHandler), trapcode, machinecode));
-  }
 
   // patch forward jump over all trap handlers
-  machinecode[trapHandlerPosition] |= (uint32_t(machinecode.size() - trapHandlerPosition) & 0x3FFFFFF);
+  arm64::patch_branch(machinecode[trapHandlerStart], int32_t(machinecode.size() - trapHandlerStart) << 2);
   return trapcodeOffsets;
 }
 

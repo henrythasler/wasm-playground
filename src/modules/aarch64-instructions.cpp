@@ -475,8 +475,7 @@ uint32_t encode_branch(int32_t imm26) {
 }
 
 void patch_branch(uint32_t &offset, int32_t imm26) {
-  offset &= 0xfc000000;                 // clear current jump offset
-  offset |= ((imm26 >> 2) & 0x3FFFFFF); // insert new jump offset
+  offset = 0x14000000 | ((imm26 >> 2) & 0x3FFFFFF); // imm26 offset
 }
 
 /**
