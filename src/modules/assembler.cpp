@@ -62,6 +62,7 @@ uint32_t initLocals(const std::map<webassembly_t::val_types_t, uint32_t> &locals
 
 void loadResult(const std::vector<webassembly_t::val_types_t> &results, const std::vector<arm64::reg_t> &wasmStack,
                 std::vector<uint32_t> &machinecode) {
+  asserte(wasmStack.size() > 0, "Wasm stack underflow when loading result");
   auto registerSize = map_valtype_to_regsize(results.back());
   auto sourceReg = wasmStack.back();
   auto targetReg = (registerSize == arm64::reg_size_t::SIZE_32BIT) ? arm64::reg_t::W0 : arm64::reg_t::X0;
@@ -474,6 +475,7 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
         auto &controlBlock = controlStack.at(controlStack.size() - 1 - labelidx);
 
         if (controlBlock.resultType != webassembly_t::val_types_t(0)) {
+          asserte(stack.size() >= 1, "insufficient operands on stack for br");
           if (controlBlock.resultRegister != arm64::reg_t::XZR) {
             // move result to correct register before branching
             machinecode.push_back(
@@ -652,14 +654,21 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
     case 0x10:
       /** call */
       {
-        std::stringstream message;
-        message << std::hex << std::setw(2) << std::setfill('0') << int32_t(*(stream - 1));
-        std::cout << message.str() << ": call instruction not yet supported in this version of the assembler\n";
         auto funcidx = uint32_t(decoder::LEB128Decoder::decodeUnsigned(stream, streamEnd));
         // emit placeholder for call instruction; needs to be patched later
-        // printf("%i", int(functionCallPatchLocations.size()));
-        // functionCallPatchLocations.push_back(FunctionCallPatchLocation{machinecode.size(), funcidx});
+        functionCallPatchLocations.push_back(FunctionCallPatchLocation{machinecode.size(), funcidx});
+
+        // FIXME: replace with trap handler
         // machinecode.push_back(arm64::encode_branch(getTraphandlerOffset(wasm::trap_code_t::AssemblerAddressPatchError, trapHandler, machinecode)));
+        machinecode.push_back(arm64::encode_branch(4));
+
+        // FIXME: replace with actual call instruction
+        machinecode.push_back(arm64::encode_mov_immediate(arm64::X0, 1, 0, arm64::reg_size_t::SIZE_64BIT));
+
+        auto reg = registerPool.allocateRegister();
+        stack.emplace_back(reg);
+        machinecode.push_back(arm64::encode_mov_register(reg, arm64::X0, arm64::reg_size_t::SIZE_64BIT));
+
         break;
       }
     case 0x00:

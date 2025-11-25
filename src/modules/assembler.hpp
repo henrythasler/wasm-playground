@@ -85,11 +85,8 @@ struct PatchLocation {
  * Location in the machinecode where a function call instruction is located that needs to be patched later.
  */
 struct FunctionCallPatchLocation {
-  size_t offset;
-  size_t stackSize;
-  // size_t offset;    // offset in machinecode where the call instruction is located
-  // uint32_t funcidx; // index of the function being called
-  // uint32_t _padding;  // padding to align to 8 bytes
+  size_t offset;    // offset in machinecode where the call instruction is located
+  uint32_t funcidx; // index of the function being called
 };
 
 struct ControlBlock {
