@@ -81,6 +81,17 @@ struct PatchLocation {
   size_t stackSize;
 };
 
+/**
+ * Location in the machinecode where a function call instruction is located that needs to be patched later.
+ */
+struct FunctionCallPatchLocation {
+  size_t offset;
+  size_t stackSize;
+  // size_t offset;    // offset in machinecode where the call instruction is located
+  // uint32_t funcidx; // index of the function being called
+  // uint32_t _padding;  // padding to align to 8 bytes
+};
+
 struct ControlBlock {
   enum Type { FUNCTION, BLOCK, LOOP, IF, ELSE };
   Type type;
@@ -108,5 +119,6 @@ inline int32_t getTraphandlerOffset(wasm::trap_code_t trapCode, const std::map<w
 
 void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vector<uint8_t>::const_iterator streamEnd, Variables &locals,
                         RegisterPool &registerPool, std::vector<ControlBlock> &controlStack, std::vector<arm64::reg_t> &stack,
-                        const std::map<wasm::trap_code_t, int32_t> &trapHandler, std::vector<uint32_t> &machinecode);
+                        const std::map<wasm::trap_code_t, int32_t> &trapHandler, std::vector<FunctionCallPatchLocation> &functionCallPatchLocations,
+                        std::vector<uint32_t> &machinecode);
 } // namespace assembler

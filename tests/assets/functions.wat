@@ -1,5 +1,5 @@
 (module
-    (func $const (result i64)
+    (func $basic (result i64)
         call $one
     )
 
@@ -7,5 +7,5 @@
         i64.const 1
     )
 
-    (export "const" (func $const))
+    (export "basic" (func $basic))
 )

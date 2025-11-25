@@ -144,7 +144,8 @@ inline int32_t getTraphandlerOffset(wasm::trap_code_t trapCode, const std::map<w
  */
 void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vector<uint8_t>::const_iterator streamEnd, Variables &locals,
                         RegisterPool &registerPool, std::vector<ControlBlock> &controlStack, std::vector<arm64::reg_t> &stack,
-                        const std::map<wasm::trap_code_t, int32_t> &trapHandler, std::vector<uint32_t> &machinecode) {
+                        const std::map<wasm::trap_code_t, int32_t> &trapHandler, std::vector<FunctionCallPatchLocation> &functionCallPatchLocations,
+                        std::vector<uint32_t> &machinecode) {
   while (stream != streamEnd) {
     switch (*stream++) {
     case 0x20:
@@ -568,12 +569,6 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
         }
         break;
       }
-    case 0x01:
-      /** nop */
-      {
-        machinecode.push_back(arm64::encode_nop());
-        break;
-      }
     case 0x0f:
       /** return */
       {
@@ -654,10 +649,29 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
         }
         break;
       }
+    case 0x10:
+      /** call */
+      {
+        std::stringstream message;
+        message << std::hex << std::setw(2) << std::setfill('0') << int32_t(*(stream - 1));
+        std::cout << message.str() << ": call instruction not yet supported in this version of the assembler\n";
+        auto funcidx = uint32_t(decoder::LEB128Decoder::decodeUnsigned(stream, streamEnd));
+        // emit placeholder for call instruction; needs to be patched later
+        // printf("%i", int(functionCallPatchLocations.size()));
+        // functionCallPatchLocations.push_back(FunctionCallPatchLocation{machinecode.size(), funcidx});
+        // machinecode.push_back(arm64::encode_branch(getTraphandlerOffset(wasm::trap_code_t::AssemblerAddressPatchError, trapHandler, machinecode)));
+        break;
+      }
     case 0x00:
       /** unreachable */
       {
         machinecode.push_back(arm64::encode_branch(getTraphandlerOffset(wasm::trap_code_t::UnreachableCodeReached, trapHandler, machinecode)));
+        break;
+      }
+    case 0x01:
+      /** nop */
+      {
+        machinecode.push_back(arm64::encode_nop());
         break;
       }
     default:
