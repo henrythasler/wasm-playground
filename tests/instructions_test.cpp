@@ -5,6 +5,7 @@
 #include <iomanip>
 
 #include "../src/modules/aarch64-instructions.hpp"
+#include "../src/modules/aarch64-instructions-mem.hpp"
 
 #define EXPECT_EQ_HEX(actual, expected) EXPECT_EQ(actual, expected) << "Expected: 0x" << std::hex << (expected) << ", Got: 0x" << std::hex << (actual)
 
@@ -34,6 +35,21 @@ TEST(instructions, str) {
   EXPECT_EQ_HEX(encode_str_unsigned_offset(X1, SP, 16, reg_size_t::SIZE_64BIT), 0xF9000BE1);
 
   EXPECT_THROW(encode_str_unsigned_offset(X1, SP, 16, reg_size_t(12)), std::runtime_error);
+}
+
+TEST(instructions, stp) {
+  // stp x0, x0, [x0, #0]
+  EXPECT_EQ_HEX(encode_stp(X0, X0, X0, 0, addressing_mode_t::SIGNED_OFFSET, reg_size_t::SIZE_64BIT), 0xA9000000);
+  // stp x8, x9, [sp, #0]
+  EXPECT_EQ_HEX(encode_stp(X8, X9, SP, 0, addressing_mode_t::SIGNED_OFFSET, reg_size_t::SIZE_64BIT), 0xA90027E8);
+  // stp x8, x9, [sp, #16]
+  EXPECT_EQ_HEX(encode_stp(X8, X9, SP, 16, addressing_mode_t::SIGNED_OFFSET, reg_size_t::SIZE_64BIT), 0xA90127E8);
+  // stp w2, w3, [sp, #16]
+  EXPECT_EQ_HEX(encode_stp(W2, W3, SP, 16, addressing_mode_t::SIGNED_OFFSET, reg_size_t::SIZE_32BIT), 0x29020FE2);
+  // stp x1, x2, [sp, #16]!
+  EXPECT_EQ_HEX(encode_stp(X1, X2, SP, 16, addressing_mode_t::PRE_INDEX, reg_size_t::SIZE_64BIT), 0xA9810BE1);
+  // stp w1, w2, [sp], #16
+  EXPECT_EQ_HEX(encode_stp(W1, W2, SP, 16, addressing_mode_t::POST_INDEX, reg_size_t::SIZE_32BIT), 0x28820BE1);
 }
 
 TEST(instruction, sub) {

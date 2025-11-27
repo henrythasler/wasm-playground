@@ -13,6 +13,7 @@ add_library(tiny_modules STATIC
     aarch64-compounds.cpp
     aarch64-instructions.cpp
     aarch64-instructions-bit.cpp
+    aarch64-instructions-mem.cpp
 )
 
 # set compiler options for warnings and treat warnings as errors

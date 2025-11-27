@@ -71,7 +71,7 @@ void loadResult(const std::vector<webassembly_t::val_types_t> &results, const st
 
 uint32_t createPreamble(uint32_t stackSize, std::vector<uint32_t> &machinecode) {
   // Prologue: create a new stack frame (stp fp, lr, [sp, #-16]!)
-  machinecode.push_back(0xA9BF7BFD);
+  machinecode.push_back(arm64::encode_stp(arm64::FP, arm64::LR, arm64::SP, -16, arm64::addressing_mode_t::PRE_INDEX, arm64::reg_size_t::SIZE_64BIT));
   // mov fp, sp
   machinecode.push_back(arm64::encode_mov_sp(arm64::FP, arm64::SP, arm64::reg_size_t::SIZE_64BIT));
 
@@ -138,6 +138,11 @@ std::map<wasm::trap_code_t, int32_t> createTrapHandler(const std::vector<wasm::t
 inline int32_t getTraphandlerOffset(wasm::trap_code_t trapCode, const std::map<wasm::trap_code_t, int32_t> &trapHandler,
                                     const std::vector<uint32_t> &machinecode) {
   return trapHandler.at(trapCode) - int32_t(machinecode.size() << 2);
+}
+
+/** save caller registers */
+void saveRegisters(std::vector<uint32_t> &machinecode) {
+  // machinecode.push_back(arm64::
 }
 
 /**

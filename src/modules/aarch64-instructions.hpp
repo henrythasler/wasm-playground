@@ -124,12 +124,26 @@ enum class branch_condition_t {
 
 enum class signed_variant_t { UNSIGNED = 0x00, SIGNED = 0x01 };
 
+enum class addressing_mode_t {
+  /**
+   * The address obtained from the base register is used, unchanged, as the address for the memory access. The oﬀset value is applied to the address,
+   * and written back into the base register.
+   */
+  POST_INDEX = 0x01,
+  /**
+   * The oﬀset value is applied to an address obtained from the base register. The result is used as the address for the memory access. The base
+   * register is unchanged.
+   */
+  SIGNED_OFFSET = 0x02,
+  /**
+   * The oﬀset value is applied to an address obtained from the base register. The result is used as the address for the memory access, and written
+   * back into the base register.
+   */
+  PRE_INDEX = 0x03
+};
+
 /** helper functions */
 uint32_t select_instruction(reg_size_t variant, uint32_t instruction_32bit, uint32_t instruction_64bit, std::string name);
-
-/** memory operations */
-uint32_t encode_ldr_unsigned_offset(reg_t rt, reg_t rn, uint16_t imm12, reg_size_t size);
-uint32_t encode_str_unsigned_offset(reg_t rt, reg_t rn, uint16_t imm12, reg_size_t size);
 
 /** arithmetic operations*/
 uint32_t encode_sub_immediate(reg_t rd, reg_t rn, uint16_t imm12, bool shift12, reg_size_t size);
