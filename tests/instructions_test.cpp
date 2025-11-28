@@ -52,6 +52,13 @@ TEST(instructions, stp) {
   EXPECT_EQ_HEX(encode_stp(W1, W2, SP, 16, addressing_mode_t::POST_INDEX, reg_size_t::SIZE_32BIT), 0x28820BE1);
 }
 
+TEST(instructions, ldp) {
+  // ldp x1, x0, [x0, #0]
+  EXPECT_EQ_HEX(encode_ldp(X1, X0, X0, 0, addressing_mode_t::SIGNED_OFFSET, reg_size_t::SIZE_64BIT), 0xA9400001);
+  // ldp fp, lr, [sp], #16
+  EXPECT_EQ_HEX(encode_ldp(FP, LR, SP, 16, addressing_mode_t::POST_INDEX, reg_size_t::SIZE_64BIT), 0xA8C17BFD);
+}
+
 TEST(instruction, sub) {
   // sub sp, sp, #0x40
   EXPECT_EQ_HEX(encode_sub_immediate(SP, SP, 0x40, false, reg_size_t::SIZE_64BIT), 0xD10103FF);

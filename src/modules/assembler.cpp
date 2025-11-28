@@ -91,7 +91,7 @@ void createEpilogue(const uint32_t stackSize, std::vector<uint32_t> &machinecode
     machinecode.push_back(arm64::encode_add_immediate(arm64::SP, arm64::SP, uint16_t(stackSize), false, arm64::reg_size_t::SIZE_64BIT));
   }
   // Epilogue: destroy stack frame (ldp fp, lr, [sp], #16)
-  machinecode.push_back(0xA8C17BFD);
+  machinecode.push_back(arm64::encode_ldp(arm64::FP, arm64::LR, arm64::SP, 16, arm64::addressing_mode_t::POST_INDEX, arm64::reg_size_t::SIZE_64BIT));
   // return (RET)
   machinecode.push_back(arm64::encode_ret());
 }

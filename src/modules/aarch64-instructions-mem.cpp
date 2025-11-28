@@ -110,4 +110,28 @@ uint32_t encode_stp(reg_t rt1, reg_t rt2, reg_t rn, int16_t imm7, addressing_mod
   return instr;
 }
 
+/**
+ * This instruction calculates an address from a base register value and an immediate offset, loads two 32-bit words or two 64-bit doublewords from
+ * memory, and writes them to two registers.
+ *
+ * `LDP rt1, rt2, [rn, #imm7]{!}`
+ * @param rt1 first destination register
+ * @param rt2 second destination register
+ * @param rn base register
+ * @param imm7 7-bit signed immediate offset
+ * @param mode addressing mode (post-index, signed offset, pre-index)
+ * @param size 32-bit or 64-bit variant
+ * @return the encoded instruction
+ */
+uint32_t encode_ldp(reg_t rt1, reg_t rt2, reg_t rn, int16_t imm7, addressing_mode_t mode, reg_size_t size) {
+  uint32_t instr = select_instruction(size, 0x28400000, 0xA8400000, "encode_ldp");
+  auto imm = imm7 >> ((size == reg_size_t::SIZE_64BIT) ? 3 : 2); // scale by 8 for 64-bit, 4 for 32-bit
+  instr |= (imm & 0x7F) << 15;                                   // imm7 field
+  instr |= (rt2 & 0x1F) << 10;                                   // Rt2 (second source register)
+  instr |= (rn & 0x1F) << 5;                                     // Rn (base register)
+  instr |= (rt1 & 0x1F);                                         // Rt1 (first source register)
+  instr |= (static_cast<uint32_t>(mode) & 0x3) << 23;            // addressing mode
+  return instr;
+}
+
 } // namespace arm64
