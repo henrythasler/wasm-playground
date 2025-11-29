@@ -17,12 +17,14 @@ class WasmModule {
 private:
   webassembly_t *wasm = nullptr;
   std::vector<WasmFunction *> wasmFunctions;
+  std::vector<uint32_t> machinecode;
 
   template <typename Derived, typename Base>
   Derived *getSectionContent(const std::vector<std::unique_ptr<Base>> &sections, webassembly_t::section_id_t section_type);
 
-  void loadModule(const std::vector<uint8_t> &bytecode);
+  void loadModule(const std::vector<uint8_t> &bytecode);  
   void compileModule();
+  void linkModule();
 
 public:
   // WasmModule() = default;
@@ -37,7 +39,12 @@ public:
     return wasmFunctions;
   }
 
+  const std::vector<uint32_t> &getMachinecode() const {
+    return machinecode;
+  }
+
   const WasmFunction *getWasmFunction(std::string name);
+  size_t getFunctionOffset(std::string name);
 };
 
 } // namespace tiny

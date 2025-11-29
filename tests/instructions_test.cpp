@@ -6,6 +6,7 @@
 
 #include "../src/modules/aarch64-instructions.hpp"
 #include "../src/modules/aarch64-instructions-mem.hpp"
+#include "../src/modules/aarch64-instructions-branch.hpp"
 
 #define EXPECT_EQ_HEX(actual, expected) EXPECT_EQ(actual, expected) << "Expected: 0x" << std::hex << (expected) << ", Got: 0x" << std::hex << (actual)
 

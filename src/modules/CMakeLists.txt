@@ -14,6 +14,7 @@ add_library(tiny_modules STATIC
     aarch64-instructions.cpp
     aarch64-instructions-bit.cpp
     aarch64-instructions-mem.cpp
+    aarch64-instructions-branch.cpp
 )
 
 # set compiler options for warnings and treat warnings as errors

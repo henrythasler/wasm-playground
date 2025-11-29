@@ -85,15 +85,16 @@ private:
   FuncPtr func_ptr_;
 
 public:
-  explicit WasmExecutable(const std::vector<uint8_t> &machine_code) : exec_mem_(machine_code), func_ptr_(reinterpret_cast<FuncPtr>(exec_mem_.get())) {
+  explicit WasmExecutable(const std::vector<uint8_t> &machine_code, size_t offset = 0)
+      : exec_mem_(machine_code), func_ptr_(reinterpret_cast<FuncPtr>(static_cast<char*>(exec_mem_.get()) + offset)) {
     if (func_ptr_ == nullptr) {
       throw std::runtime_error("Invalid function pointer");
     }
   }
 
   // Constructor for uint32_t vector
-  explicit WasmExecutable(const std::vector<uint32_t> &machine_code)
-      : exec_mem_(machine_code), func_ptr_(reinterpret_cast<FuncPtr>(exec_mem_.get())) {
+  explicit WasmExecutable(const std::vector<uint32_t> &machine_code, size_t offset = 0)
+      : exec_mem_(machine_code), func_ptr_(reinterpret_cast<FuncPtr>(static_cast<char*>(exec_mem_.get()) + offset)) {
     if (func_ptr_ == nullptr) {
       throw std::runtime_error("Invalid function pointer");
     }
@@ -130,12 +131,14 @@ public:
  *   auto add = make_wasm_function<wasm_i32, wasm_i32, wasm_i32>(code);
  *   wasm_i32 result = add(5, 7);
  */
-template <typename ReturnType, typename... Args> WasmExecutable<ReturnType, Args...> make_wasm_function(const std::vector<uint8_t> &code) {
-  return WasmExecutable<ReturnType, Args...>(code);
+template <typename ReturnType, typename... Args>
+WasmExecutable<ReturnType, Args...> make_wasm_function(const std::vector<uint8_t> &code, size_t offset = 0) {
+  return WasmExecutable<ReturnType, Args...>(code, offset);
 }
 
-template <typename ReturnType, typename... Args> WasmExecutable<ReturnType, Args...> make_wasm_function(const std::vector<uint32_t> &code) {
-  return WasmExecutable<ReturnType, Args...>(code);
+template <typename ReturnType, typename... Args>
+WasmExecutable<ReturnType, Args...> make_wasm_function(const std::vector<uint32_t> &code, size_t offset = 0) {
+  return WasmExecutable<ReturnType, Args...>(code, offset);
 }
 
 } // namespace tiny

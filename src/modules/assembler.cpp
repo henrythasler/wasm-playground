@@ -663,12 +663,8 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
         // emit placeholder for call instruction; needs to be patched later
         functionCallPatchLocations.push_back(FunctionCallPatchLocation{machinecode.size(), funcidx});
 
-        // FIXME: replace with trap handler
-        // machinecode.push_back(arm64::encode_branch(getTraphandlerOffset(wasm::trap_code_t::AssemblerAddressPatchError, trapHandler, machinecode)));
-        machinecode.push_back(arm64::encode_branch(4));
-
-        // FIXME: replace with actual call instruction
-        machinecode.push_back(arm64::encode_mov_immediate(arm64::X0, 1, 0, arm64::reg_size_t::SIZE_64BIT));
+        // for now, just emit a branch link to the trap handler for address patch errors; will be patched later
+        machinecode.push_back(arm64::encode_branch_link(getTraphandlerOffset(wasm::trap_code_t::AssemblerAddressPatchError, trapHandler, machinecode)));
 
         auto reg = registerPool.allocateRegister();
         stack.emplace_back(reg);

@@ -5,6 +5,7 @@ namespace tiny {
 WasmModule::WasmModule(const std::vector<uint8_t> &bytecode) {
   loadModule(bytecode);
   compileModule();
+  linkModule();
 }
 
 WasmModule::~WasmModule() {
@@ -43,6 +44,18 @@ const WasmFunction *WasmModule::getWasmFunction(std::string name) {
   return nullptr;
 }
 
+size_t WasmModule::getFunctionOffset(std::string name){
+  size_t offset = 0;
+  for (auto function : wasmFunctions) {
+    if (name == function->getName()) {
+      return offset;
+    }
+    offset += function->getMachinecode().size() * sizeof(uint32_t);
+  }
+  asserte(false, "getFunctionOffset(): could not find function '" + name + "'");
+  return 0;
+}
+
 /**
  * Assembling steps for each entry (function) in the code-section
  * 1. allocate memory to hold all locals (64-bit) using the stack; init with 0x00
@@ -76,6 +89,12 @@ void WasmModule::compileModule() {
   for (size_t j = 0; j < export_section->exports()->size(); ++j) {
     const auto &item = export_section->exports()->at(j);
     wasmFunctions.at(static_cast<size_t>(item->idx()->value()))->setName(item->name()->value());
+  }
+}
+
+void WasmModule::linkModule() {
+  for(auto wasmFunction : wasmFunctions) {
+    machinecode.insert(machinecode.end(), wasmFunction->getMachinecode().begin(), wasmFunction->getMachinecode().end());
   }
 }
 
