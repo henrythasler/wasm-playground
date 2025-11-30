@@ -368,7 +368,6 @@ uint32_t encode_movk(reg_t rd, uint16_t imm16, uint8_t shift, reg_size_t size) {
   return instr;
 }
 
-
 /**
  * This instruction does nothing, other than advance the value of the program counter by 4.
  */

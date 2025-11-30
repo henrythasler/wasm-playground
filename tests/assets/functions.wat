@@ -8,4 +8,5 @@
     )
 
     (export "basic" (func $basic))
+    (export "one" (func $one))
 )

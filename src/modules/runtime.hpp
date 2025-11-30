@@ -86,7 +86,7 @@ private:
 
 public:
   explicit WasmExecutable(const std::vector<uint8_t> &machine_code, size_t offset = 0)
-      : exec_mem_(machine_code), func_ptr_(reinterpret_cast<FuncPtr>(static_cast<char*>(exec_mem_.get()) + offset)) {
+      : exec_mem_(machine_code), func_ptr_(reinterpret_cast<FuncPtr>(static_cast<char *>(exec_mem_.get()) + offset)) {
     if (func_ptr_ == nullptr) {
       throw std::runtime_error("Invalid function pointer");
     }
@@ -94,7 +94,7 @@ public:
 
   // Constructor for uint32_t vector
   explicit WasmExecutable(const std::vector<uint32_t> &machine_code, size_t offset = 0)
-      : exec_mem_(machine_code), func_ptr_(reinterpret_cast<FuncPtr>(static_cast<char*>(exec_mem_.get()) + offset)) {
+      : exec_mem_(machine_code), func_ptr_(reinterpret_cast<FuncPtr>(static_cast<char *>(exec_mem_.get()) + offset)) {
     if (func_ptr_ == nullptr) {
       throw std::runtime_error("Invalid function pointer");
     }

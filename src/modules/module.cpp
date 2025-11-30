@@ -44,7 +44,7 @@ const WasmFunction *WasmModule::getWasmFunction(std::string name) {
   return nullptr;
 }
 
-size_t WasmModule::getFunctionOffset(std::string name){
+size_t WasmModule::getFunctionOffset(std::string name) {
   size_t offset = 0;
   for (auto function : wasmFunctions) {
     if (name == function->getName()) {
@@ -92,9 +92,21 @@ void WasmModule::compileModule() {
   }
 }
 
+/**
+ * Concatenate all compiled functions to create the final machinecode
+ */
 void WasmModule::linkModule() {
-  for(auto wasmFunction : wasmFunctions) {
+  size_t totalSize = 0;
+  for (auto wasmFunction : wasmFunctions) {
     machinecode.insert(machinecode.end(), wasmFunction->getMachinecode().begin(), wasmFunction->getMachinecode().end());
+
+    for (auto functionCall : wasmFunction->getFunctionCalls()) {
+      uint32_t patchLocation = totalSize + functionCall.offset;
+      uint32_t targetFunctionOffset = getFunctionOffset(wasmFunctions.at(functionCall.funcidx)->getName());
+      arm64::patch_branch_link(machinecode[patchLocation], targetFunctionOffset);
+    }
+
+    totalSize += wasmFunction->getMachinecode().size();
   }
 }
 

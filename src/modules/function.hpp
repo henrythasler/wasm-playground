@@ -56,6 +56,10 @@ public:
   const std::vector<uint32_t> &getMachinecode() const {
     return machinecode;
   }
+
+  const std::vector<assembler::FunctionCallPatchLocation> &getFunctionCalls() const {
+    return functionCalls;
+  }
 };
 
 } // namespace tiny
