@@ -7,9 +7,8 @@ namespace {
 
 TEST(compare, lt_s32) {
   auto wasmModule = helper::loadModule("compare.wasm");
-  auto machinecode = wasmModule.getWasmFunction("lt_s32")->getMachinecode();
-  auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t, wasm::wasm_i32_t, wasm::wasm_i32_t>(machinecode);
-  helper::dump("compare.lt_s32.bin", machinecode);
+  auto machinecode = wasmModule.getMachinecode();
+  auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t, wasm::wasm_i32_t, wasm::wasm_i32_t>(machinecode, wasmModule.getFunctionOffset("lt_s32"));
 
   EXPECT_EQ(wasmFunction(0, 1), 1);
   EXPECT_EQ(wasmFunction(1, 0), 0);
@@ -22,9 +21,8 @@ TEST(compare, lt_s32) {
 
 TEST(compare, lt_u32) {
   auto wasmModule = helper::loadModule("compare.wasm");
-  auto machinecode = wasmModule.getWasmFunction("lt_u32")->getMachinecode();
-  auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t, wasm::wasm_i32_t, wasm::wasm_i32_t>(machinecode);
-  helper::dump("compare.lt_u32.bin", machinecode);
+  auto machinecode = wasmModule.getMachinecode();
+  auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t, wasm::wasm_i32_t, wasm::wasm_i32_t>(machinecode, wasmModule.getFunctionOffset("lt_u32"));
 
   EXPECT_EQ(wasmFunction(0, 1), 1);
   EXPECT_EQ(wasmFunction(1, 0), 0);
@@ -38,9 +36,8 @@ TEST(compare, lt_u32) {
 
 TEST(compare, lt_s64) {
   auto wasmModule = helper::loadModule("compare.wasm");
-  auto machinecode = wasmModule.getWasmFunction("lt_s64")->getMachinecode();
-  auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t, wasm::wasm_i64_t, wasm::wasm_i64_t>(machinecode);
-  helper::dump("compare.lt_s64.bin", machinecode);
+  auto machinecode = wasmModule.getMachinecode();
+  auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t, wasm::wasm_i64_t, wasm::wasm_i64_t>(machinecode, wasmModule.getFunctionOffset("lt_s64"));
 
   EXPECT_EQ(wasmFunction(0, 1), 1);
   EXPECT_EQ(wasmFunction(1, 0), 0);
@@ -53,9 +50,8 @@ TEST(compare, lt_s64) {
 
 TEST(compare, lt_u64) {
   auto wasmModule = helper::loadModule("compare.wasm");
-  auto machinecode = wasmModule.getWasmFunction("lt_u64")->getMachinecode();
-  auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t, wasm::wasm_i64_t, wasm::wasm_i64_t>(machinecode);
-  helper::dump("compare.lt_u64.bin", machinecode);
+  auto machinecode = wasmModule.getMachinecode();
+  auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t, wasm::wasm_i64_t, wasm::wasm_i64_t>(machinecode, wasmModule.getFunctionOffset("lt_u64"));
 
   EXPECT_EQ(wasmFunction(0, 1), 1);
   EXPECT_EQ(wasmFunction(1, 0), 0);
@@ -69,9 +65,8 @@ TEST(compare, lt_u64) {
 
 TEST(compare, le_s32) {
   auto wasmModule = helper::loadModule("compare.wasm");
-  auto machinecode = wasmModule.getWasmFunction("le_s32")->getMachinecode();
-  auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t, wasm::wasm_i32_t, wasm::wasm_i32_t>(machinecode);
-  helper::dump("compare.le_s32.bin", machinecode);
+  auto machinecode = wasmModule.getMachinecode();
+  auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t, wasm::wasm_i32_t, wasm::wasm_i32_t>(machinecode, wasmModule.getFunctionOffset("le_s32"));
 
   EXPECT_EQ(wasmFunction(0, 1), 1);
   EXPECT_EQ(wasmFunction(1, 0), 0);
@@ -84,9 +79,8 @@ TEST(compare, le_s32) {
 
 TEST(compare, le_u32) {
   auto wasmModule = helper::loadModule("compare.wasm");
-  auto machinecode = wasmModule.getWasmFunction("le_u32")->getMachinecode();
-  auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t, wasm::wasm_i32_t, wasm::wasm_i32_t>(machinecode);
-  helper::dump("compare.le_u32.bin", machinecode);
+  auto machinecode = wasmModule.getMachinecode();
+  auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t, wasm::wasm_i32_t, wasm::wasm_i32_t>(machinecode, wasmModule.getFunctionOffset("le_u32"));
 
   EXPECT_EQ(wasmFunction(0, 1), 1);
   EXPECT_EQ(wasmFunction(1, 0), 0);
@@ -100,9 +94,8 @@ TEST(compare, le_u32) {
 
 TEST(compare, le_s64) {
   auto wasmModule = helper::loadModule("compare.wasm");
-  auto machinecode = wasmModule.getWasmFunction("le_s64")->getMachinecode();
-  auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t, wasm::wasm_i64_t, wasm::wasm_i64_t>(machinecode);
-  helper::dump("compare.le_s64.bin", machinecode);
+  auto machinecode = wasmModule.getMachinecode();
+  auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t, wasm::wasm_i64_t, wasm::wasm_i64_t>(machinecode, wasmModule.getFunctionOffset("le_s64"));
 
   EXPECT_EQ(wasmFunction(0, 1), 1);
   EXPECT_EQ(wasmFunction(1, 0), 0);
@@ -115,9 +108,8 @@ TEST(compare, le_s64) {
 
 TEST(compare, le_u64) {
   auto wasmModule = helper::loadModule("compare.wasm");
-  auto machinecode = wasmModule.getWasmFunction("le_u64")->getMachinecode();
-  auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t, wasm::wasm_i64_t, wasm::wasm_i64_t>(machinecode);
-  helper::dump("compare.le_u64.bin", machinecode);
+  auto machinecode = wasmModule.getMachinecode();
+  auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t, wasm::wasm_i64_t, wasm::wasm_i64_t>(machinecode, wasmModule.getFunctionOffset("le_u64"));
 
   EXPECT_EQ(wasmFunction(0, 1), 1);
   EXPECT_EQ(wasmFunction(1, 0), 0);
@@ -135,9 +127,8 @@ TEST(compare, le_u64) {
 
 TEST(compare, eqz_i32) {
   auto wasmModule = helper::loadModule("compare.wasm");
-  auto machinecode = wasmModule.getWasmFunction("eqz_i32")->getMachinecode();
-  auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t, wasm::wasm_i32_t>(machinecode);
-  helper::dump("compare.eqz_i32.bin", machinecode);
+  auto machinecode = wasmModule.getMachinecode();
+  auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t, wasm::wasm_i32_t>(machinecode, wasmModule.getFunctionOffset("eqz_i32"));
 
   EXPECT_EQ(wasmFunction(0), 1);
   EXPECT_EQ(wasmFunction(1), 0);
@@ -148,9 +139,8 @@ TEST(compare, eqz_i32) {
 
 TEST(compare, eqz_i64) {
   auto wasmModule = helper::loadModule("compare.wasm");
-  auto machinecode = wasmModule.getWasmFunction("eqz_i64")->getMachinecode();
-  auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t, wasm::wasm_i64_t>(machinecode);
-  helper::dump("compare.eqz_i64.bin", machinecode);
+  auto machinecode = wasmModule.getMachinecode();
+  auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t, wasm::wasm_i64_t>(machinecode, wasmModule.getFunctionOffset("eqz_i64"));
 
   EXPECT_EQ(wasmFunction(0), 1);
   EXPECT_EQ(wasmFunction(1), 0);
@@ -161,9 +151,8 @@ TEST(compare, eqz_i64) {
 
 TEST(compare, eq_i32) {
   auto wasmModule = helper::loadModule("compare.wasm");
-  auto machinecode = wasmModule.getWasmFunction("eq_i32")->getMachinecode();
-  auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t, wasm::wasm_i32_t, wasm::wasm_i32_t>(machinecode);
-  helper::dump("compare.eq_i32.bin", machinecode);
+  auto machinecode = wasmModule.getMachinecode();
+  auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t, wasm::wasm_i32_t, wasm::wasm_i32_t>(machinecode, wasmModule.getFunctionOffset("eq_i32"));
 
   EXPECT_EQ(wasmFunction(0, 1), 0);
   EXPECT_EQ(wasmFunction(1, 0), 0);
@@ -176,9 +165,8 @@ TEST(compare, eq_i32) {
 
 TEST(compare, eq_i64) {
   auto wasmModule = helper::loadModule("compare.wasm");
-  auto machinecode = wasmModule.getWasmFunction("eq_i64")->getMachinecode();
-  auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t, wasm::wasm_i64_t, wasm::wasm_i64_t>(machinecode);
-  helper::dump("compare.eq_i64.bin", machinecode);
+  auto machinecode = wasmModule.getMachinecode();
+  auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t, wasm::wasm_i64_t, wasm::wasm_i64_t>(machinecode, wasmModule.getFunctionOffset("eq_i64"));
 
   EXPECT_EQ(wasmFunction(0, 1), 0);
   EXPECT_EQ(wasmFunction(1, 0), 0);
@@ -197,9 +185,8 @@ TEST(compare, eq_i64) {
 
 TEST(compare, gt_s32) {
   auto wasmModule = helper::loadModule("compare.wasm");
-  auto machinecode = wasmModule.getWasmFunction("gt_s32")->getMachinecode();
-  auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t, wasm::wasm_i32_t, wasm::wasm_i32_t>(machinecode);
-  helper::dump("compare.gt_s32.bin", machinecode);
+  auto machinecode = wasmModule.getMachinecode();
+  auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t, wasm::wasm_i32_t, wasm::wasm_i32_t>(machinecode, wasmModule.getFunctionOffset("gt_s32"));
 
   EXPECT_EQ(wasmFunction(0, 1), 0);
   EXPECT_EQ(wasmFunction(1, 0), 1);
@@ -215,9 +202,8 @@ TEST(compare, gt_s32) {
 
 TEST(compare, gt_u32) {
   auto wasmModule = helper::loadModule("compare.wasm");
-  auto machinecode = wasmModule.getWasmFunction("gt_u32")->getMachinecode();
-  auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t, wasm::wasm_i32_t, wasm::wasm_i32_t>(machinecode);
-  helper::dump("compare.gt_u32.bin", machinecode);
+  auto machinecode = wasmModule.getMachinecode();
+  auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t, wasm::wasm_i32_t, wasm::wasm_i32_t>(machinecode, wasmModule.getFunctionOffset("gt_u32"));
 
   EXPECT_EQ(wasmFunction(0, 1), 0);
   EXPECT_EQ(wasmFunction(1, 0), 1);
@@ -233,9 +219,8 @@ TEST(compare, gt_u32) {
 
 TEST(compare, gt_s64) {
   auto wasmModule = helper::loadModule("compare.wasm");
-  auto machinecode = wasmModule.getWasmFunction("gt_s64")->getMachinecode();
-  auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t, wasm::wasm_i64_t, wasm::wasm_i64_t>(machinecode);
-  helper::dump("compare.gt_s64.bin", machinecode);
+  auto machinecode = wasmModule.getMachinecode();
+  auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t, wasm::wasm_i64_t, wasm::wasm_i64_t>(machinecode, wasmModule.getFunctionOffset("gt_s64"));
 
   EXPECT_EQ(wasmFunction(0, 1), 0);
   EXPECT_EQ(wasmFunction(1, 0), 1);
@@ -251,9 +236,8 @@ TEST(compare, gt_s64) {
 
 TEST(compare, gt_u64) {
   auto wasmModule = helper::loadModule("compare.wasm");
-  auto machinecode = wasmModule.getWasmFunction("gt_u64")->getMachinecode();
-  auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t, wasm::wasm_i64_t, wasm::wasm_i64_t>(machinecode);
-  helper::dump("compare.gt_u64.bin", machinecode);
+  auto machinecode = wasmModule.getMachinecode();
+  auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t, wasm::wasm_i64_t, wasm::wasm_i64_t>(machinecode, wasmModule.getFunctionOffset("gt_u64"));
 
   EXPECT_EQ(wasmFunction(0, 1), 0);
   EXPECT_EQ(wasmFunction(1, 0), 1);

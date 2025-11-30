@@ -45,12 +45,10 @@ const WasmFunction *WasmModule::getWasmFunction(std::string name) {
 }
 
 size_t WasmModule::getFunctionOffset(std::string name) {
-  size_t offset = 0;
   for (auto function : wasmFunctions) {
     if (name == function->getName()) {
-      return offset;
+      return function->getMachinecodeOffset() << 2;
     }
-    offset += function->getMachinecode().size() * sizeof(uint32_t);
   }
   asserte(false, "getFunctionOffset(): could not find function '" + name + "'");
   return 0;
@@ -75,13 +73,24 @@ void WasmModule::compileModule() {
   asserte(code_section != nullptr, "WasmModule: Invalid Code Section");
   asserte(code_section->entries() != nullptr, "WasmModule: Code section is empty");
 
+  machinecode.clear();
+
+  auto trapHandler = assembler::createTrapHandler(
+      {
+          wasm::trap_code_t::UnreachableCodeReached,
+          wasm::trap_code_t::IntegerDivisionByZero,
+          wasm::trap_code_t::IntegerOverflow,
+          wasm::trap_code_t::AssemblerAddressPatchError,
+      },
+      machinecode);
+
   for (size_t j = 0; j < code_section->entries()->size(); ++j) {
     const auto &code = code_section->entries()->at(j);
     const auto &func = function_section->typeidx()->at(j);
     const auto &funcType = type_section->functypes()->at(static_cast<size_t>(func->value()));
 
     auto wasmFunction = new WasmFunction();
-    wasmFunction->compile(code->func(), funcType);
+    wasmFunction->compile(code->func(), funcType, trapHandler, machinecode);
     wasmFunctions.push_back(wasmFunction);
   }
 
@@ -98,7 +107,7 @@ void WasmModule::compileModule() {
 void WasmModule::linkModule() {
   size_t totalSize = 0;
   for (auto wasmFunction : wasmFunctions) {
-    machinecode.insert(machinecode.end(), wasmFunction->getMachinecode().begin(), wasmFunction->getMachinecode().end());
+    // machinecode.insert(machinecode.end(), wasmFunction->getMachinecode().begin(), wasmFunction->getMachinecode().end());
 
     for (auto functionCall : wasmFunction->getFunctionCalls()) {
       int32_t patchLocation = totalSize + functionCall.offset;
@@ -106,7 +115,7 @@ void WasmModule::linkModule() {
       arm64::patch_branch_link(machinecode[patchLocation], targetFunctionOffset);
     }
 
-    totalSize += wasmFunction->getMachinecode().size();
+    totalSize += wasmFunction->getMachinecodeSize();
   }
 }
 

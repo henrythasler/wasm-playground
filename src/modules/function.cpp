@@ -35,7 +35,8 @@ std::string WasmFunction::joinValTypes(const std::vector<webassembly_t::val_type
   return resultString;
 }
 
-size_t WasmFunction::compile(const webassembly_t::func_t *func, const std::unique_ptr<webassembly_t::functype_t> &funcType) {
+size_t WasmFunction::compile(const webassembly_t::func_t *func, const std::unique_ptr<webassembly_t::functype_t> &funcType,
+                             const std::map<wasm::trap_code_t, int32_t> &trapHandler, std::vector<uint32_t> &machinecode) {
   // stack size allocated for this function; value may change during compilation
   uint32_t stackSize = 0;
   // set of local variables
@@ -69,7 +70,7 @@ size_t WasmFunction::compile(const webassembly_t::func_t *func, const std::uniqu
     stackSize += assembler::mapWasmValTypeToArm64Size(local->valtype()) * uint32_t(local->num_valtype()->value());
   }
 
-  machinecode.clear();
+  machinecodeOffset = machinecode.size();
 
   // create aligned stack and preamble (stack frame)
   stackSize = assembler::createPreamble(stackSize, machinecode);
@@ -89,15 +90,6 @@ size_t WasmFunction::compile(const webassembly_t::func_t *func, const std::uniqu
     stackPosition = assembler::initLocals(locals, stackPosition, variables, machinecode);
   }
 
-  auto trapHandler = assembler::createTrapHandler(
-      {
-          wasm::trap_code_t::UnreachableCodeReached,
-          wasm::trap_code_t::IntegerDivisionByZero,
-          wasm::trap_code_t::IntegerOverflow,
-          wasm::trap_code_t::AssemblerAddressPatchError,
-      },
-      machinecode);
-
   // Business logic
   if (func->expr().size() > 0) {
     auto exprStr = func->expr();
@@ -115,6 +107,7 @@ size_t WasmFunction::compile(const webassembly_t::func_t *func, const std::uniqu
 
   assembler::createEpilogue(stackSize, machinecode);
 
-  return machinecode.size();
+  machinecodeSize = machinecode.size() - machinecodeOffset;
+  return machinecodeSize;
 }
 } // namespace tiny

@@ -79,23 +79,25 @@ int main(int argc, char const *argv[]) {
   /**
    * print some infos about each function before executing it
    */
+  auto machinecode = wasmModule->getMachinecode();
   for (auto function : wasmModule->getWasmFunctions()) {
     std::cout << "  " << function->getResultString() << " " << function->getName() << "(" << function->getParameterString() << ")" << std::endl;
-    auto machinecode = function->getMachinecode();
-    if (machinecode.size() == 0) {
-      std::cout << YELLOW << "WARNING: Machinecode is empty!" << RESET << std::endl;
-    } else {
-      std::cout << "  Machinecode (hex): " << std::hex;
-      for (const auto instruction : machinecode) {
-        std::cout << std::setw(8) << std::setfill('0') << instruction << " ";
-      }
-      std::cout << std::dec << std::endl;
-    }
+    // auto machinecode = function->getMachinecode();
+    // if (machinecode.size() == 0) {
+    //   std::cout << YELLOW << "WARNING: Machinecode is empty!" << RESET << std::endl;
+    // } else {
+    //   std::cout << "  Machinecode (hex): " << std::hex;
+    //   for (const auto instruction : machinecode) {
+    //     std::cout << std::setw(8) << std::setfill('0') << instruction << " ";
+    //   }
+    //   std::cout << std::dec << std::endl;
+    // }
 
     /* execute machine code */
     if (!dry_run) {
-      std::cout << "  Executing machine code (break *0x" << machinecode.data() << ")... ";
-      auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t, wasm::wasm_i32_t, wasm::wasm_i32_t>(machinecode);
+      // std::cout << "  Executing machine code (break *0x" << machinecode.data() << ")... ";
+      auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t, wasm::wasm_i32_t, wasm::wasm_i32_t>(
+          machinecode, wasmModule->getFunctionOffset(function->getName()));
       try {
         auto res = wasmFunction.call(2, 0);
         std::cout << res << " ";

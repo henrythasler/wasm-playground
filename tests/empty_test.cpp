@@ -1,5 +1,3 @@
-#include <filesystem>
-#include <fstream>
 #include <gmock/gmock.h> // This is the key include for EXPECT_THAT
 #include <gtest/gtest.h>
 
@@ -12,8 +10,9 @@ namespace {
 
 TEST(local0, function0) {
   auto wasmModule = helper::loadModule("empty-fn.wasm");
-  auto machinecode = wasmModule.getWasmFunction("foo")->getMachinecode();
-  auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t>(machinecode);
+  auto machinecode = wasmModule.getMachinecode();
+  auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t>(machinecode, wasmModule.getFunctionOffset("foo"));
+
   wasmFunction();
 }
 

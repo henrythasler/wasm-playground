@@ -14,7 +14,9 @@ namespace tiny {
 class WasmFunction {
 private:
   // std::vector<uint8_t> bytecode;
-  std::vector<uint32_t> machinecode;
+  // std::vector<uint32_t> machinecode;
+  size_t machinecodeOffset = 0;
+  size_t machinecodeSize = 0;
   std::string name;
   std::vector<webassembly_t::val_types_t> parameters;
   std::map<webassembly_t::val_types_t, uint32_t> locals;
@@ -27,7 +29,8 @@ public:
   WasmFunction() = default;
   ~WasmFunction() = default;
 
-  size_t compile(const webassembly_t::func_t *func, const std::unique_ptr<webassembly_t::functype_t> &funcType);
+  size_t compile(const webassembly_t::func_t *func, const std::unique_ptr<webassembly_t::functype_t> &funcType,
+                 const std::map<wasm::trap_code_t, int32_t> &trapHandler, std::vector<uint32_t> &machinecode);
 
   std::string getName() const {
     return name;
@@ -53,9 +56,17 @@ public:
     name = newName;
   };
 
-  const std::vector<uint32_t> &getMachinecode() const {
-    return machinecode;
+  size_t getMachinecodeOffset() const {
+    return machinecodeOffset;
   }
+
+  size_t getMachinecodeSize() const {
+    return machinecodeSize;
+  }
+
+  // const std::vector<uint32_t> &getMachinecode() const {
+  //   return machinecode;
+  // }
 
   const std::vector<assembler::FunctionCallPatchLocation> &getFunctionCalls() const {
     return functionCalls;

@@ -11,9 +11,8 @@ namespace testing {
 
 TEST(division, signed32) {
   auto wasmModule = helper::loadModule("division.wasm");
-  auto machinecode = wasmModule.getWasmFunction("div_s32")->getMachinecode();
-  auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t, wasm::wasm_i32_t, wasm::wasm_i32_t>(machinecode);
-  helper::dump("division.div_s32.bin", machinecode);
+  auto machinecode = wasmModule.getMachinecode();
+  auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t, wasm::wasm_i32_t, wasm::wasm_i32_t>(machinecode, wasmModule.getFunctionOffset("div_s32"));
 
   EXPECT_EQ(wasmFunction(1, 1), 1);
   EXPECT_EQ(wasmFunction(0, 1), 0);
@@ -59,9 +58,8 @@ TEST(division, signed32) {
 
 TEST(division, unsigned32) {
   auto wasmModule = helper::loadModule("division.wasm");
-  auto machinecode = wasmModule.getWasmFunction("div_u32")->getMachinecode();
-  auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t, wasm::wasm_i32_t, wasm::wasm_i32_t>(machinecode);
-  helper::dump("division.div_u32.bin", machinecode);
+  auto machinecode = wasmModule.getMachinecode();
+  auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t, wasm::wasm_i32_t, wasm::wasm_i32_t>(machinecode, wasmModule.getFunctionOffset("div_u32"));
 
   EXPECT_EQ(wasmFunction(1, 1), 1);
   EXPECT_EQ(wasmFunction(0, 1), 0);
@@ -93,9 +91,8 @@ TEST(division, unsigned32) {
 
 TEST(division, signed64) {
   auto wasmModule = helper::loadModule("division.wasm");
-  auto machinecode = wasmModule.getWasmFunction("div_s64")->getMachinecode();
-  auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i64_t, wasm::wasm_i64_t, wasm::wasm_i64_t>(machinecode);
-  helper::dump("division.div_s64.bin", machinecode);
+  auto machinecode = wasmModule.getMachinecode();
+  auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i64_t, wasm::wasm_i64_t, wasm::wasm_i64_t>(machinecode, wasmModule.getFunctionOffset("div_s64"));
 
   EXPECT_EQ(wasmFunction(1, 1), 1);
   EXPECT_EQ(wasmFunction(0, 1), 0);
@@ -141,9 +138,8 @@ TEST(division, signed64) {
 
 TEST(division, unsigned64) {
   auto wasmModule = helper::loadModule("division.wasm");
-  auto machinecode = wasmModule.getWasmFunction("div_u64")->getMachinecode();
-  auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i64_t, wasm::wasm_i64_t, wasm::wasm_i64_t>(machinecode);
-  helper::dump("division.div_u64.bin", machinecode);
+  auto machinecode = wasmModule.getMachinecode();
+  auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i64_t, wasm::wasm_i64_t, wasm::wasm_i64_t>(machinecode, wasmModule.getFunctionOffset("div_u64"));
 
   EXPECT_EQ(wasmFunction(1, 1), 1);
   EXPECT_EQ(wasmFunction(0, 1), 0);
