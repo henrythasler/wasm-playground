@@ -16,4 +16,11 @@ TEST(functions, basic) {
   EXPECT_EQ(caller(), 1);
 }
 
+TEST(functions, jump_back) {
+  auto wasmModule = helper::loadModule("functions.wasm");
+  auto machinecode = wasmModule.getMachinecode();
+  auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i64_t>(machinecode, wasmModule.getFunctionOffset("back"));
+  EXPECT_EQ(wasmFunction(), 1);
+}
+
 } // namespace

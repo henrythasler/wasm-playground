@@ -101,8 +101,8 @@ void WasmModule::linkModule() {
     machinecode.insert(machinecode.end(), wasmFunction->getMachinecode().begin(), wasmFunction->getMachinecode().end());
 
     for (auto functionCall : wasmFunction->getFunctionCalls()) {
-      uint32_t patchLocation = totalSize + functionCall.offset;
-      uint32_t targetFunctionOffset = getFunctionOffset(wasmFunctions.at(functionCall.funcidx)->getName());
+      int32_t patchLocation = totalSize + functionCall.offset;
+      int32_t targetFunctionOffset = int32_t(getFunctionOffset(wasmFunctions.at(functionCall.funcidx)->getName())) - patchLocation * sizeof(uint32_t);
       arm64::patch_branch_link(machinecode[patchLocation], targetFunctionOffset);
     }
 
