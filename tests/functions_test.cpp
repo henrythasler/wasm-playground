@@ -10,7 +10,6 @@ TEST(functions, basic) {
   auto machinecode = wasmModule.getMachinecode();
   auto caller = tiny::make_wasm_function<wasm::wasm_i64_t>(machinecode, wasmModule.getFunctionOffset("basic"));
   auto callee = tiny::make_wasm_function<wasm::wasm_i64_t>(machinecode, wasmModule.getFunctionOffset("one"));
-  helper::dump("functions.bin", machinecode);
 
   EXPECT_EQ(callee(), 1);
   EXPECT_EQ(caller(), 1);
@@ -20,6 +19,7 @@ TEST(functions, jump_back) {
   auto wasmModule = helper::loadModule("functions.wasm");
   auto machinecode = wasmModule.getMachinecode();
   auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i64_t>(machinecode, wasmModule.getFunctionOffset("back"));
+
   EXPECT_EQ(wasmFunction(), 1);
 }
 
