@@ -64,6 +64,14 @@ public:
     return machinecodeSize;
   }
 
+  void setMachinecodeOffset(size_t offset) {
+    machinecodeOffset = offset;
+  }
+
+  void setMachinecodeSize(size_t size) {
+    machinecodeSize = size;
+  }
+
   // const std::vector<uint32_t> &getMachinecode() const {
   //   return machinecode;
   // }

@@ -75,6 +75,7 @@ void WasmModule::compileModule() {
 
   machinecode.clear();
 
+  auto trapHandlerFunction = new WasmFunction();
   auto trapHandler = assembler::createTrapHandler(
       {
           wasm::trap_code_t::UnreachableCodeReached,
@@ -83,6 +84,10 @@ void WasmModule::compileModule() {
           wasm::trap_code_t::AssemblerAddressPatchError,
       },
       machinecode);
+  trapHandlerFunction->setMachinecodeOffset(0);
+  trapHandlerFunction->setMachinecodeSize(machinecode.size());
+  trapHandlerFunction->setName("trap_handler");
+  wasmFunctions.push_back(trapHandlerFunction);
 
   for (size_t j = 0; j < code_section->entries()->size(); ++j) {
     const auto &code = code_section->entries()->at(j);
@@ -97,7 +102,8 @@ void WasmModule::compileModule() {
   auto export_section = getSectionContent<webassembly_t::export_section_t>(*(wasm->sections()), webassembly_t::SECTION_ID_EXPORT_SECTION);
   for (size_t j = 0; j < export_section->exports()->size(); ++j) {
     const auto &item = export_section->exports()->at(j);
-    wasmFunctions.at(static_cast<size_t>(item->idx()->value()))->setName(item->name()->value());
+    // offset by 1 because of trap handler at index 0
+    wasmFunctions.at(1 + static_cast<size_t>(item->idx()->value()))->setName(item->name()->value());
   }
 }
 
@@ -105,17 +111,18 @@ void WasmModule::compileModule() {
  * Concatenate all compiled functions to create the final machinecode
  */
 void WasmModule::linkModule() {
-  size_t totalSize = 0;
   for (auto wasmFunction : wasmFunctions) {
-    // machinecode.insert(machinecode.end(), wasmFunction->getMachinecode().begin(), wasmFunction->getMachinecode().end());
-
     for (auto functionCall : wasmFunction->getFunctionCalls()) {
-      int32_t patchLocation = totalSize + functionCall.offset;
-      int32_t targetFunctionOffset = int32_t(getFunctionOffset(wasmFunctions.at(functionCall.funcidx)->getName())) - patchLocation * sizeof(uint32_t);
+      int32_t patchLocation = functionCall.offset;
+      int32_t targetFunctionOffset =
+          int32_t(getFunctionOffset(wasmFunctions.at(1 + functionCall.funcidx)->getName())) - patchLocation * sizeof(uint32_t);
+
+      std::stringstream message;
+      message << std::hex << std::setw(2) << std::setfill('0') << patchLocation * 8;
+      asserte(patchLocation < machinecode.size(),
+              "linkModule(): patch location out of bounds in '" + wasmFunction->getName() + "()': 0x" + message.str());
       arm64::patch_branch_link(machinecode[patchLocation], targetFunctionOffset);
     }
-
-    totalSize += wasmFunction->getMachinecodeSize();
   }
 }
 

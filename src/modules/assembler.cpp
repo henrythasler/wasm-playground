@@ -109,10 +109,6 @@ std::map<wasm::trap_code_t, int32_t> createTrapHandler(const std::vector<wasm::t
 
   auto trapHandlerAddress = reinterpret_cast<uint64_t>(&wasmTrapHandler);
 
-  // this instruction requires address patching after all handlers are emitted; for now, just jump to the next instruction
-  auto trapHandlerStart = machinecode.size();
-  machinecode.push_back(arm64::encode_branch(4));
-
   int32_t idx = 1;
   for (auto trapcode : trapCodes) {
     // record offset of this trapcode handler
@@ -130,8 +126,6 @@ std::map<wasm::trap_code_t, int32_t> createTrapHandler(const std::vector<wasm::t
   machinecode.push_back(arm64::encode_movk(arm64::X9, uint16_t((trapHandlerAddress >> (3 << 4)) & 0xFFFF), 3 << 4, arm64::reg_size_t::SIZE_64BIT));
   machinecode.push_back(arm64::encode_branch_register(arm64::X9));
 
-  // patch forward jump over all trap handlers
-  arm64::patch_branch(machinecode[trapHandlerStart], int32_t(machinecode.size() - trapHandlerStart) << 2);
   return trapcodeOffsets;
 }
 

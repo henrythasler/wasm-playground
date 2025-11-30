@@ -84,6 +84,7 @@ endif()
 add_executable(all_tests
   # test helper
   helper.cpp
+  elfwriter.cpp
   objdump.cpp
   # support function tests
   loader_test.cpp
@@ -104,7 +105,7 @@ add_executable(all_tests
   branch_test.cpp
   block_extended_test.cpp
   bit_test.cpp
-  # functions_test.cpp
+  functions_test.cpp
 )
 
 # GoogleTest requires at least C++17

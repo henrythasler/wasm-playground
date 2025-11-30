@@ -2,6 +2,7 @@
 #include <string>
 #include <vector>
 
+#include "elfwriter.hpp"
 #include "helper.hpp"
 
 namespace {
@@ -13,8 +14,15 @@ TEST(objdump, wasm) {
 
   for (const auto &wasmFile : wasmFiles) {
     auto wasmModule = helper::loadModule(wasmFile + ".wasm");
-    auto machinecode = wasmModule.getMachinecode();
-    helper::dump(wasmFile + ".o", machinecode);
+    std::vector<uint32_t> machinecode = wasmModule.getMachinecode();
+
+    ELFWriter::ELFWriter writer;
+    writer.add_code(reinterpret_cast<const uint8_t *>(machinecode.data()), machinecode.size() * sizeof(uint32_t));
+
+    for (auto function : wasmModule.getWasmFunctions()) {
+      writer.add_symbol(function->getName(), wasmModule.getFunctionOffset(function->getName()), function->getMachinecodeSize() * sizeof(uint32_t));
+    }
+    writer.write_elf(wasmFile + ".o");
   }
 }
 
