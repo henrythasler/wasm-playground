@@ -19,6 +19,10 @@ TEST(objdump, wasm) {
     ELFWriter::ELFWriter writer;
     writer.add_code(reinterpret_cast<const uint8_t *>(machinecode.data()), machinecode.size() * sizeof(uint32_t));
 
+    for(auto builtin : wasmModule.getBuiltins()) {
+      writer.add_symbol(builtin->name, builtin->machinecodeOffset, builtin->machinecodeSize * sizeof(uint32_t));
+    }
+
     for (auto function : wasmModule.getWasmFunctions()) {
       writer.add_symbol(function->getName(), wasmModule.getFunctionOffset(function->getName()), function->getMachinecodeSize() * sizeof(uint32_t));
     }

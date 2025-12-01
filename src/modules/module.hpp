@@ -6,6 +6,7 @@
 #include <iostream>
 #include <vector>
 
+#include "builtin.hpp"
 #include "function.hpp"
 #include "helper.hpp"
 #include "module.hpp"
@@ -16,6 +17,7 @@ namespace tiny {
 class WasmModule {
 private:
   webassembly_t *wasm = nullptr;
+  std::vector<Builtin *> builtins;
   std::vector<WasmFunction *> wasmFunctions;
   std::vector<uint32_t> machinecode;
 
@@ -37,6 +39,10 @@ public:
 
   const std::vector<WasmFunction *> &getWasmFunctions() {
     return wasmFunctions;
+  }
+
+  const std::vector<Builtin *> &getBuiltins() {
+    return builtins;
   }
 
   const std::vector<uint32_t> &getMachinecode() const {

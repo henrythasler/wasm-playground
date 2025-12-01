@@ -6,6 +6,7 @@ add_library(tiny_modules STATIC
     module.cpp
     wasm.cpp
     assembler.cpp
+    builtin.cpp
     function.cpp
     runtime.cpp
     leb128.cpp
