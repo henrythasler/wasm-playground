@@ -145,26 +145,34 @@ inline int32_t getTraphandlerOffset(wasm::trap_code_t trapCode, const std::map<w
 
 /** save caller registers */
 void saveRegisters(RegisterPool &registerPool, std::vector<uint32_t> &machinecode) {
-  constexpr arm64::reg_size_t reg_size = arm64::reg_size_t::SIZE_64BIT;
-  auto numRegisters = registerPool.getRegisterPool().size();
+  auto registers = registerPool.getRegisterNames();
+  auto numRegisters = registers.size();
+  asserte(numRegisters % 2 == 0, "saveRegisters(): number of saved registers must be even");
+
   uint32_t offset = numRegisters * AARCH64_INT64_SIZE;
   machinecode.push_back(arm64::encode_sub_immediate(arm64::SP, arm64::SP, offset, false, arm64::reg_size_t::SIZE_64BIT));
 
-  for (const auto &reg : registerPool.getRegisterPool()) {
-    machinecode.push_back(arm64::encode_str_unsigned_offset(reg.first, arm64::SP, offset, reg_size));
-    offset -= AARCH64_INT64_SIZE;
+  for (int32_t i = 0; i < int32_t(numRegisters); i += 2) {
+    offset -= AARCH64_INT64_SIZE * 2;
+    auto reg1 = registers.at(i);
+    auto reg2 = registers.at(i + 1);
+    machinecode.push_back(arm64::encode_stp(reg1, reg2, arm64::SP, offset, arm64::addressing_mode_t::SIGNED_OFFSET, arm64::reg_size_t::SIZE_64BIT));
   }
 }
 
 void restoreRegisters(RegisterPool &registerPool, std::vector<uint32_t> &machinecode) {
-  constexpr arm64::reg_size_t reg_size = arm64::reg_size_t::SIZE_64BIT;
-  auto numRegisters = registerPool.getRegisterPool().size();
-  uint32_t offset = numRegisters * AARCH64_INT64_SIZE;
-  for (const auto &reg : registerPool.getRegisterPool()) {
-    machinecode.push_back(arm64::encode_ldr_unsigned_offset(reg.first, arm64::SP, offset, reg_size));
-    offset -= AARCH64_INT64_SIZE;
-  }
+  auto registers = registerPool.getRegisterNames();
+  auto numRegisters = registers.size();
+  asserte(numRegisters % 2 == 0, "restoreRegisters(): number of saved registers must be even");
 
+  uint32_t offset = numRegisters * AARCH64_INT64_SIZE;
+
+  for (int32_t i = 0; i < int32_t(numRegisters); i += 2) {
+    offset -= AARCH64_INT64_SIZE * 2;
+    auto reg1 = registers.at(i);
+    auto reg2 = registers.at(i + 1);
+    machinecode.push_back(arm64::encode_ldp(reg1, reg2, arm64::SP, offset, arm64::addressing_mode_t::SIGNED_OFFSET, arm64::reg_size_t::SIZE_64BIT));
+  }
   machinecode.push_back(arm64::encode_add_immediate(arm64::SP, arm64::SP, numRegisters * AARCH64_INT64_SIZE, false, arm64::reg_size_t::SIZE_64BIT));
 }
 

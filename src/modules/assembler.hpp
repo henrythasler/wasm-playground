@@ -21,8 +21,8 @@ namespace assembler {
 class RegisterPool {
 private:
   // true=available; false=in use
-  std::map<arm64::reg_t, bool> registers = {{arm64::X9, true},  {arm64::X10, true}, {arm64::X11, true}, {arm64::X12, true},
-                                            {arm64::X13, true}, {arm64::X14, true}, {arm64::X15, true}};
+  std::map<arm64::reg_t, bool> registers = {{arm64::X8, true},  {arm64::X9, true},  {arm64::X10, true}, {arm64::X11, true},
+                                            {arm64::X12, true}, {arm64::X13, true}, {arm64::X14, true}, {arm64::X15, true}};
 
 public:
   RegisterPool() = default;
@@ -44,9 +44,13 @@ public:
     registers[reg] = false;
   }
 
-  // return a reference to the register-pool
-  const std::map<arm64::reg_t, bool> &getRegisterPool() {
-    return registers;
+  // return a vector of all registers
+  std::vector<arm64::reg_t> getRegisterNames(void) {
+    std::vector<arm64::reg_t> regs;
+    for (auto reg : registers) {
+      regs.push_back(reg.first);
+    }
+    return regs;
   }
 };
 
