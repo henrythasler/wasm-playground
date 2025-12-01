@@ -104,6 +104,15 @@ void printStack(const std::vector<arm64::reg_t> &stack) {
   std::cout << std::endl;
 }
 
+/**
+ * Create a trap handler that can handle multiple trap codes. For each trap code, a jump sequence is created that loads the trap code into register X0
+ * and branches to the actual trap handler.
+ * After loading the address of the actual trap handler, a branch register instruction is used to jump to the
+ * handler.
+ * @param trapCodes A vector of trap codes to be handled.
+ * @param machinecode A reference to the vector where the generated machine code will be appended.
+ * @return A map of trap codes to their respective offsets in the machine code.
+ */
 std::map<wasm::trap_code_t, int32_t> createTrapHandler(const std::vector<wasm::trap_code_t> trapCodes, std::vector<uint32_t> &machinecode) {
   std::map<wasm::trap_code_t, int32_t> trapcodeOffsets;
 
@@ -119,7 +128,7 @@ std::map<wasm::trap_code_t, int32_t> createTrapHandler(const std::vector<wasm::t
     idx++;
   }
 
-  /** actual trap handler */
+  // prepare branch to actual trap handler; load its address into X9 and branch to it
   machinecode.push_back(arm64::encode_mov_immediate(arm64::X9, uint16_t(trapHandlerAddress & 0xFFFF), 0, arm64::reg_size_t::SIZE_64BIT));
   machinecode.push_back(arm64::encode_movk(arm64::X9, uint16_t((trapHandlerAddress >> (1 << 4)) & 0xFFFF), 1 << 4, arm64::reg_size_t::SIZE_64BIT));
   machinecode.push_back(arm64::encode_movk(arm64::X9, uint16_t((trapHandlerAddress >> (2 << 4)) & 0xFFFF), 2 << 4, arm64::reg_size_t::SIZE_64BIT));
@@ -135,8 +144,28 @@ inline int32_t getTraphandlerOffset(wasm::trap_code_t trapCode, const std::map<w
 }
 
 /** save caller registers */
-void saveRegisters(std::vector<uint32_t> &machinecode) {
-  // machinecode.push_back(arm64::
+void saveRegisters(RegisterPool &registerPool, std::vector<uint32_t> &machinecode) {
+  constexpr arm64::reg_size_t reg_size = arm64::reg_size_t::SIZE_64BIT;
+  auto numRegisters = registerPool.getRegisterPool().size();
+  uint32_t offset = numRegisters * AARCH64_INT64_SIZE;
+  machinecode.push_back(arm64::encode_sub_immediate(arm64::SP, arm64::SP, offset, false, arm64::reg_size_t::SIZE_64BIT));
+
+  for (const auto &reg : registerPool.getRegisterPool()) {
+    machinecode.push_back(arm64::encode_str_unsigned_offset(reg.first, arm64::SP, offset, reg_size));
+    offset -= AARCH64_INT64_SIZE;
+  }
+}
+
+void restoreRegisters(RegisterPool &registerPool, std::vector<uint32_t> &machinecode) {
+  constexpr arm64::reg_size_t reg_size = arm64::reg_size_t::SIZE_64BIT;
+  auto numRegisters = registerPool.getRegisterPool().size();
+  uint32_t offset = numRegisters * AARCH64_INT64_SIZE;
+  for (const auto &reg : registerPool.getRegisterPool()) {
+    machinecode.push_back(arm64::encode_ldr_unsigned_offset(reg.first, arm64::SP, offset, reg_size));
+    offset -= AARCH64_INT64_SIZE;
+  }
+
+  machinecode.push_back(arm64::encode_add_immediate(arm64::SP, arm64::SP, numRegisters * AARCH64_INT64_SIZE, false, arm64::reg_size_t::SIZE_64BIT));
 }
 
 /**
@@ -653,6 +682,8 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
     case 0x10:
       /** call */
       {
+        saveRegisters(registerPool, machinecode);
+
         auto funcidx = uint32_t(decoder::LEB128Decoder::decodeUnsigned(stream, streamEnd));
         // emit placeholder for call instruction; needs to be patched later
         functionCallPatchLocations.push_back(FunctionCallPatchLocation{machinecode.size(), funcidx});
@@ -661,6 +692,7 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
         machinecode.push_back(
             arm64::encode_branch_link(getTraphandlerOffset(wasm::trap_code_t::AssemblerAddressPatchError, trapHandler, machinecode)));
 
+        restoreRegisters(registerPool, machinecode);
         auto reg = registerPool.allocateRegister();
         stack.emplace_back(reg);
         machinecode.push_back(arm64::encode_mov_register(reg, arm64::X0, arm64::reg_size_t::SIZE_64BIT));

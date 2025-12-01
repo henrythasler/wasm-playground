@@ -23,4 +23,12 @@ TEST(functions, jump_back) {
   EXPECT_EQ(wasmFunction(), 1);
 }
 
+TEST(functions, save_regs) {
+  auto wasmModule = helper::loadModule("functions.wasm");
+  auto machinecode = wasmModule.getMachinecode();
+  auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i64_t>(machinecode, wasmModule.getFunctionOffset("four"));
+
+  EXPECT_EQ(wasmFunction(), 4);
+}
+
 } // namespace

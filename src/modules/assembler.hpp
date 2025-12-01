@@ -43,6 +43,11 @@ public:
   void lockRegister(arm64::reg_t reg) {
     registers[reg] = false;
   }
+
+  // return a reference to the register-pool
+  const std::map<arm64::reg_t, bool> &getRegisterPool() {
+    return registers;
+  }
 };
 
 class Variables {
