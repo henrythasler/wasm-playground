@@ -115,7 +115,8 @@ void WasmModule::linkModule() {
   for (auto wasmFunction : wasmFunctions) {
     for (auto functionCall : wasmFunction->getFunctionCalls()) {
       int32_t patchLocation = functionCall.offset;
-      int32_t targetFunctionOffset = int32_t(getFunctionOffset(wasmFunctions.at(functionCall.funcidx)->getName())) - patchLocation * sizeof(uint32_t);
+      int32_t targetFunctionOffset =
+          int32_t(wasmFunctions.at(functionCall.funcidx)->getMachinecodeOffset() * sizeof(uint32_t)) - patchLocation * sizeof(uint32_t);
 
       std::stringstream message;
       message << std::hex << std::setw(2) << std::setfill('0') << patchLocation * 8;

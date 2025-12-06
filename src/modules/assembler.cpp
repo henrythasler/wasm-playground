@@ -690,17 +690,18 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
     case 0x10:
       /** call */
       {
-        saveRegisters(registerPool, machinecode);
-
         auto funcidx = uint32_t(decoder::LEB128Decoder::decodeUnsigned(stream, streamEnd));
+
+        // FIXME: handle parameters and return values
+
+        saveRegisters(registerPool, machinecode);
         // emit placeholder for call instruction; needs to be patched later
         functionCallPatchLocations.push_back(FunctionCallPatchLocation{machinecode.size(), funcidx});
-
         // for now, just emit a branch link to the trap handler for address patch errors; will be patched later
         machinecode.push_back(
             arm64::encode_branch_link(getTraphandlerOffset(wasm::trap_code_t::AssemblerAddressPatchError, trapHandler, machinecode)));
-
         restoreRegisters(registerPool, machinecode);
+
         auto reg = registerPool.allocateRegister();
         stack.emplace_back(reg);
         machinecode.push_back(arm64::encode_mov_register(reg, arm64::X0, arm64::reg_size_t::SIZE_64BIT));

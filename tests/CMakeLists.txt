@@ -99,6 +99,7 @@ add_executable(all_tests
   division_test.cpp
   block_test.cpp
   loop_test.cpp
+  call_test.cpp
   # additional test cases
   echo_test.cpp
   compare_test.cpp
