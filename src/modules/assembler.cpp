@@ -689,11 +689,12 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
         break;
       }
     case 0x10:
-      /** call */
+    case 0x11:
+      /** call and call_indirect */
       {
+        // FIXME: implement call_indirect
         auto funcidx = uint32_t(decoder::LEB128Decoder::decodeUnsigned(stream, streamEnd));
 
-        // FIXME: handle parameters and return values
         const auto &func = function_section->typeidx()->at(funcidx);
         const auto &funcType = type_section->functypes()->at(static_cast<size_t>(func->value()));
         auto parameterTypes = *funcType->parameters()->valtype();

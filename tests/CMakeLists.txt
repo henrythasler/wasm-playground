@@ -100,6 +100,7 @@ add_executable(all_tests
   block_test.cpp
   loop_test.cpp
   call_test.cpp
+  call_indirect_test.cpp
   # additional test cases
   echo_test.cpp
   compare_test.cpp
