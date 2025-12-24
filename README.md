@@ -14,7 +14,7 @@ Progress:
 - Chapter05: ✅
 - Chapter06: ✅
 - Chapter07: ✅
-- Chapter08: 0%
+- Chapter08: ✅
 - Chapter09: 0%
 - Chapter10: 0%
 - Chapter11: 0%
