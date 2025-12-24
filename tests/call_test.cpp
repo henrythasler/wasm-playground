@@ -26,7 +26,23 @@ TEST(call, type_first_i32) {
   auto machinecode = wasmModule.getMachinecode();
   auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t>(machinecode, wasmModule.getFunctionOffset("type-first-i32"));
 
-  // EXPECT_EQ(wasmFunction(), 32);
+  EXPECT_EQ(wasmFunction(), 32);
+}
+
+TEST(call, type_first_i64) {
+  auto wasmModule = helper::loadModule("call.0.wasm");
+  auto machinecode = wasmModule.getMachinecode();
+  auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i64_t>(machinecode, wasmModule.getFunctionOffset("type-first-i64"));
+
+  EXPECT_EQ(wasmFunction(), 64);
+}
+
+TEST(call, type_second_i64) {
+  auto wasmModule = helper::loadModule("call.0.wasm");
+  auto machinecode = wasmModule.getMachinecode();
+  auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i64_t>(machinecode, wasmModule.getFunctionOffset("type-second-i64"));
+
+  EXPECT_EQ(wasmFunction(), 64);
 }
 
 } // namespace

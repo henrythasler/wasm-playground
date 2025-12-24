@@ -36,6 +36,7 @@ std::string WasmFunction::joinValTypes(const std::vector<webassembly_t::val_type
 }
 
 size_t WasmFunction::compile(const webassembly_t::func_t *func, const std::unique_ptr<webassembly_t::functype_t> &funcType,
+                             webassembly_t::type_section_t *type_section, webassembly_t::function_section_t *function_section,
                              const std::map<wasm::trap_code_t, int32_t> &trapHandler, std::vector<uint32_t> &machinecode) {
   // stack size allocated for this function; value may change during compilation
   uint32_t stackSize = 0;
@@ -97,7 +98,8 @@ size_t WasmFunction::compile(const webassembly_t::func_t *func, const std::uniqu
     auto it = expr.cbegin();
     auto result_type = (results.size() > 0) ? results.back() : webassembly_t::val_types_t(0);
     controlStack.push_back(assembler::ControlBlock{assembler::ControlBlock::Type::FUNCTION, {}, registerPool, wasmStack, result_type});
-    assembler::assembleExpression(it, expr.end(), variables, registerPool, controlStack, wasmStack, trapHandler, functionCalls, machinecode);
+    assembler::assembleExpression(it, expr.end(), variables, registerPool, controlStack, wasmStack, trapHandler, functionCalls, type_section,
+                                  function_section, machinecode);
     asserte(controlStack.size() == 0, "control stack should be empty but has: " + std::to_string(controlStack.size()));
   }
 

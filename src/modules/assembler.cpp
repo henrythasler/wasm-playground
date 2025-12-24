@@ -182,6 +182,7 @@ void restoreRegisters(RegisterPool &registerPool, std::vector<uint32_t> &machine
 void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vector<uint8_t>::const_iterator streamEnd, Variables &locals,
                         RegisterPool &registerPool, std::vector<ControlBlock> &controlStack, std::vector<arm64::reg_t> &stack,
                         const std::map<wasm::trap_code_t, int32_t> &trapHandler, std::vector<FunctionCallPatchLocation> &functionCallPatchLocations,
+                        webassembly_t::type_section_t *type_section, webassembly_t::function_section_t *function_section,
                         std::vector<uint32_t> &machinecode) {
   while (stream != streamEnd) {
     switch (*stream++) {
@@ -693,6 +694,23 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
         auto funcidx = uint32_t(decoder::LEB128Decoder::decodeUnsigned(stream, streamEnd));
 
         // FIXME: handle parameters and return values
+        const auto &func = function_section->typeidx()->at(funcidx);
+        const auto &funcType = type_section->functypes()->at(static_cast<size_t>(func->value()));
+        auto parameterTypes = *funcType->parameters()->valtype();
+        asserte(parameterTypes.size() <= 8, "function calls with more than 8 parameters are not supported");
+        asserte(stack.size() >= parameterTypes.size(), "insufficient operands on stack for function call");
+
+        // move parameters from stack in reverse order into argument registers
+        auto targetRegisterNum = parameterTypes.size() - 1;
+        for (auto valtype : parameterTypes) {
+          auto registerSize = map_valtype_to_regsize(valtype);
+          auto sourceReg = stack.back();
+          machinecode.push_back(arm64::encode_mov_register(arm64::reg_t(targetRegisterNum), sourceReg, registerSize));
+          targetRegisterNum--;
+
+          stack.pop_back();
+          registerPool.freeRegister(sourceReg);
+        }
 
         saveRegisters(registerPool, machinecode);
         // emit placeholder for call instruction; needs to be patched later
@@ -702,6 +720,7 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
             arm64::encode_branch_link(getTraphandlerOffset(wasm::trap_code_t::AssemblerAddressPatchError, trapHandler, machinecode)));
         restoreRegisters(registerPool, machinecode);
 
+        // get return value
         auto reg = registerPool.allocateRegister();
         stack.emplace_back(reg);
         machinecode.push_back(arm64::encode_mov_register(reg, arm64::X0, arm64::reg_size_t::SIZE_64BIT));

@@ -97,7 +97,7 @@ void WasmModule::compileModule() {
     const auto &funcType = type_section->functypes()->at(static_cast<size_t>(func->value()));
 
     auto wasmFunction = new WasmFunction();
-    wasmFunction->compile(code->func(), funcType, trapHandler, machinecode);
+    wasmFunction->compile(code->func(), funcType, type_section, function_section, trapHandler, machinecode);
     wasmFunctions.push_back(wasmFunction);
   }
 

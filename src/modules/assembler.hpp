@@ -128,5 +128,6 @@ inline int32_t getTraphandlerOffset(wasm::trap_code_t trapCode, const std::map<w
 void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vector<uint8_t>::const_iterator streamEnd, Variables &locals,
                         RegisterPool &registerPool, std::vector<ControlBlock> &controlStack, std::vector<arm64::reg_t> &stack,
                         const std::map<wasm::trap_code_t, int32_t> &trapHandler, std::vector<FunctionCallPatchLocation> &functionCallPatchLocations,
+                        webassembly_t::type_section_t *type_section, webassembly_t::function_section_t *function_section,
                         std::vector<uint32_t> &machinecode);
 } // namespace assembler
