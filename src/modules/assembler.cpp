@@ -689,10 +689,8 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
         break;
       }
     case 0x10:
-    case 0x11:
-      /** call and call_indirect */
+      /** call */
       {
-        // FIXME: implement call_indirect
         auto funcidx = uint32_t(decoder::LEB128Decoder::decodeUnsigned(stream, streamEnd));
 
         const auto &func = function_section->typeidx()->at(funcidx);
@@ -725,6 +723,25 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
         auto reg = registerPool.allocateRegister();
         stack.emplace_back(reg);
         machinecode.push_back(arm64::encode_mov_register(reg, arm64::X0, arm64::reg_size_t::SIZE_64BIT));
+
+        break;
+      }
+    case 0x11:
+      /** call_indirect */
+      {
+        auto typeidx = uint32_t(decoder::LEB128Decoder::decodeUnsigned(stream, streamEnd));
+        auto nullByte = *stream++;
+
+        asserte(typeidx < type_section->functypes()->size(), "typeidx out of bounds in call_indirect");
+        const auto &expectedFuncType = type_section->functypes()->at(static_cast<size_t>(typeidx));
+        auto expectedParameterTypes = *expectedFuncType->parameters()->valtype();
+        asserte(expectedParameterTypes.size() <= 8, "function calls with more than 8 parameters are not supported");
+
+        // get table index from top of stack
+        asserte(stack.size() >= 1, "insufficient operands on stack for call_indirect");
+        auto tableidx = stack.back();
+        stack.pop_back();
+        registerPool.freeRegister(tableidx);
 
         break;
       }

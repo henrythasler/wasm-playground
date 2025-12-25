@@ -31,4 +31,12 @@ TEST(functions, save_regs) {
   EXPECT_EQ(wasmFunction(), 4);
 }
 
+TEST(functions_indirect, calculate) {
+  auto wasmModule = helper::loadModule("functions_indirect.wasm");
+  auto machinecode = wasmModule.getMachinecode();
+  auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t, wasm::wasm_i32_t, wasm::wasm_i32_t, wasm::wasm_i32_t>(machinecode, wasmModule.getFunctionOffset("calculate"));
+
+  // EXPECT_EQ(wasmFunction(1, 10, 20), 200);
+}
+
 } // namespace

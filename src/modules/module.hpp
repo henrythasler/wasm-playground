@@ -11,6 +11,7 @@
 #include "helper.hpp"
 #include "module.hpp"
 #include "webassembly.h"
+#include "assembler-tables.hpp"
 
 namespace tiny {
 
@@ -20,6 +21,7 @@ private:
   std::vector<Builtin *> builtins;
   std::vector<WasmFunction *> wasmFunctions;
   std::vector<uint32_t> machinecode;
+  std::vector<assembler::TableSection *> tables;
 
   template <typename Derived, typename Base>
   Derived *getSectionContent(const std::vector<std::unique_ptr<Base>> &sections, webassembly_t::section_id_t section_type);
@@ -47,6 +49,10 @@ public:
 
   const std::vector<uint32_t> &getMachinecode() const {
     return machinecode;
+  }
+
+  const std::vector<assembler::TableSection *> &getTables() const {
+    return tables;
   }
 
   const WasmFunction *getWasmFunction(std::string name);

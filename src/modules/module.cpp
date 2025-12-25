@@ -30,7 +30,7 @@ Derived *WasmModule::getSectionContent(const std::vector<std::unique_ptr<Base>> 
       return dynamic_cast<Derived *>(section.get()->content());
     }
   }
-  asserte(false, "getSectionContent(): could not find section '" + std::to_string(section_id) + "'");
+  // asserte(false, "getSectionContent(): could not find section '" + std::to_string(section_id) + "'");
   return nullptr;
 }
 
@@ -69,6 +69,8 @@ void WasmModule::compileModule() {
   auto code_section = getSectionContent<webassembly_t::code_section_t>(*(wasm->sections()), webassembly_t::SECTION_ID_CODE_SECTION);
   auto function_section = getSectionContent<webassembly_t::function_section_t>(*(wasm->sections()), webassembly_t::SECTION_ID_FUNCTION_SECTION);
   auto type_section = getSectionContent<webassembly_t::type_section_t>(*(wasm->sections()), webassembly_t::SECTION_ID_TYPE_SECTION);
+  auto table_section = getSectionContent<webassembly_t::table_section_t>(*(wasm->sections()), webassembly_t::SECTION_ID_TABLE_SECTION);
+  auto element_section = getSectionContent<webassembly_t::element_section_t>(*(wasm->sections()), webassembly_t::SECTION_ID_ELEMENT_SECTION);
 
   asserte(code_section != nullptr, "WasmModule: Invalid Code Section");
   asserte(code_section->entries() != nullptr, "WasmModule: Code section is empty");
@@ -86,7 +88,7 @@ void WasmModule::compileModule() {
           wasm::trap_code_t::AssemblerAddressPatchError,
       },
       machinecode);
-  trapHandlerBuiltin->machinecodeSize = machinecode.size();
+  trapHandlerBuiltin->machinecodeSize = machinecode.size() - trapHandlerBuiltin->machinecodeOffset;
   trapHandlerBuiltin->name = "trap_handler";
   builtins.push_back(trapHandlerBuiltin);
 
@@ -105,6 +107,15 @@ void WasmModule::compileModule() {
   for (size_t j = 0; j < export_section->exports()->size(); ++j) {
     const auto &item = export_section->exports()->at(j);
     wasmFunctions.at(static_cast<size_t>(item->idx()->value()))->setName(item->name()->value());
+  }
+
+  if (table_section != nullptr && element_section != nullptr) {
+    auto functionTable = new assembler::TableSection();
+    functionTable->machinecodeOffset = machinecode.size();
+    assembler::emitFunctionTable(table_section, element_section, machinecode);
+    functionTable->machinecodeSize = machinecode.size() - functionTable->machinecodeOffset;
+    functionTable->name = "function_table";
+    tables.push_back(functionTable);
   }
 }
 

@@ -6,6 +6,7 @@ add_library(tiny_modules STATIC
     module.cpp
     wasm.cpp
     assembler.cpp
+    assembler-tables.cpp
     builtin.cpp
     function.cpp
     runtime.cpp
