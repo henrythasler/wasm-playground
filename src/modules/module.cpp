@@ -109,14 +109,29 @@ void WasmModule::compileModule() {
     wasmFunctions.at(static_cast<size_t>(item->idx()->value()))->setName(item->name()->value());
   }
 
+  auto dataSectionStartOffset = machinecode.size();
+  auto dataSectionSize = 0u;
+  auto dataSectionOffset = 0u;
   if (table_section != nullptr && element_section != nullptr) {
     auto functionTable = new assembler::TableSection();
-    functionTable->machinecodeOffset = machinecode.size();
-    assembler::emitFunctionTable(table_section, element_section, machinecode);
-    functionTable->machinecodeSize = machinecode.size() - functionTable->machinecodeOffset;
+    functionTable->offset = dataSectionOffset + dataSectionSize;
+    assembler::emitFunctionTable(table_section, element_section, data);
+    functionTable->size = data.size() - functionTable->offset;
     functionTable->name = "function_table";
     tables.push_back(functionTable);
+    dataSectionSize += functionTable->size;
   }
+
+  // insert padding to data section to align to 8 bytes
+  while (data.size() % 8 != 0) {
+    data.push_back(0x00);
+    dataSectionSize += 1;
+  }
+
+  // Append data section at the end of the machinecode
+  const uint32_t *ptr = reinterpret_cast<const uint32_t *>(data.data());
+  size_t count = data.size() / sizeof(uint32_t);
+  machinecode.insert(machinecode.end(), ptr, ptr + count);
 }
 
 /**

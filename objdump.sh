@@ -11,6 +11,10 @@ for file in ./tests/machinecode/*.o; do
 
     # disassemble arm64 binaries and change file extension to asm
     # see https://man.archlinux.org/man/aarch64-linux-gnu-objdump.1
-    aarch64-linux-gnu-objdump -D $file > ${file%.o}.asm;
+    aarch64-linux-gnu-objdump -d -s -t $file > ${file%.o}.asm;
+
+    # Append data section
+    # aarch64-linux-gnu-objdump -s -j .data $file >> ${file%.o}.asm    
+
     rm ${file}
 done

@@ -6,12 +6,12 @@
 #include <iostream>
 #include <vector>
 
+#include "assembler-tables.hpp"
 #include "builtin.hpp"
 #include "function.hpp"
 #include "helper.hpp"
 #include "module.hpp"
 #include "webassembly.h"
-#include "assembler-tables.hpp"
 
 namespace tiny {
 
@@ -21,6 +21,7 @@ private:
   std::vector<Builtin *> builtins;
   std::vector<WasmFunction *> wasmFunctions;
   std::vector<uint32_t> machinecode;
+  std::vector<uint8_t> data;
   std::vector<assembler::TableSection *> tables;
 
   template <typename Derived, typename Base>
@@ -49,6 +50,10 @@ public:
 
   const std::vector<uint32_t> &getMachinecode() const {
     return machinecode;
+  }
+
+  const std::vector<uint8_t> &getDataSection() const {
+    return data;
   }
 
   const std::vector<assembler::TableSection *> &getTables() const {

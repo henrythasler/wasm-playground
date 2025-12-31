@@ -6,14 +6,13 @@ namespace assembler {
 class TableSection {
 private:
 public:
-  size_t machinecodeOffset = 0;
-  size_t machinecodeSize = 0;
+  size_t offset = 0;
+  size_t size = 0;
   std::string name;
 
   TableSection() = default;
   ~TableSection() = default;
 };
 
-void emitFunctionTable(webassembly_t::table_section_t *table_section, webassembly_t::element_section_t *element_section,
-                       std::vector<uint32_t> &machinecode);
+void emitFunctionTable(webassembly_t::table_section_t *table_section, webassembly_t::element_section_t *element_section, std::vector<uint8_t> &data);
 } // namespace assembler

@@ -10,11 +10,15 @@ void ELFWriter::add_data(const uint8_t *data_bytes, size_t size) {
   data.insert(data.end(), data_bytes, data_bytes + size);
 }
 
-void ELFWriter::add_symbol(const std::string &name, uint64_t offset, uint64_t size, bool is_data) {
+void ELFWriter::add_rodata(const uint8_t *data_bytes, size_t size) {
+  rodata.insert(rodata.end(), data_bytes, data_bytes + size);
+}
+
+void ELFWriter::add_symbol(const std::string &name, uint64_t offset, uint64_t size, int section) {
   symbol_names.push_back(name);
   symbol_offsets.push_back(offset);
   symbol_sizes.push_back(size);
-  symbol_sections.push_back(is_data ? 2 : 1); // 1=.text, 2=.data
+  symbol_sections.push_back(section); // section: 1=.text, 2=.data, 3=.rodata
 }
 
 void ELFWriter::write_elf(std::string filename) {
@@ -44,7 +48,9 @@ void ELFWriter::write_elf(std::string filename) {
   // Calculate offsets
   size_t text_offset = sizeof(Elf64_Ehdr);
   size_t text_size = code.size();
-  size_t data_offset = text_offset + text_size;
+  size_t rodata_offset = text_offset + text_size;
+  size_t rodata_size = rodata.size();
+  size_t data_offset = rodata_offset + rodata_size;
   size_t data_size = data.size();
 
   // Build string tables
@@ -58,8 +64,8 @@ void ELFWriter::write_elf(std::string filename) {
   size_t shdr_offset = symtab_offset + symtab.size() * sizeof(Elf64_Sym);
 
   ehdr.e_shoff = shdr_offset;
-  ehdr.e_shnum = 6;    // NULL, .text, .data, .shstrtab, .strtab, .symtab
-  ehdr.e_shstrndx = 3; // .shstrtab section index
+  ehdr.e_shnum = 7;    // NULL, .text, .rodata, .data, .shstrtab, .strtab, .symtab
+  ehdr.e_shstrndx = 4; // .shstrtab section index
 
   std::ofstream file(path / filename, std::ios::binary);
   if (file) {
@@ -68,6 +74,9 @@ void ELFWriter::write_elf(std::string filename) {
 
     // Write .text section
     file.write(reinterpret_cast<const char *>(code.data()), code.size());
+
+    // Write .rodata section (literal pools)
+    file.write(reinterpret_cast<const char *>(rodata.data()), rodata.size());
 
     // Write .data section
     file.write(reinterpret_cast<const char *>(data.data()), data.size());
@@ -82,8 +91,8 @@ void ELFWriter::write_elf(std::string filename) {
     file.write(reinterpret_cast<const char *>(symtab.data()), symtab.size() * sizeof(Elf64_Sym));
 
     // Write section headers
-    write_section_headers(file, text_offset, text_size, data_offset, data_size, shstrtab_offset, shstrtab.size(), strtab_offset, strtab.size(),
-                          symtab_offset, symtab.size() * sizeof(Elf64_Sym));
+    write_section_headers(file, text_offset, text_size, rodata_offset, rodata_size, data_offset, data_size, shstrtab_offset, shstrtab.size(),
+                          strtab_offset, strtab.size(), symtab_offset, symtab.size() * sizeof(Elf64_Sym));
   }
 }
 
@@ -92,7 +101,7 @@ std::vector<uint8_t> ELFWriter::build_section_string_table() {
   tab.push_back(0); // NULL string
 
   // Add section names
-  for (const char *name : {".text", ".data", ".shstrtab", ".strtab", ".symtab"}) {
+  for (const char *name : {".text", ".rodata", ".data", ".shstrtab", ".strtab", ".symtab"}) {
     tab.insert(tab.end(), name, name + strlen(name) + 1);
   }
   return tab;
@@ -122,9 +131,10 @@ std::vector<Elf64_Sym> ELFWriter::build_symbol_table(const std::vector<uint8_t> 
     Elf64_Sym sym = {};
     sym.st_name = str_offset;
 
-    bool is_data = (symbol_sections[i] == 2);
-    sym.st_info = ELF64_ST_INFO(STB_GLOBAL, is_data ? STT_OBJECT : STT_FUNC);
-    sym.st_shndx = symbol_sections[i]; // Section index
+    int section = symbol_sections[i];
+    bool is_func = (section == 1); // .text = function
+    sym.st_info = ELF64_ST_INFO(STB_GLOBAL, is_func ? STT_FUNC : STT_OBJECT);
+    sym.st_shndx = section; // Section index
     sym.st_value = symbol_offsets[i];
     sym.st_size = symbol_sizes[i];
     symtab.push_back(sym);
@@ -135,9 +145,9 @@ std::vector<Elf64_Sym> ELFWriter::build_symbol_table(const std::vector<uint8_t> 
   return symtab;
 }
 
-void ELFWriter::write_section_headers(std::ofstream &file, size_t text_offset, size_t text_size, size_t data_offset, size_t data_size,
-                                      size_t shstrtab_offset, size_t shstrtab_size, size_t strtab_offset, size_t strtab_size, size_t symtab_offset,
-                                      size_t symtab_size) {
+void ELFWriter::write_section_headers(std::ofstream &file, size_t text_offset, size_t text_size, size_t rodata_offset, size_t rodata_size,
+                                      size_t data_offset, size_t data_size, size_t shstrtab_offset, size_t shstrtab_size, size_t strtab_offset,
+                                      size_t strtab_size, size_t symtab_offset, size_t symtab_size) {
   // NULL section header
   Elf64_Shdr shdr = {};
   file.write(reinterpret_cast<char *>(&shdr), sizeof(shdr));
@@ -152,9 +162,19 @@ void ELFWriter::write_section_headers(std::ofstream &file, size_t text_offset, s
   shdr.sh_addralign = 4;
   file.write(reinterpret_cast<char *>(&shdr), sizeof(shdr));
 
+  // .rodata section (for literal pools)
+  shdr = {};
+  shdr.sh_name = 7; // ".rodata" in .shstrtab
+  shdr.sh_type = SHT_PROGBITS;
+  shdr.sh_flags = SHF_ALLOC; // Read-only, no execute
+  shdr.sh_offset = rodata_offset;
+  shdr.sh_size = rodata_size;
+  shdr.sh_addralign = 8;
+  file.write(reinterpret_cast<char *>(&shdr), sizeof(shdr));
+
   // .data section
   shdr = {};
-  shdr.sh_name = 7; // ".data" in .shstrtab
+  shdr.sh_name = 15; // ".data" in .shstrtab
   shdr.sh_type = SHT_PROGBITS;
   shdr.sh_flags = SHF_ALLOC | SHF_WRITE;
   shdr.sh_offset = data_offset;
@@ -164,7 +184,7 @@ void ELFWriter::write_section_headers(std::ofstream &file, size_t text_offset, s
 
   // .shstrtab section
   shdr = {};
-  shdr.sh_name = 13; // ".shstrtab" in .shstrtab
+  shdr.sh_name = 21; // ".shstrtab" in .shstrtab
   shdr.sh_type = SHT_STRTAB;
   shdr.sh_offset = shstrtab_offset;
   shdr.sh_size = shstrtab_size;
@@ -173,7 +193,7 @@ void ELFWriter::write_section_headers(std::ofstream &file, size_t text_offset, s
 
   // .strtab section
   shdr = {};
-  shdr.sh_name = 23; // ".strtab" in .shstrtab
+  shdr.sh_name = 31; // ".strtab" in .shstrtab
   shdr.sh_type = SHT_STRTAB;
   shdr.sh_offset = strtab_offset;
   shdr.sh_size = strtab_size;
@@ -182,11 +202,11 @@ void ELFWriter::write_section_headers(std::ofstream &file, size_t text_offset, s
 
   // .symtab section
   shdr = {};
-  shdr.sh_name = 31; // ".symtab" in .shstrtab
+  shdr.sh_name = 39; // ".symtab" in .shstrtab
   shdr.sh_type = SHT_SYMTAB;
   shdr.sh_offset = symtab_offset;
   shdr.sh_size = symtab_size;
-  shdr.sh_link = 4; // Link to .strtab
+  shdr.sh_link = 5; // Link to .strtab
   shdr.sh_info = 1; // One local symbol (NULL)
   shdr.sh_addralign = 8;
   shdr.sh_entsize = sizeof(Elf64_Sym);
