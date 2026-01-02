@@ -109,6 +109,7 @@ void WasmModule::compileModule() {
     wasmFunctions.at(static_cast<size_t>(item->idx()->value()))->setName(item->name()->value());
   }
 
+  // Process table and element sections to create and inline literal pool to store the data
   auto dataSectionStartOffset = machinecode.size();
   auto dataSectionSize = 0u;
   auto dataSectionOffset = 0u;
@@ -122,16 +123,16 @@ void WasmModule::compileModule() {
     dataSectionSize += functionTable->size;
   }
 
-  // insert padding to data section to align to 8 bytes
-  while (data.size() % 8 != 0) {
-    data.push_back(0x00);
-    dataSectionSize += 1;
-  }
+  // // insert padding to data section to align to 8 bytes
+  // while (data.size() % 8 != 0) {
+  //   data.push_back(0x00);
+  //   dataSectionSize += 1;
+  // }
 
-  // Append data section at the end of the machinecode
-  const uint32_t *ptr = reinterpret_cast<const uint32_t *>(data.data());
-  size_t count = data.size() / sizeof(uint32_t);
-  machinecode.insert(machinecode.end(), ptr, ptr + count);
+  // // Append data section at the end of the machinecode
+  // const uint32_t *ptr = reinterpret_cast<const uint32_t *>(data.data());
+  // size_t count = data.size() / sizeof(uint32_t);
+  // machinecode.insert(machinecode.end(), ptr, ptr + count);
 }
 
 /**

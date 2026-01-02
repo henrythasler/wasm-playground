@@ -46,11 +46,22 @@ void patch_branch_link(uint32_t &offset, int32_t imm26) {
 /**
  * This instruction branches unconditionally to an address in a register.
  *
- * `BLR rn`
+ * `BR rn`
  * @param rn register containing the target address
  * @return the encoded instruction
  */
 uint32_t encode_branch_register(reg_t rn) {
+  return 0xD61F0000 | ((rn & 0x1F) << 5);
+}
+
+/**
+ * This instruction calls a subroutine at an address in a register, setting register X30 to PC+4
+ * 
+ * `BLR rn`
+ * @param rn register containing the target address
+ * @return the encoded instruction
+ */
+uint32_t encode_branch_link_register(reg_t rn) {
   return 0xD63F0000 | ((rn & 0x1F) << 5);
 }
 

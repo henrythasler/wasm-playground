@@ -16,3 +16,4 @@ tests/machinecode/
 # ignore compiled files
 tests/assets/*.json
 tests/assets/*.wasm
+*.bkp

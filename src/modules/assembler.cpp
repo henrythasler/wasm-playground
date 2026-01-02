@@ -743,6 +743,9 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
         stack.pop_back();
         registerPool.freeRegister(tableidx);
 
+        // load function from corresponding table section stored as inline literal pool
+        auto funcAddressReg = registerPool.allocateRegister();
+
         break;
       }
     case 0x00:

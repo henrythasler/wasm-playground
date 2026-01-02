@@ -100,6 +100,11 @@ struct FunctionCallPatchLocation {
   uint32_t funcidx; // index of the function being called
 };
 
+struct LoadLiteralPatchLocation {
+  size_t offset;    // offset in machinecode where the call instruction is located
+  uint32_t funcidx; // index of the function being called
+};
+
 struct ControlBlock {
   enum Type { FUNCTION, BLOCK, LOOP, IF, ELSE };
   Type type;

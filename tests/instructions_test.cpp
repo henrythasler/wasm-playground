@@ -193,8 +193,10 @@ TEST(instruction, branch) {
 
   // b #8
   EXPECT_EQ_HEX(encode_branch(8), 0x14000002);
+  // BR X16
+  EXPECT_EQ_HEX(encode_branch_register(X16), 0xD61F0200);
   // BLR X16
-  EXPECT_EQ_HEX(encode_branch_register(X16), 0xD63F0200);
+  EXPECT_EQ_HEX(encode_branch_link_register(X16), 0xD63F0200);
 
   // CBZ X7, #32
   EXPECT_EQ_HEX(encode_cbz(X7, 0x10, reg_size_t::SIZE_64BIT), 0xB4000087);

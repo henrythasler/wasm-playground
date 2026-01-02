@@ -13,6 +13,7 @@ uint32_t encode_ret(reg_t rn = X30);
 uint32_t encode_branch(int32_t imm26);
 uint32_t encode_branch_link(int32_t imm26);
 uint32_t encode_branch_register(reg_t rn);
+uint32_t encode_branch_link_register(reg_t rn);
 uint32_t encode_branch_cond(branch_condition_t cond, int32_t imm19);
 uint32_t encode_cbz(reg_t rt, int32_t imm19, reg_size_t size);
 uint32_t encode_cbnz(reg_t rt, int32_t imm19, reg_size_t size);
