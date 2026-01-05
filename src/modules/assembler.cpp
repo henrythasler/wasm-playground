@@ -183,7 +183,7 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
                         RegisterPool &registerPool, std::vector<ControlBlock> &controlStack, std::vector<arm64::reg_t> &stack,
                         const std::map<wasm::trap_code_t, int32_t> &trapHandler, std::vector<FunctionCallPatchLocation> &functionCallPatchLocations,
                         webassembly_t::type_section_t *type_section, webassembly_t::function_section_t *function_section,
-                        std::vector<uint32_t> &machinecode) {
+                        FunctionTable *functionTable, std::vector<uint32_t> &machinecode) {
   while (stream != streamEnd) {
     switch (*stream++) {
     case 0x20:
@@ -740,11 +740,24 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
         // get table index from top of stack
         asserte(stack.size() >= 1, "insufficient operands on stack for call_indirect");
         auto tableidx = stack.back();
+
+        // check that the value in register 'tableidx' is smaller than the size of the table
+        // use subs_immediate to substract (static) table size from 'tableidx' register
+        // branch_cond over next instruction if result is >= 0; otherwise jump to trap handler from table index out of bounds
+        machinecode.push_back(
+            arm64::encode_cmp_immediate(tableidx, static_cast<uint32_t>(functionTable->size), false, arm64::reg_size_t::SIZE_64BIT));
+        machinecode.push_back(arm64::encode_branch_cond(arm64::branch_condition_t::LT,
+                                                        getTraphandlerOffset(wasm::trap_code_t::TableOutOfBounds, trapHandler, machinecode)));
+
+        // load actual function index from function table into 'functionidx' register
+        auto functionidx = registerPool.allocateRegister();
+        machinecode.push_back(arm64::encode_ldr_unsigned_offset(functionidx, tableidx, functionTable->offset, arm64::reg_size_t::SIZE_8BIT));
+
         stack.pop_back();
         registerPool.freeRegister(tableidx);
 
-        // load function from corresponding table section stored as inline literal pool
-        auto funcAddressReg = registerPool.allocateRegister();
+        // // load function from corresponding table section stored as inline literal pool
+        // auto funcAddressReg = registerPool.allocateRegister();
 
         break;
       }

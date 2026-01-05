@@ -79,14 +79,20 @@ TEST(objdump, wasm) {
     //   auto name = table->name.empty() ? "table_" + std::to_string(tableIndex) : table->name;
     //   writer.add_symbol(name, machinecode.size() * sizeof(uint32_t) - wasmModule.getDataSection().size() * sizeof(uint8_t) + table->offset * sizeof(uint8_t), table->size * sizeof(uint8_t), 3);
     //   tableIndex++;
-    // }    
+    // }
 
-    writer.add_rodata(reinterpret_cast<const uint8_t *>(wasmModule.getDataSection().data()), wasmModule.getDataSection().size() * sizeof(uint8_t));
-    int tableIndex = 0;
-    for (auto table : wasmModule.getTables()) {
-      auto name = table->name.empty() ? "table_" + std::to_string(tableIndex) : table->name;
-      writer.add_symbol(name, table->offset * sizeof(uint8_t), table->size * sizeof(uint8_t), 3);
-      tableIndex++;
+    // auto table = wasmModule.getFunctionTable();
+    // writer.add_rodata(reinterpret_cast<const uint8_t *>(table.data()), wasmModule.getDataSection().size() * sizeof(uint8_t));
+    // int tableIndex = 0;
+    // for (auto table : wasmModule.getTables()) {
+    //   auto name = table->name.empty() ? "table_" + std::to_string(tableIndex) : table->name;
+    //   writer.add_symbol(name, table->offset * sizeof(uint8_t), table->size * sizeof(uint8_t), 3);
+    //   tableIndex++;
+    // }
+
+    auto functionTable = wasmModule.getFunctionTable();
+    if(functionTable != nullptr) {
+      writer.add_symbol(functionTable->name, functionTable->offset * sizeof(uint32_t), functionTable->size * sizeof(uint8_t), 3);
     }
 
     writer.write_elf(wasmFile + ".o");

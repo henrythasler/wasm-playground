@@ -6,7 +6,7 @@
 #include <iostream>
 #include <vector>
 
-#include "assembler-tables.hpp"
+#include "assembler.hpp"
 #include "builtin.hpp"
 #include "function.hpp"
 #include "helper.hpp"
@@ -21,8 +21,7 @@ private:
   std::vector<Builtin *> builtins;
   std::vector<WasmFunction *> wasmFunctions;
   std::vector<uint32_t> machinecode;
-  std::vector<uint8_t> data;
-  std::vector<assembler::TableSection *> tables;
+  assembler::FunctionTable *functionTable = nullptr;
 
   template <typename Derived, typename Base>
   Derived *getSectionContent(const std::vector<std::unique_ptr<Base>> &sections, webassembly_t::section_id_t section_type);
@@ -52,12 +51,8 @@ public:
     return machinecode;
   }
 
-  const std::vector<uint8_t> &getDataSection() const {
-    return data;
-  }
-
-  const std::vector<assembler::TableSection *> &getTables() const {
-    return tables;
+  const assembler::FunctionTable *getFunctionTable() const {
+    return functionTable;
   }
 
   const WasmFunction *getWasmFunction(std::string name);

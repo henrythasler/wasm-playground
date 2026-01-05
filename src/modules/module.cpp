@@ -86,11 +86,58 @@ void WasmModule::compileModule() {
           wasm::trap_code_t::IntegerDivisionByZero,
           wasm::trap_code_t::IntegerOverflow,
           wasm::trap_code_t::AssemblerAddressPatchError,
+          wasm::trap_code_t::TableOutOfBounds,
       },
       machinecode);
   trapHandlerBuiltin->machinecodeSize = machinecode.size() - trapHandlerBuiltin->machinecodeOffset;
   trapHandlerBuiltin->name = "trap_handler";
   builtins.push_back(trapHandlerBuiltin);
+
+  // Process table and element sections to create and inline literal pool to store the data
+  // auto dataSectionStartOffset = machinecode.size();
+  // auto dataSectionSize = 0u;
+  // auto dataSectionOffset = 0u;
+
+  if (table_section != nullptr && element_section != nullptr) {
+    // first table and first element is used
+    const auto &table = *table_section->tables()->at(0);
+    const auto &element = *element_section->elements()->at(0);
+
+    this->functionTable = new assembler::FunctionTable();
+
+    asserte(table.elemtype() == webassembly_t::types_t::TYPES_ELEMENT,
+            "Only funcref element type is supported in function tables. Found: " + std::to_string(table.elemtype()));
+    auto limits = table.limits();
+    asserte(limits->min()->value() < 0xff, "Function table size > 254: " + std::to_string(limits->min()->value()));
+    for (auto i = 0; i < limits->min()->value(); i++) {
+      this->functionTable->data.push_back(0xff);
+    }
+
+    // initialize function table with element section
+    auto table_index = element.tableidx()->value(); // currently only one table is supported
+    asserte(table_index == 0, "Only one function table is supported. Found table index: " + std::to_string(table_index));
+    for (int32_t i = 0; i < element.num_init()->value(); i++) {
+      auto value = element.init_vec()->at(i)->value();
+      asserte(value < 0xff, "Function index in table >254: " + std::to_string(value));
+      this->functionTable->data.at(i) = static_cast<uint8_t>(value);
+    }
+
+    // assembler::emitFunctionTable(table_section, element_section, data);
+    functionTable->size = this->functionTable->data.size();
+    functionTable->name = "function_table";
+    // dataSectionSize += functionTable->size;
+
+    // insert padding to align to 8 bytes
+    while (this->functionTable->data.size() % 8 != 0) {
+      this->functionTable->data.push_back(0xff);
+    }
+
+    // insert function table data into machinecode as inline literal pool
+    functionTable->offset = machinecode.size();
+    const uint32_t *ptr = reinterpret_cast<const uint32_t *>(this->functionTable->data.data());
+    size_t count = this->functionTable->data.size() / sizeof(uint32_t);
+    machinecode.insert(machinecode.end(), ptr, ptr + count);
+  }
 
   // Compile each function in the code section
   for (size_t j = 0; j < code_section->entries()->size(); ++j) {
@@ -99,7 +146,7 @@ void WasmModule::compileModule() {
     const auto &funcType = type_section->functypes()->at(static_cast<size_t>(func->value()));
 
     auto wasmFunction = new WasmFunction();
-    wasmFunction->compile(code->func(), funcType, type_section, function_section, trapHandler, machinecode);
+    wasmFunction->compile(code->func(), funcType, type_section, function_section, trapHandler, functionTable, machinecode);
     wasmFunctions.push_back(wasmFunction);
   }
 
@@ -108,31 +155,6 @@ void WasmModule::compileModule() {
     const auto &item = export_section->exports()->at(j);
     wasmFunctions.at(static_cast<size_t>(item->idx()->value()))->setName(item->name()->value());
   }
-
-  // Process table and element sections to create and inline literal pool to store the data
-  auto dataSectionStartOffset = machinecode.size();
-  auto dataSectionSize = 0u;
-  auto dataSectionOffset = 0u;
-  if (table_section != nullptr && element_section != nullptr) {
-    auto functionTable = new assembler::TableSection();
-    functionTable->offset = dataSectionOffset + dataSectionSize;
-    assembler::emitFunctionTable(table_section, element_section, data);
-    functionTable->size = data.size() - functionTable->offset;
-    functionTable->name = "function_table";
-    tables.push_back(functionTable);
-    dataSectionSize += functionTable->size;
-  }
-
-  // // insert padding to data section to align to 8 bytes
-  // while (data.size() % 8 != 0) {
-  //   data.push_back(0x00);
-  //   dataSectionSize += 1;
-  // }
-
-  // // Append data section at the end of the machinecode
-  // const uint32_t *ptr = reinterpret_cast<const uint32_t *>(data.data());
-  // size_t count = data.size() / sizeof(uint32_t);
-  // machinecode.insert(machinecode.end(), ptr, ptr + count);
 }
 
 /**

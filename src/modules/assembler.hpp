@@ -9,6 +9,7 @@
 #include "aarch64-instructions-branch.hpp"
 #include "aarch64-instructions-mem.hpp"
 #include "aarch64-instructions.hpp"
+#include "assembler-tables.hpp"
 #include "helper.hpp"
 #include "leb128.hpp"
 #include "wasm.hpp"
@@ -134,5 +135,5 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
                         RegisterPool &registerPool, std::vector<ControlBlock> &controlStack, std::vector<arm64::reg_t> &stack,
                         const std::map<wasm::trap_code_t, int32_t> &trapHandler, std::vector<FunctionCallPatchLocation> &functionCallPatchLocations,
                         webassembly_t::type_section_t *type_section, webassembly_t::function_section_t *function_section,
-                        std::vector<uint32_t> &machinecode);
+                        FunctionTable *functionTable, std::vector<uint32_t> &machinecode);
 } // namespace assembler
