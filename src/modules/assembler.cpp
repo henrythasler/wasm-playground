@@ -182,8 +182,8 @@ void restoreRegisters(RegisterPool &registerPool, std::vector<uint32_t> &machine
 void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vector<uint8_t>::const_iterator streamEnd, Variables &locals,
                         RegisterPool &registerPool, std::vector<ControlBlock> &controlStack, std::vector<arm64::reg_t> &stack,
                         const std::map<wasm::trap_code_t, int32_t> &trapHandler, std::vector<FunctionCallPatchLocation> &functionCallPatchLocations,
-                        webassembly_t::type_section_t *type_section, webassembly_t::function_section_t *function_section,
-                        FunctionTable *functionTable, std::vector<uint32_t> &machinecode) {
+                        std::vector<DataSegmentPatchLocation> &dataSegmentPatches, webassembly_t::type_section_t *type_section,
+                        webassembly_t::function_section_t *function_section, FunctionTable *functionTable, std::vector<uint32_t> &machinecode) {
   while (stream != streamEnd) {
     switch (*stream++) {
     case 0x20:
@@ -746,18 +746,20 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
         // branch_cond over next instruction if result is >= 0; otherwise jump to trap handler from table index out of bounds
         machinecode.push_back(
             arm64::encode_cmp_immediate(tableidx, static_cast<uint32_t>(functionTable->size), false, arm64::reg_size_t::SIZE_64BIT));
-        machinecode.push_back(arm64::encode_branch_cond(arm64::branch_condition_t::LT,
+        machinecode.push_back(arm64::encode_branch_cond(arm64::branch_condition_t::GE,
                                                         getTraphandlerOffset(wasm::trap_code_t::TableOutOfBounds, trapHandler, machinecode)));
 
         // load actual function index from function table into 'functionidx' register
-        // tableidx register can be reused for functionidx
         stack.pop_back();
-        registerPool.freeRegister(tableidx);
         auto functionidx = registerPool.allocateRegister();
-        // machinecode.push_back(arm64::encode_ldr_unsigned_offset(functionidx, tableidx, functionTable->offset, arm64::reg_size_t::SIZE_8BIT));
 
-        // // load function from corresponding table section stored as inline literal pool
-        // auto funcAddressReg = registerPool.allocateRegister();
+        dataSegmentPatches.push_back(DataSegmentPatchLocation{machinecode.size(), DataSegmentType::FUNCTION_TABLE});
+        machinecode.push_back(arm64::encode_adrp(functionidx, 0));
+        machinecode.push_back(arm64::encode_add_immediate(functionidx, functionidx, 0, false, arm64::reg_size_t::SIZE_64BIT));
+        machinecode.push_back(arm64::encode_ldr_unsigned_offset(functionidx, functionidx, 0, arm64::reg_size_t::SIZE_64BIT));
+
+        registerPool.freeRegister(tableidx);
+        stack.emplace_back(functionidx);
 
         break;
       }

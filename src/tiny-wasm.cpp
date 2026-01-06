@@ -96,10 +96,11 @@ int main(int argc, char const *argv[]) {
     /* execute machine code */
     if (!dry_run) {
       // std::cout << "  Executing machine code (break *0x" << machinecode.data() << ")... ";
-      auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t, wasm::wasm_i32_t, wasm::wasm_i32_t>(
-          machinecode, wasmModule->getFunctionOffset(function->getName()));
+      // auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t, wasm::wasm_i32_t, wasm::wasm_i32_t>(
+      //     machinecode, wasmModule->getFunctionOffset(function->getName()));
+      auto wasmFunction = tiny::make_linked_wasm_function<wasm::wasm_i32_t, wasm::wasm_i32_t, wasm::wasm_i32_t, wasm::wasm_i32_t>(*wasmModule, function->getName());
       try {
-        auto res = wasmFunction.call(2, 0);
+        auto res = wasmFunction.call(1, 10, 20);
         std::cout << res << " ";
       } catch (const std::exception &e) {
         std::cerr << RED << "Execution failed: " << e.what() << RESET << std::endl;

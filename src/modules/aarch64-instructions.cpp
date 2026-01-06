@@ -192,6 +192,11 @@ uint32_t encode_add_immediate(reg_t rd, reg_t rn, uint16_t imm12, bool shift12, 
   return instr;
 }
 
+void patch_add_immediate(uint32_t &offset, uint16_t imm12) {
+  offset &= ~(0xFFF << 10);        // Clear existing imm12 field
+  offset |= (imm12 & 0xFFF) << 10; // Set new imm12 field
+}
+
 /**
  * This instruction adds a register value and an optionally-shifted immediate value, and writes the result to the destination register. It updates the
  * condition flags based on the result.

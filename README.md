@@ -59,7 +59,7 @@ Run unit-tests with: `npm test`
 
 LeakSanitizer is incompatible with emulator/debugging/tracing tools. Setting `detect_leaks=0` disables leak detection during execution.
 
-`ASAN_OPTIONS=detect_leaks=0 qemu-aarch64 -L /usr/aarch64-linux-gnu/ build/src/tiny-wasm wasm/nop-fn.wasm`
+`ASAN_OPTIONS=detect_leaks=0 qemu-aarch64 -L /usr/aarch64-linux-gnu/ build/src/tiny-wasm tests/assets/empty-fn.wasm`
 
 ### On arm64 Machine
 
@@ -69,7 +69,7 @@ LeakSanitizer is incompatible with emulator/debugging/tracing tools. Setting `de
 
 Start the executable:
 
-`ASAN_OPTIONS=detect_leaks=0 qemu-aarch64 -L /usr/aarch64-linux-gnu/ -g 1234 ./tiny-wasm ../wasm/nop-fn.wasm`
+`ASAN_OPTIONS=detect_leaks=0 qemu-aarch64 -L /usr/aarch64-linux-gnu/ -g 1234 build/src/tiny-wasm tests/assets/empty-fn.wasm`
 
 Set breakpoint in source code. Start Debugging (F5).
 

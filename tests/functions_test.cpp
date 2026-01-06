@@ -35,7 +35,7 @@ TEST(functions_indirect, calculate) {
   auto wasmModule = helper::loadModule("functions_indirect.wasm");
   auto wasmFunction = tiny::make_linked_wasm_function<wasm::wasm_i32_t, wasm::wasm_i32_t, wasm::wasm_i32_t, wasm::wasm_i32_t>(wasmModule, "calculate");
 
-  // EXPECT_EQ(wasmFunction(1, 10, 20), 200);
+  // EXPECT_EQ(wasmFunction(0, 10, 20), 2);
 }
 
 } // namespace

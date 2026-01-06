@@ -51,6 +51,10 @@ public:
     return machinecode;
   }
 
+  std::vector<uint32_t> &getMutableMachinecode() {
+    return machinecode;
+  }
+
   const assembler::FunctionTable *getFunctionTable() const {
     return functionTable;
   }

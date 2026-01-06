@@ -22,6 +22,7 @@ private:
   std::map<webassembly_t::val_types_t, uint32_t> locals;
   std::vector<webassembly_t::val_types_t> results;
   std::vector<assembler::FunctionCallPatchLocation> functionCalls;
+  std::vector<assembler::DataSegmentPatchLocation> dataSegmentPatches;
 
   std::string joinValTypes(const std::vector<webassembly_t::val_types_t> &valTypes);
 
@@ -80,6 +81,10 @@ public:
 
   const std::vector<assembler::FunctionCallPatchLocation> &getFunctionCalls() const {
     return functionCalls;
+  }
+
+  const std::vector<assembler::DataSegmentPatchLocation> &getDataSegmentPatches() const {
+    return dataSegmentPatches;
   }
 };
 

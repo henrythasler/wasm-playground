@@ -86,15 +86,14 @@ public:
 template <typename ReturnType, typename... Args> class WasmExecutable {
 private:
   CustomMemory exec_mem_;
-  CustomMemory ro_mem_;
+  CustomMemory fn_table_;
   using FuncPtr = ReturnType (*)(Args...);
   FuncPtr func_ptr_;
-  uint8_t *ro_mem_ptr_;
 
 public:
   explicit WasmExecutable(const std::vector<uint8_t> &machine_code, const std::vector<uint8_t> &functionTable, size_t offset = 0)
-      : exec_mem_(machine_code), ro_mem_(functionTable, PROT_READ),
-        func_ptr_(reinterpret_cast<FuncPtr>(static_cast<char *>(exec_mem_.get()) + offset)), ro_mem_ptr_(static_cast<uint8_t *>(ro_mem_.get())) {
+      : exec_mem_(machine_code, PROT_WRITE | PROT_EXEC), fn_table_(functionTable, PROT_READ),
+        func_ptr_(reinterpret_cast<FuncPtr>(static_cast<char *>(exec_mem_.get()) + offset)) {
     if (func_ptr_ == nullptr) {
       throw std::runtime_error("Invalid function pointer");
     }
@@ -102,8 +101,8 @@ public:
 
   // Constructor for uint32_t vector
   explicit WasmExecutable(const std::vector<uint32_t> &machine_code, const std::vector<uint8_t> &functionTable, size_t offset = 0)
-      : exec_mem_(machine_code), ro_mem_(functionTable, PROT_READ),
-        func_ptr_(reinterpret_cast<FuncPtr>(static_cast<char *>(exec_mem_.get()) + offset)), ro_mem_ptr_(static_cast<uint8_t *>(ro_mem_.get())) {
+      : exec_mem_(machine_code, PROT_WRITE | PROT_EXEC), fn_table_(functionTable, PROT_READ),
+        func_ptr_(reinterpret_cast<FuncPtr>(static_cast<char *>(exec_mem_.get()) + offset)) {
     if (func_ptr_ == nullptr) {
       throw std::runtime_error("Invalid function pointer");
     }
@@ -132,8 +131,16 @@ public:
     return func_ptr_;
   }
 
-  uint8_t *get_ro_memory_pointer() const {
-    return ro_mem_ptr_;
+  intptr_t get_fntable_memory_address() const {
+    return reinterpret_cast<intptr_t>(fn_table_.get());
+  }
+
+  intptr_t get_code_memory_address() const {
+    return reinterpret_cast<intptr_t>(exec_mem_.get());
+  }
+
+  uint32_t *get_mutable_code_pointer() {
+    return static_cast<uint32_t *>(exec_mem_.get());
   }
 };
 
@@ -159,10 +166,44 @@ WasmExecutable<ReturnType, Args...> make_wasm_function(const std::vector<uint32_
 template <typename ReturnType, typename... Args>
 WasmExecutable<ReturnType, Args...> make_linked_wasm_function(tiny::WasmModule &wasmModule, const std::string &funcName) {
   const auto &code = wasmModule.getMachinecode();
-  size_t offset = wasmModule.getFunctionOffset(funcName);
+  size_t exportFunctionOffset = wasmModule.getFunctionOffset(funcName);
   const auto *functionTable = wasmModule.getFunctionTable();
 
-  auto wasmExecutable = WasmExecutable<ReturnType, Args...>(code, functionTable->data, offset);
+  auto wasmExecutable = WasmExecutable<ReturnType, Args...>(code, functionTable->data, exportFunctionOffset);
+
+  auto fnTableAddress = wasmExecutable.get_fntable_memory_address();
+  auto codeAddress = wasmExecutable.get_code_memory_address();
+
+  uint32_t *codePtr = wasmExecutable.get_mutable_code_pointer();
+
+  for (auto wasmFunction : wasmModule.getWasmFunctions()) {
+    for (auto patchLocation : wasmFunction->getDataSegmentPatches()) {
+      switch (patchLocation.type) {
+      case assembler::DataSegmentType::FUNCTION_TABLE: {
+        intptr_t pc = codeAddress + static_cast<intptr_t>(patchLocation.offset * 4);
+        intptr_t delta = fnTableAddress - pc;
+        std::cout << std::hex << "Patching code segment 0x" << codeAddress << " at offset 0x" << patchLocation.offset * 4
+                  << " with function table address at 0x" << fnTableAddress << " (delta: 0x" << delta << ")" << std::dec << std::endl;
+        std::cout << std::hex << "  Current ADRP instruction: 0x" << codePtr[patchLocation.offset] << std::dec << std::endl;
+        arm64::patch_adrp(codePtr[patchLocation.offset], delta);
+        std::cout << std::hex << "  Patched ADRP instruction: 0x" << codePtr[patchLocation.offset] << std::dec << std::endl;
+
+        std::cout << std::hex << "  Current ADD instruction: 0x" << codePtr[patchLocation.offset + 1] << std::dec << std::endl;
+        arm64::patch_add_immediate(codePtr[patchLocation.offset + 1], static_cast<uint16_t>(delta & 0xffff));
+        std::cout << std::hex << "  Patched ADD instruction: 0x" << codePtr[patchLocation.offset + 1] << std::dec << std::endl;
+
+        std::cout << std::hex << "  Table[0]: " << reinterpret_cast<uint32_t *>(fnTableAddress)[0] << std::dec << std::endl;
+
+        break;
+      }
+      default: {
+        asserte(false, "Unsupported patch location type");
+        break;
+      }
+      }
+    }
+  }
+
   return wasmExecutable;
 }
 

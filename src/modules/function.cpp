@@ -99,7 +99,7 @@ size_t WasmFunction::compile(const webassembly_t::func_t *func, const std::uniqu
     auto it = expr.cbegin();
     auto result_type = (results.size() > 0) ? results.back() : webassembly_t::val_types_t(0);
     controlStack.push_back(assembler::ControlBlock{assembler::ControlBlock::Type::FUNCTION, {}, registerPool, wasmStack, result_type});
-    assembler::assembleExpression(it, expr.end(), variables, registerPool, controlStack, wasmStack, trapHandler, functionCalls, type_section,
+    assembler::assembleExpression(it, expr.end(), variables, registerPool, controlStack, wasmStack, trapHandler, functionCalls, dataSegmentPatches, type_section,
                                   function_section, functionTable, machinecode);
     asserte(controlStack.size() == 0, "control stack should be empty but has: " + std::to_string(controlStack.size()));
   }
