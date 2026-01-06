@@ -756,7 +756,7 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
         dataSegmentPatches.push_back(DataSegmentPatchLocation{machinecode.size(), DataSegmentType::FUNCTION_TABLE});
         machinecode.push_back(arm64::encode_adrp(functionidx, 0));
         machinecode.push_back(arm64::encode_add_immediate(functionidx, functionidx, 0, false, arm64::reg_size_t::SIZE_64BIT));
-        machinecode.push_back(arm64::encode_ldr_unsigned_offset(functionidx, functionidx, 0, arm64::reg_size_t::SIZE_64BIT));
+        machinecode.push_back(arm64::encode_ldr_unsigned_offset(functionidx, functionidx, 0, arm64::reg_size_t::SIZE_32BIT));
 
         registerPool.freeRegister(tableidx);
         stack.emplace_back(functionidx);
