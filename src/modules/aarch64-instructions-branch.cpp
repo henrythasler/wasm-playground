@@ -56,7 +56,7 @@ uint32_t encode_branch_register(reg_t rn) {
 
 /**
  * This instruction calls a subroutine at an address in a register, setting register X30 to PC+4
- * 
+ *
  * `BLR rn`
  * @param rn register containing the target address
  * @return the encoded instruction

@@ -133,10 +133,10 @@ void WasmModule::compileModule() {
     }
 
     // insert function table data into machinecode as inline literal pool
-    functionTable->offset = machinecode.size();
-    const uint32_t *ptr = reinterpret_cast<const uint32_t *>(this->functionTable->data.data());
-    size_t count = this->functionTable->data.size() / sizeof(uint32_t);
-    machinecode.insert(machinecode.end(), ptr, ptr + count);
+    // functionTable->offset = machinecode.size();
+    // const uint32_t *ptr = reinterpret_cast<const uint32_t *>(this->functionTable->data.data());
+    // size_t count = this->functionTable->data.size() / sizeof(uint32_t);
+    // machinecode.insert(machinecode.end(), ptr, ptr + count);
   }
 
   // Compile each function in the code section

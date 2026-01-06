@@ -750,11 +750,11 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
                                                         getTraphandlerOffset(wasm::trap_code_t::TableOutOfBounds, trapHandler, machinecode)));
 
         // load actual function index from function table into 'functionidx' register
-        auto functionidx = registerPool.allocateRegister();
-        machinecode.push_back(arm64::encode_ldr_unsigned_offset(functionidx, tableidx, functionTable->offset, arm64::reg_size_t::SIZE_8BIT));
-
+        // tableidx register can be reused for functionidx
         stack.pop_back();
         registerPool.freeRegister(tableidx);
+        auto functionidx = registerPool.allocateRegister();
+        // machinecode.push_back(arm64::encode_ldr_unsigned_offset(functionidx, tableidx, functionTable->offset, arm64::reg_size_t::SIZE_8BIT));
 
         // // load function from corresponding table section stored as inline literal pool
         // auto funcAddressReg = registerPool.allocateRegister();

@@ -10,6 +10,7 @@
 
 #include "assembler.hpp"
 #include "helper.hpp"
+#include "module.hpp"
 #include "wasm.hpp"
 
 namespace tiny {
@@ -18,14 +19,14 @@ namespace tiny {
  * RAII wrapper for JIT-compiled executable memory
  * Handles allocation, permission management, and automatic cleanup
  */
-class ExecutableMemory {
+class CustomMemory {
 private:
   void *mem_;
   size_t size_;
 
   // Helper to get byte size from uint32_t vector
-  static size_t get_byte_size(const std::vector<uint32_t> &code) {
-    return code.size() * sizeof(uint32_t);
+  static size_t get_byte_size(const std::vector<uint32_t> &data) {
+    return data.size() * sizeof(uint32_t);
   }
 
   // Helper to get byte pointer from uint32_t vector
@@ -33,31 +34,35 @@ private:
     return reinterpret_cast<const uint8_t *>(code.data());
   }
 
-  void allocate_and_copy(const uint8_t *data, size_t byte_size);
+  void allocate_and_copy(const uint8_t *data, size_t byte_size, int mode);
 
 public:
   // Constructor for uint8_t vector (byte array)
-  ExecutableMemory(const std::vector<uint8_t> &code) : mem_(nullptr), size_(code.size()) {
-    allocate_and_copy(code.data(), size_);
+  CustomMemory(const std::vector<uint8_t> &data, int mode = PROT_READ | PROT_EXEC) : mem_(nullptr), size_(data.size()) {
+    if (size_ > 0) {
+      allocate_and_copy(data.data(), size_, mode);
+    }
   }
 
   // Constructor for uint32_t vector (word array)
-  ExecutableMemory(const std::vector<uint32_t> &code) : mem_(nullptr), size_(get_byte_size(code)) {
-    allocate_and_copy(get_byte_ptr(code), size_);
+  CustomMemory(const std::vector<uint32_t> &data, int mode = PROT_READ | PROT_EXEC) : mem_(nullptr), size_(get_byte_size(data)) {
+    if (size_ > 0) {
+      allocate_and_copy(get_byte_ptr(data), size_, mode);
+    }
   }
 
-  ~ExecutableMemory() {
+  ~CustomMemory() {
     if (mem_ != nullptr) {
       munmap(mem_, size_);
     }
   }
 
   // Delete copy constructor and assignment
-  ExecutableMemory(const ExecutableMemory &) = delete;
-  ExecutableMemory &operator=(const ExecutableMemory &) = delete;
+  CustomMemory(const CustomMemory &) = delete;
+  CustomMemory &operator=(const CustomMemory &) = delete;
 
   // Allow move semantics
-  ExecutableMemory(ExecutableMemory &&other) noexcept : mem_(other.mem_), size_(other.size_) {
+  CustomMemory(CustomMemory &&other) noexcept : mem_(other.mem_), size_(other.size_) {
     other.mem_ = nullptr;
     other.size_ = 0;
   }
@@ -80,21 +85,25 @@ public:
  */
 template <typename ReturnType, typename... Args> class WasmExecutable {
 private:
-  ExecutableMemory exec_mem_;
+  CustomMemory exec_mem_;
+  CustomMemory ro_mem_;
   using FuncPtr = ReturnType (*)(Args...);
   FuncPtr func_ptr_;
+  uint8_t *ro_mem_ptr_;
 
 public:
-  explicit WasmExecutable(const std::vector<uint8_t> &machine_code, size_t offset = 0)
-      : exec_mem_(machine_code), func_ptr_(reinterpret_cast<FuncPtr>(static_cast<char *>(exec_mem_.get()) + offset)) {
+  explicit WasmExecutable(const std::vector<uint8_t> &machine_code, const std::vector<uint8_t> &functionTable, size_t offset = 0)
+      : exec_mem_(machine_code), ro_mem_(functionTable, PROT_READ),
+        func_ptr_(reinterpret_cast<FuncPtr>(static_cast<char *>(exec_mem_.get()) + offset)), ro_mem_ptr_(static_cast<uint8_t *>(ro_mem_.get())) {
     if (func_ptr_ == nullptr) {
       throw std::runtime_error("Invalid function pointer");
     }
   }
 
   // Constructor for uint32_t vector
-  explicit WasmExecutable(const std::vector<uint32_t> &machine_code, size_t offset = 0)
-      : exec_mem_(machine_code), func_ptr_(reinterpret_cast<FuncPtr>(static_cast<char *>(exec_mem_.get()) + offset)) {
+  explicit WasmExecutable(const std::vector<uint32_t> &machine_code, const std::vector<uint8_t> &functionTable, size_t offset = 0)
+      : exec_mem_(machine_code), ro_mem_(functionTable, PROT_READ),
+        func_ptr_(reinterpret_cast<FuncPtr>(static_cast<char *>(exec_mem_.get()) + offset)), ro_mem_ptr_(static_cast<uint8_t *>(ro_mem_.get())) {
     if (func_ptr_ == nullptr) {
       throw std::runtime_error("Invalid function pointer");
     }
@@ -122,6 +131,10 @@ public:
   FuncPtr get_function_pointer() const {
     return func_ptr_;
   }
+
+  uint8_t *get_ro_memory_pointer() const {
+    return ro_mem_ptr_;
+  }
 };
 
 /**
@@ -133,12 +146,24 @@ public:
  */
 template <typename ReturnType, typename... Args>
 WasmExecutable<ReturnType, Args...> make_wasm_function(const std::vector<uint8_t> &code, size_t offset = 0) {
-  return WasmExecutable<ReturnType, Args...>(code, offset);
+  auto empty = std::vector<uint8_t>{};
+  return WasmExecutable<ReturnType, Args...>(code, empty, offset);
 }
 
 template <typename ReturnType, typename... Args>
 WasmExecutable<ReturnType, Args...> make_wasm_function(const std::vector<uint32_t> &code, size_t offset = 0) {
-  return WasmExecutable<ReturnType, Args...>(code, offset);
+  auto empty = std::vector<uint8_t>{};
+  return WasmExecutable<ReturnType, Args...>(code, empty, offset);
+}
+
+template <typename ReturnType, typename... Args>
+WasmExecutable<ReturnType, Args...> make_linked_wasm_function(tiny::WasmModule &wasmModule, const std::string &funcName) {
+  const auto &code = wasmModule.getMachinecode();
+  size_t offset = wasmModule.getFunctionOffset(funcName);
+  const auto *functionTable = wasmModule.getFunctionTable();
+
+  auto wasmExecutable = WasmExecutable<ReturnType, Args...>(code, functionTable->data, offset);
+  return wasmExecutable;
 }
 
 } // namespace tiny

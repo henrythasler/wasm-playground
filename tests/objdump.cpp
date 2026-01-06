@@ -92,7 +92,8 @@ TEST(objdump, wasm) {
 
     auto functionTable = wasmModule.getFunctionTable();
     if(functionTable != nullptr) {
-      writer.add_symbol(functionTable->name, functionTable->offset * sizeof(uint32_t), functionTable->size * sizeof(uint8_t), 3);
+      writer.add_rodata(reinterpret_cast<const uint8_t *>(functionTable->data.data()), functionTable->data.size() * sizeof(uint8_t));
+      writer.add_symbol(functionTable->name, functionTable->offset * sizeof(uint32_t), functionTable->data.size() * sizeof(uint8_t), 3);
     }
 
     writer.write_elf(wasmFile + ".o");
