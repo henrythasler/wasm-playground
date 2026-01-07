@@ -180,16 +180,21 @@ WasmExecutable<ReturnType, Args...> make_linked_wasm_function(tiny::WasmModule &
     for (auto patchLocation : wasmFunction->getDataSegmentPatches()) {
       switch (patchLocation.type) {
       case assembler::DataSegmentType::FUNCTION_TABLE: {
-        intptr_t pc = codeAddress + static_cast<intptr_t>(patchLocation.offset * 4);
-        intptr_t delta = fnTableAddress - pc;
+        // FIXME: consider patch location offset
+        uint64_t code_page = (uint64_t)codeAddress & ~0xfffULL;
+        uint64_t target_page = (uint64_t)fnTableAddress & ~0xfffULL;
+        int64_t page_offset = (int64_t)(target_page - code_page);
+        uint32_t low12 = (uint64_t)fnTableAddress & 0xfff;
+
         std::cout << std::hex << "Patching code segment 0x" << codeAddress << " at offset 0x" << patchLocation.offset * 4
-                  << " with function table address at 0x" << fnTableAddress << " (delta: 0x" << delta << ")" << std::dec << std::endl;
+                  << " with function table address at 0x" << fnTableAddress << " (page_offset: 0x" << page_offset << " low12: 0x" << low12 << ")"
+                  << std::dec << std::endl;
         std::cout << std::hex << "  Current ADRP instruction: 0x" << codePtr[patchLocation.offset] << std::dec << std::endl;
-        arm64::patch_adrp(codePtr[patchLocation.offset], delta);
+        arm64::patch_adrp(codePtr[patchLocation.offset], page_offset);
         std::cout << std::hex << "  Patched ADRP instruction: 0x" << codePtr[patchLocation.offset] << std::dec << std::endl;
 
         std::cout << std::hex << "  Current ADD instruction: 0x" << codePtr[patchLocation.offset + 1] << std::dec << std::endl;
-        arm64::patch_add_immediate(codePtr[patchLocation.offset + 1], static_cast<uint16_t>(delta & 0xffff));
+        arm64::patch_add_immediate(codePtr[patchLocation.offset + 1], static_cast<uint16_t>(low12));
         std::cout << std::hex << "  Patched ADD instruction: 0x" << codePtr[patchLocation.offset + 1] << std::dec << std::endl;
 
         std::cout << std::hex << "  Table[0]: " << reinterpret_cast<uint32_t *>(fnTableAddress)[0] << std::dec << std::endl;

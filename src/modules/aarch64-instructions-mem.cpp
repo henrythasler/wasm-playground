@@ -86,6 +86,34 @@ uint32_t encode_str_unsigned_offset(reg_t rt, reg_t rn, uint16_t imm12, reg_size
   return instr;
 }
 
+uint32_t encode_ldr_register(reg_t rt, reg_t rn, reg_t rm, signed_variant_t variant, reg_size_t size) {
+  uint32_t instr = 0;
+
+  // Base opcode for STR unsigned offset
+  switch (size) {
+  case reg_size_t::SIZE_8BIT: // LDRB
+    instr = 0x38607800;
+    break;
+  // case reg_size_t::SIZE_16BIT: // LDRH
+  //   instr = 0x79000000;
+  //   break;
+  // case reg_size_t::SIZE_32BIT: // LDRW
+  //   instr = 0xB9000000;
+  //   break;
+  // case reg_size_t::SIZE_64BIT: // LDR
+  //   instr = 0xF9000000;
+  //   break;
+  default:
+    asserte(false, "encode_ldr_register(): invalid size value");
+    break;
+  }
+  instr |= (rm & 0x1F) << 16; // Rm (offset register)
+  instr |= (rn & 0x1F) << 5;  // Rn (base register)
+  instr |= (rt & 0x1F);       // Rt (source register)
+
+  return instr;
+}
+
 /**
  * This instruction calculates an address from a base register value and an immediate offset, and stores two 32-bit words or two 64-bit doublewords to
  * the calculated address, from two registers.
