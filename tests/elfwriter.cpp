@@ -14,11 +14,12 @@ void ELFWriter::add_rodata(const uint8_t *data_bytes, size_t size) {
   rodata.insert(rodata.end(), data_bytes, data_bytes + size);
 }
 
-void ELFWriter::add_symbol(const std::string &name, uint64_t offset, uint64_t size, int section) {
+void ELFWriter::add_symbol(const std::string &name, uint64_t offset, uint64_t size, int section, int type) {
   symbol_names.push_back(name);
   symbol_offsets.push_back(offset);
   symbol_sizes.push_back(size);
   symbol_sections.push_back(section); // section: 1=.text, 2=.data, 3=.rodata
+  symbol_types.push_back(type); // STT_NOTYPE || STT_OBJECT || STT_FUNC || ...
 }
 
 void ELFWriter::write_elf(std::string filename) {
@@ -131,10 +132,8 @@ std::vector<Elf64_Sym> ELFWriter::build_symbol_table(const std::vector<uint8_t> 
     Elf64_Sym sym = {};
     sym.st_name = str_offset;
 
-    int section = symbol_sections[i];
-    bool is_func = (section == 1); // .text = function
-    sym.st_info = ELF64_ST_INFO(STB_GLOBAL, is_func ? STT_FUNC : STT_OBJECT);
-    sym.st_shndx = section; // Section index
+    sym.st_info = ELF64_ST_INFO(STB_GLOBAL, symbol_types.at(i));
+    sym.st_shndx = symbol_sections.at(i); // Section index
     sym.st_value = symbol_offsets[i];
     sym.st_size = symbol_sizes[i];
     symtab.push_back(sym);

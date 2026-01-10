@@ -9,7 +9,8 @@ public:
   size_t offset = 0;
   size_t size = 0;
   std::string name;
-  std::vector<uint8_t> data;
+  std::vector<uint8_t> entries;
+  std::vector<uint64_t> functionOffset;
 
   FunctionTable() = default;
   ~FunctionTable() = default;

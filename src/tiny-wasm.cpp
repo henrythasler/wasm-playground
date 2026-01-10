@@ -99,7 +99,7 @@ int main(int argc, char const *argv[]) {
       // auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t, wasm::wasm_i32_t, wasm::wasm_i32_t>(
       //     machinecode, wasmModule->getFunctionOffset(function->getName()));
       auto wasmFunction =
-          tiny::make_linked_wasm_function<wasm::wasm_i32_t, wasm::wasm_i32_t, wasm::wasm_i32_t, wasm::wasm_i32_t>(*wasmModule, function->getName());
+          tiny::make_wasm_function<wasm::wasm_i32_t, wasm::wasm_i32_t, wasm::wasm_i32_t, wasm::wasm_i32_t>(*wasmModule, function->getName());
       try {
         auto res = wasmFunction.call(3, 10, 20);
         std::cout << res << " ";

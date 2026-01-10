@@ -2,7 +2,7 @@
 
 namespace tiny {
 
-void CustomMemory::allocate_and_copy(const uint8_t *data, size_t byte_size, int mode) {
+void CustomMemory::allocate_and_copy(const uint8_t *data, size_t byte_size, int protectionMode) {
   asserte(byte_size > 0, "Cannot allocate zero-sized memory");
 
   // Allocate writable memory
@@ -16,7 +16,7 @@ void CustomMemory::allocate_and_copy(const uint8_t *data, size_t byte_size, int 
   __builtin___clear_cache(mem_, static_cast<char *>(mem_) + byte_size);
 
   // Set final permissions (e.g. remove write permission for W^X compliance)
-  if (mprotect(mem_, byte_size, mode) != 0) {
+  if (mprotect(mem_, byte_size, protectionMode) != 0) {
     munmap(mem_, byte_size);
     asserte(false, "mprotect failed: " + std::string(strerror(errno)));
   }

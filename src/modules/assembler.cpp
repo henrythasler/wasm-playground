@@ -182,7 +182,7 @@ void restoreRegisters(RegisterPool &registerPool, std::vector<uint32_t> &machine
 void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vector<uint8_t>::const_iterator streamEnd, Variables &locals,
                         RegisterPool &registerPool, std::vector<ControlBlock> &controlStack, std::vector<arm64::reg_t> &stack,
                         const std::map<wasm::trap_code_t, int32_t> &trapHandler, std::vector<FunctionCallPatchLocation> &functionCallPatchLocations,
-                        std::vector<DataSegmentPatchLocation> &dataSegmentPatches, webassembly_t::type_section_t *type_section,
+                        std::vector<LoadAddressPatchLocation> &loadAddressPatches, webassembly_t::type_section_t *type_section,
                         webassembly_t::function_section_t *function_section, FunctionTable *functionTable, std::vector<uint32_t> &machinecode) {
   while (stream != streamEnd) {
     switch (*stream++) {
@@ -753,12 +753,12 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
         stack.pop_back();
         auto functionidx = registerPool.allocateRegister();
 
-        dataSegmentPatches.push_back(DataSegmentPatchLocation{machinecode.size(), DataSegmentType::FUNCTION_TABLE});
+        loadAddressPatches.push_back(LoadAddressPatchLocation{machinecode.size(), DataSegmentType::FUNCTION_TABLE});
         machinecode.push_back(arm64::encode_adrp(functionidx, 0));
         machinecode.push_back(arm64::encode_add_immediate(functionidx, functionidx, 0, false, arm64::reg_size_t::SIZE_64BIT));
         machinecode.push_back(
             arm64::encode_ldr_register(functionidx, functionidx, tableidx, arm64::signed_variant_t::UNSIGNED, arm64::reg_size_t::SIZE_8BIT));
-        // machinecode.push_back(arm64::encode_ldr_unsigned_offset(functionidx, functionidx, 0, arm64::reg_size_t::SIZE_8BIT));
+        machinecode.push_back(arm64::encode_branch_link_register(functionidx));
 
         registerPool.freeRegister(tableidx);
         stack.emplace_back(functionidx);

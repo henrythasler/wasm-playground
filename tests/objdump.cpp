@@ -18,7 +18,7 @@ void writer_test() {
     };
     
     writer.add_code(reinterpret_cast<uint8_t*>(code), sizeof(code));
-    writer.add_symbol("my_function", 0, sizeof(code), 1);  // section 1 = .text
+    writer.add_symbol("my_function", 0, sizeof(code), 1, STT_FUNC);  // section 1 = .text
     
     // Add literal pool to .rodata
     // The LDR above will read this value
@@ -27,7 +27,7 @@ void writer_test() {
     };
     
     writer.add_rodata(reinterpret_cast<uint8_t*>(literals), sizeof(literals));
-    writer.add_symbol("literal_pool", 0, sizeof(literals), 3);  // section 3 = .rodata
+    writer.add_symbol("literal_pool", 0, sizeof(literals), 3, STT_OBJECT);  // section 3 = .rodata
     
     // Add another function
     uint32_t code2[] = {
@@ -36,7 +36,7 @@ void writer_test() {
     };
     
     writer.add_code(reinterpret_cast<uint8_t*>(code2), sizeof(code2));
-    writer.add_symbol("another_function", sizeof(code), sizeof(code2), 1);
+    writer.add_symbol("another_function", sizeof(code), sizeof(code2), 1, STT_FUNC);
     
     // Add regular data section
     uint64_t data_values[] = {
@@ -45,7 +45,7 @@ void writer_test() {
     };
     
     writer.add_data(reinterpret_cast<uint8_t*>(data_values), sizeof(data_values));
-    writer.add_symbol("my_data_array", 0, sizeof(data_values), 2);  // section 2 = .data
+    writer.add_symbol("my_data_array", 0, sizeof(data_values), 2, STT_OBJECT);  // section 2 = .data
     
     writer.write_elf("jit_output.o");
 }
@@ -63,13 +63,13 @@ TEST(objdump, wasm) {
     writer.add_code(reinterpret_cast<const uint8_t *>(machinecode.data()), machinecode.size() * sizeof(uint32_t));
 
     for (auto builtin : wasmModule.getBuiltins()) {
-      writer.add_symbol(builtin->name, builtin->machinecodeOffset, builtin->machinecodeSize * sizeof(uint32_t));
+      writer.add_symbol(builtin->name, builtin->machinecodeOffset, builtin->machinecodeSize * sizeof(uint32_t), 1, STT_FUNC);
     }
 
     int functionIndex = 0;
     for (auto function : wasmModule.getWasmFunctions()) {
       auto name = function->getName().empty() ? "func_" + std::to_string(functionIndex) : function->getName();
-      writer.add_symbol(name, function->getMachinecodeOffset() * sizeof(uint32_t), function->getMachinecodeSize() * sizeof(uint32_t));
+      writer.add_symbol(name, function->getMachinecodeOffset() * sizeof(uint32_t), function->getMachinecodeSize() * sizeof(uint32_t), 1, STT_FUNC);
       functionIndex++;
     }
 
@@ -92,8 +92,13 @@ TEST(objdump, wasm) {
 
     auto functionTable = wasmModule.getFunctionTable();
     if(functionTable != nullptr) {
-      writer.add_rodata(reinterpret_cast<const uint8_t *>(functionTable->data.data()), functionTable->data.size() * sizeof(uint8_t));
-      writer.add_symbol(functionTable->name, functionTable->offset * sizeof(uint32_t), functionTable->data.size() * sizeof(uint8_t), 3);
+      // adds function table as .data section
+      // writer.add_rodata(reinterpret_cast<const uint8_t *>(functionTable->data.data()), functionTable->data.size() * sizeof(uint8_t));
+      // writer.add_symbol(functionTable->name, functionTable->offset * sizeof(uint32_t), functionTable->data.size() * sizeof(uint8_t), 3);
+
+      // adds function table as .text section
+      writer.add_code(reinterpret_cast<const uint8_t *>(functionTable->functionOffset.data()), functionTable->functionOffset.size() * sizeof(uint64_t));
+      writer.add_symbol(functionTable->name, functionTable->offset, functionTable->functionOffset.size() * sizeof(uint64_t), 1, STT_NOTYPE);
     }
 
     writer.write_elf(wasmFile + ".o");

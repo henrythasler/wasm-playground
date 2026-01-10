@@ -101,10 +101,15 @@ struct FunctionCallPatchLocation {
   uint32_t funcidx; // index of the function being called
 };
 
+struct IndirectFunctionCallPatchLocation {
+  size_t offset;    // offset in machinecode where the call instruction is located
+  uint32_t funcidx; // index of the function being called
+};
+
 enum DataSegmentType { FUNCTION_TABLE };
 
-struct DataSegmentPatchLocation {
-  size_t offset; // offset in machinecode where the data segment load instruction is located
+struct LoadAddressPatchLocation {
+  size_t offset; // offset in machinecode where the ADRP-ADD pair is located
   DataSegmentType type;
 };
 
@@ -141,6 +146,6 @@ inline int32_t getTraphandlerOffset(wasm::trap_code_t trapCode, const std::map<w
 void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vector<uint8_t>::const_iterator streamEnd, Variables &locals,
                         RegisterPool &registerPool, std::vector<ControlBlock> &controlStack, std::vector<arm64::reg_t> &stack,
                         const std::map<wasm::trap_code_t, int32_t> &trapHandler, std::vector<FunctionCallPatchLocation> &functionCallPatchLocations,
-                        std::vector<DataSegmentPatchLocation> &dataSegmentPatches, webassembly_t::type_section_t *type_section,
+                        std::vector<LoadAddressPatchLocation> &loadAddressPatches, webassembly_t::type_section_t *type_section,
                         webassembly_t::function_section_t *function_section, FunctionTable *functionTable, std::vector<uint32_t> &machinecode);
 } // namespace assembler

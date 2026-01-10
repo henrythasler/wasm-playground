@@ -17,12 +17,13 @@ private:
   std::vector<uint64_t> symbol_offsets;
   std::vector<uint64_t> symbol_sizes;
   std::vector<int> symbol_sections;  // 1=.text, 2=.data, 3=.rodata
+  std::vector<int> symbol_types;
 
 public:
   void add_code(const uint8_t *data, size_t size);
   void add_data(const uint8_t *data_bytes, size_t size);
   void add_rodata(const uint8_t *data_bytes, size_t size);
-  void add_symbol(const std::string &name, uint64_t offset, uint64_t size, int section = 1);
+  void add_symbol(const std::string &name, uint64_t offset, uint64_t size, int section, int type);
   void write_elf(std::string filename);
 
 private:
