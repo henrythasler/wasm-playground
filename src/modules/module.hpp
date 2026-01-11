@@ -21,6 +21,7 @@ private:
   std::vector<Builtin *> builtins;
   std::vector<WasmFunction *> wasmFunctions;
   std::vector<uint32_t> machinecode;
+  std::vector<uint32_t> linkedMachinecode;
   assembler::FunctionTable *functionTable = nullptr;
 
   template <typename Derived, typename Base>
@@ -51,9 +52,11 @@ public:
     return machinecode;
   }
 
-  std::vector<uint32_t> &getMutableMachinecode() {
-    return machinecode;
-  }
+  const std::vector<uint32_t> &linkMachinecode() const;
+
+  // std::vector<uint32_t> &getMutableMachinecode() {
+  //   return machinecode;
+  // }
 
   const assembler::FunctionTable *getFunctionTable() const {
     return functionTable;

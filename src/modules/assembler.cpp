@@ -745,7 +745,7 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
         // use subs_immediate to substract (static) table size from 'tableidx' register
         // branch_cond over next instruction if result is >= 0; otherwise jump to trap handler from table index out of bounds
         machinecode.push_back(
-            arm64::encode_cmp_immediate(tableidx, static_cast<uint32_t>(functionTable->size), false, arm64::reg_size_t::SIZE_64BIT));
+            arm64::encode_cmp_immediate(tableidx, static_cast<uint32_t>(functionTable->entries.size()), false, arm64::reg_size_t::SIZE_64BIT));
         machinecode.push_back(arm64::encode_branch_cond(arm64::branch_condition_t::GE,
                                                         getTraphandlerOffset(wasm::trap_code_t::TableOutOfBounds, trapHandler, machinecode)));
 
@@ -758,7 +758,7 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
         machinecode.push_back(arm64::encode_add_immediate(functionidx, functionidx, 0, false, arm64::reg_size_t::SIZE_64BIT));
         machinecode.push_back(
             arm64::encode_ldr_register(functionidx, functionidx, tableidx, arm64::signed_variant_t::UNSIGNED, arm64::reg_size_t::SIZE_8BIT));
-        machinecode.push_back(arm64::encode_branch_link_register(functionidx));
+        // machinecode.push_back(arm64::encode_branch_link_register(functionidx));
 
         registerPool.freeRegister(tableidx);
         stack.emplace_back(functionidx);

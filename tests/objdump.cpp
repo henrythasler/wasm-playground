@@ -57,7 +57,8 @@ TEST(objdump, wasm) {
 
   for (const auto &wasmFile : wasmFiles) {
     auto wasmModule = helper::loadModule(wasmFile + ".wasm");
-    std::vector<uint32_t> machinecode = wasmModule.getMachinecode();
+    // std::vector<uint32_t> machinecode = wasmModule.getMachinecode();
+    const auto &machinecode = wasmModule.linkMachinecode();
 
     ELFWriter::ELFWriter writer;
     writer.add_code(reinterpret_cast<const uint8_t *>(machinecode.data()), machinecode.size() * sizeof(uint32_t));
@@ -97,8 +98,13 @@ TEST(objdump, wasm) {
       // writer.add_symbol(functionTable->name, functionTable->offset * sizeof(uint32_t), functionTable->data.size() * sizeof(uint8_t), 3);
 
       // adds function table as .text section
-      writer.add_code(reinterpret_cast<const uint8_t *>(functionTable->functionOffset.data()), functionTable->functionOffset.size() * sizeof(uint64_t));
-      writer.add_symbol(functionTable->name, functionTable->offset, functionTable->functionOffset.size() * sizeof(uint64_t), 1, STT_NOTYPE);
+      // std::vector<uint32_t> functionOffset;
+      // for (const auto &entry : functionTable->entries) {
+      //   functionOffset.push_back(entry.offset);
+      // }
+
+      // writer.add_code(reinterpret_cast<const uint8_t *>(functionOffset.data()), functionOffset.size() * sizeof(uint32_t));
+      writer.add_symbol(functionTable->name, functionTable->offset * sizeof(uint32_t), functionTable->entries.size() * sizeof(uint32_t), 1, STT_NOTYPE);
     }
 
     writer.write_elf(wasmFile + ".o");

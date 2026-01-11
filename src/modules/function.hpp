@@ -83,7 +83,7 @@ public:
     return functionCallPatches;
   }
 
-  const std::vector<assembler::LoadAddressPatchLocation> &getDataSegmentPatches() const {
+  const std::vector<assembler::LoadAddressPatchLocation> &getLoadAddressPatches() const {
     return loadAddressPatches;
   }
 };

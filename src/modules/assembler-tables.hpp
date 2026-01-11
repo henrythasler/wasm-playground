@@ -3,14 +3,18 @@
 #include "webassembly.h"
 
 namespace assembler {
+
+struct FunctionTableEntry {
+  uint32_t index;
+  uint32_t offset;
+};
+
 class FunctionTable {
 private:
 public:
   size_t offset = 0;
-  size_t size = 0;
   std::string name;
-  std::vector<uint8_t> entries;
-  std::vector<uint64_t> functionOffset;
+  std::vector<FunctionTableEntry> entries;
 
   FunctionTable() = default;
   ~FunctionTable() = default;

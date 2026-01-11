@@ -106,8 +106,7 @@ void WasmModule::compileModule() {
     auto limits = table.limits();
     asserte(limits->min()->value() < 0xff, "Function table size > 254: " + std::to_string(limits->min()->value()));
     for (auto i = 0; i < limits->min()->value(); i++) {
-      this->functionTable->entries.push_back(0xff);
-      this->functionTable->functionOffset.push_back(0); // placaholder locations will be patched later
+      this->functionTable->entries.push_back({0xff, static_cast<uint32_t>(-1)});
     }
 
     // initialize function table with element section
@@ -116,16 +115,10 @@ void WasmModule::compileModule() {
     for (int32_t i = 0; i < element.num_init()->value(); i++) {
       auto value = element.init_vec()->at(i)->value();
       asserte(value < 0xff, "Function index in table >254: " + std::to_string(value));
-      this->functionTable->entries.at(i) = static_cast<uint8_t>(value);
+      this->functionTable->entries.at(i).index = static_cast<uint8_t>(value);
     }
 
-    this->functionTable->size = this->functionTable->entries.size();
     this->functionTable->name = "function_table";
-
-    // insert padding to align to 8 bytes
-    while (this->functionTable->entries.size() % 8 != 0) {
-      this->functionTable->entries.push_back(0xff);
-    }
   }
 
   // Compile each function in the code section
@@ -166,7 +159,44 @@ void WasmModule::linkModule() {
               "linkModule(): patch location out of bounds in '" + wasmFunction->getName() + "()': 0x" + message.str());
       arm64::patch_branch_link(machinecode[patchLocation], targetFunctionOffset);
     }
+
+    if (this->functionTable != nullptr) {
+      for (size_t j = 0; j < this->functionTable->entries.size(); j++) {
+        if (this->functionTable->entries.at(j).index == 0xff)
+          continue;
+
+        this->functionTable->entries.at(j).offset =
+            wasmFunctions.at(this->functionTable->entries.at(j).index)->getMachinecodeOffset() * sizeof(uint32_t);
+      }
+    }
+
+    for (auto loadAddressPatch : wasmFunction->getLoadAddressPatches()) {
+      int32_t patchLocation = loadAddressPatch.offset;
+
+      uint64_t code_page = (uint64_t)(patchLocation * sizeof(uint32_t)) & ~0xfffULL;
+      uint64_t target_page = (uint64_t)(this->functionTable->offset * sizeof(uint32_t)) & ~0xfffULL;
+      int64_t page_offset = (int64_t)(target_page - code_page);
+
+      uint32_t low12 = (uint64_t)(this->functionTable->offset * sizeof(uint32_t)) & 0xfff;
+
+      arm64::patch_adrp(machinecode[patchLocation], page_offset);
+      arm64::patch_add_immediate(machinecode[patchLocation + 1], static_cast<uint16_t>(low12));
+    }
   }
+}
+
+const std::vector<uint32_t> &WasmModule::linkMachinecode() const {
+  auto &linkedCode = const_cast<std::vector<uint32_t> &>(linkedMachinecode);
+  linkedCode.insert(linkedCode.end(), machinecode.begin(), machinecode.end());
+
+  if (functionTable != nullptr) {
+    std::vector<uint32_t> jumpTable;
+    for (const auto &entry : functionTable->entries) {
+      jumpTable.push_back(entry.offset);
+    }
+    linkedCode.insert(linkedCode.end(), jumpTable.begin(), jumpTable.end());
+  }
+  return linkedMachinecode;
 }
 
 } // namespace tiny
