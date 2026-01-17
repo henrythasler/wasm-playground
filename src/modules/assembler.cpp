@@ -753,11 +753,23 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
         stack.pop_back();
         auto functionidx = registerPool.allocateRegister();
 
-        loadAddressPatches.push_back(LoadAddressPatchLocation{machinecode.size(), DataSegmentType::FUNCTION_TABLE});
-        machinecode.push_back(arm64::encode_adrp(functionidx, 0));
-        machinecode.push_back(arm64::encode_add_immediate(functionidx, functionidx, 0, false, arm64::reg_size_t::SIZE_64BIT));
-        machinecode.push_back(
-            arm64::encode_ldr_register(functionidx, functionidx, tableidx, arm64::signed_variant_t::UNSIGNED, arm64::reg_size_t::SIZE_8BIT));
+        // load base address of module's JIT area
+        
+
+
+        // machinecode.push_back(arm64::encode_adrp(functionidx, reinterpret_cast<uint64_t>(&executableMemoryAddress)));
+        // machinecode.push_back(arm64::encode_add_immediate(functionidx, functionidx, reinterpret_cast<uint64_t>(&executableMemoryAddress), false,
+        //                                                   arm64::reg_size_t::SIZE_64BIT));
+        // machinecode.push_back(arm64::encode_ldr_unsigned_offset(functionidx, functionidx, 0, arm64::reg_size_t::SIZE_64BIT));
+
+        // std::cout << std::hex << "executableMemoryAddress: content=0x" << executableMemoryAddress << " location=0x" << &executableMemoryAddress
+        //           << std::dec << std::endl;
+
+        // loadAddressPatches.push_back(LoadAddressPatchLocation{machinecode.size(), DataSegmentType::FUNCTION_TABLE});
+        // machinecode.push_back(arm64::encode_adrp(functionidx, 0));
+        // machinecode.push_back(arm64::encode_add_immediate(functionidx, functionidx, 0, false, arm64::reg_size_t::SIZE_64BIT));
+        // machinecode.push_back(
+        //     arm64::encode_ldr_register(functionidx, functionidx, tableidx, arm64::signed_variant_t::UNSIGNED, arm64::reg_size_t::SIZE_8BIT));
         // machinecode.push_back(arm64::encode_branch_link_register(functionidx));
 
         registerPool.freeRegister(tableidx);

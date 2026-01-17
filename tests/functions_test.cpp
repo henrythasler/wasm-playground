@@ -34,6 +34,7 @@ TEST(functions, save_regs) {
 TEST(functions_indirect, calculate) {
   auto wasmModule = helper::loadModule("functions_indirect.wasm");
   auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t, wasm::wasm_i32_t, wasm::wasm_i32_t, wasm::wasm_i32_t>(wasmModule, "calculate");
+  // std::cout << std::hex << "executableMemoryAddress: content=" << executableMemoryAddress << " location" << &executableMemoryAddress << std::endl;
 
   // EXPECT_EQ(wasmFunction(0, 10, 20), 2);
 }

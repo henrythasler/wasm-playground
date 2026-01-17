@@ -217,6 +217,15 @@ TEST(instruction, ret) {
   EXPECT_EQ_HEX(encode_ret(X8), 0xD65F0100);
 }
 
+TEST(instruction, ardp) {
+  // adrp x0, #0
+  EXPECT_EQ_HEX(encode_adrp(X0, 0), 0x90000000);
+  // adrp x1, #0x12345000
+  EXPECT_EQ_HEX(encode_adrp(X1, 0x12345000), 0xB0091A21);
+  // adrp x15, #0xffffffffFFFFF000
+  EXPECT_EQ_HEX(encode_adrp(X15, 0xffffffffFFFFF000), 0xF0FFFFEF);
+}
+
 TEST(instruction, misc) {
   // nop
   EXPECT_EQ_HEX(encode_nop(), 0xD503201F);

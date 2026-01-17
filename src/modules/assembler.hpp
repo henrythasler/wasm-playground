@@ -18,6 +18,9 @@
 // Global jmp_buf for trap handling
 extern jmp_buf g_jmpbuf;
 
+// Global variable to hold the base address for JIT-compiled code
+static uint64_t executableMemoryAddress = 0;
+
 namespace assembler {
 class RegisterPool {
 private:

@@ -16,7 +16,7 @@ uint32_t encode_stp(reg_t rt1, reg_t rt2, reg_t rn, int16_t imm7, addressing_mod
 uint32_t encode_ldp(reg_t rt1, reg_t rt2, reg_t rn, int16_t imm7, addressing_mode_t mode, reg_size_t size);
 
 /** memory page instructions */
-uint32_t encode_adrp(reg_t rd, intptr_t address);
-void patch_adrp(uint32_t &offset, intptr_t address);
+uint32_t encode_adrp(reg_t rd, uint64_t address);
+void patch_adrp(uint32_t &offset, uint64_t address);
 
 } // namespace arm64

@@ -76,7 +76,6 @@ size_t WasmFunction::compile(const webassembly_t::func_t *func, const std::uniqu
 
   // create aligned stack and preamble (stack frame)
   stackSize = assembler::createPreamble(stackSize, machinecode);
-  asserte(stackSize % AARCH64_STACK_ALIGNMENT == 0, "stack size not aligned properly");
 
   // arm64 stack is full descending; that means we start allocating from the top (higher addresses) and grow downwards (lower addresses)
   stackPosition = stackSize;

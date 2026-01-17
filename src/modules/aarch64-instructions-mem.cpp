@@ -171,7 +171,7 @@ uint32_t encode_ldp(reg_t rt1, reg_t rt2, reg_t rn, int16_t imm7, addressing_mod
  * @param address Is the program label whose 4KB page address is to be calculated.
  * @return the encoded instruction
  */
-uint32_t encode_adrp(reg_t rd, intptr_t address) {
+uint32_t encode_adrp(reg_t rd, uint64_t address) {
   uint32_t instr = 0x90000000;
 
   auto imm = address >> 12;               // Shift right by 12 to get the page number
@@ -182,7 +182,7 @@ uint32_t encode_adrp(reg_t rd, intptr_t address) {
   return instr;
 }
 
-void patch_adrp(uint32_t &offset, intptr_t address) {
+void patch_adrp(uint32_t &offset, uint64_t address) {
   auto imm = address >> 12;                // Shift right by 12 to get the page number
   offset &= 0x9F00001F;                    // clear existing values
   offset |= (imm & 0x3) << 29;             // immlo
