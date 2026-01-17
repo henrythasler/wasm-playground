@@ -17,12 +17,15 @@
     local.get 0
     i32.mul
   )
-  
+
+  (func $nop
+  )
+
   ;; Create a table with 5 slots
   (table $funcTable 5 funcref)
   
   ;; Populate the table: put function references at specific indices
-  (elem (i32.const 0) $add $multiply $square)
+  (elem (i32.const 0) $add $multiply $square $nop)
   ;; This puts:
   ;; - $add at index 0
   ;; - $multiply at index 1

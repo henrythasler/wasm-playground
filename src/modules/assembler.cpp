@@ -328,16 +328,7 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
         auto constValue = decoder::LEB128Decoder::decodeSigned(stream, streamEnd); // n
         auto reg = registerPool.allocateRegister();
         stack.emplace_back(reg);
-
-        auto chunkLimit = (registerSize == arm64::reg_size_t::SIZE_32BIT) ? 2 : 4;
-        for (uint8_t i = 0; i < chunkLimit; i++) {
-          uint16_t chunk = uint16_t((constValue >> (i << 4)) & 0xFFFF);
-          if (i == 0) {
-            machinecode.push_back(arm64::encode_mov_immediate(reg, chunk, 0, registerSize));
-          } else if (chunk != 0) {
-            machinecode.push_back(arm64::encode_movk(reg, chunk, i << 4, registerSize));
-          }
-        }
+        arm64::emit_mov_large_immediate(reg, uint64_t(constValue), registerSize, machinecode);
         break;
       }
     case 0x1A:
@@ -731,19 +722,32 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
     case 0x11:
       /** call_indirect */
       {
+        // get the type index that is encoded with the call_indirect instruction
         auto typeidx = uint32_t(decoder::LEB128Decoder::decodeUnsigned(stream, streamEnd));
-        auto nullByte = *stream++;
 
+        // skip reserved byte
+        *stream++;
+
+        // verify that we have a valid type index that is within bounds of the type section
         asserte(typeidx < type_section->functypes()->size(), "typeidx out of bounds in call_indirect");
+
+        // get expected function type and signature from type section
         const auto &expectedFuncType = type_section->functypes()->at(static_cast<size_t>(typeidx));
         auto expectedParameterTypes = *expectedFuncType->parameters()->valtype();
+        auto expectedResultType = expectedFuncType->results()->valtype();
+
+        // check that we do not exceed the maximum number of supported parameters
         asserte(expectedParameterTypes.size() <= 8, "function calls with more than 8 parameters are not supported");
 
-        // get table index from top of stack
+        // check that we do not have more than one return value
+        asserte(expectedResultType->size() <= 1, "functions with more than one return value are not supported");
+
+        // ensure that we have enough operands on the stack for the table index
         asserte(stack.size() >= 1, "insufficient operands on stack for call_indirect");
+        // get table index from top of stack
         auto tableidx = stack.back();
 
-        // check that the value in register 'tableidx' is smaller than the size of the table
+        // emit runtime check that the value in register 'tableidx' is smaller than the size of the table
         // use subs_immediate to substract (static) table size from 'tableidx' register
         // branch_cond over next instruction if result is >= 0; otherwise jump to trap handler from table index out of bounds
         machinecode.push_back(
@@ -751,41 +755,42 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
         machinecode.push_back(arm64::encode_branch_cond(arm64::branch_condition_t::GE,
                                                         getTraphandlerOffset(wasm::trap_code_t::TableOutOfBounds, trapHandler, machinecode)));
 
-        // load actual function index from function table into 'functionidx' register
+        // discard table index
         stack.pop_back();
-        auto functionidx = registerPool.allocateRegister();
 
+        // allocate a register to hold the function index which we will load from the function table
+        auto functionidxReg = registerPool.allocateRegister();
+
+        // record location for load address patching
         loadAddressPatches.push_back(LoadAddressPatchLocation{machinecode.size(), DataSegmentType::FUNCTION_TABLE});
-        // load function index from function_table using the tableidx register as offset
-        machinecode.push_back(arm64::encode_adrp(functionidx, 0));
-        machinecode.push_back(arm64::encode_add_immediate(functionidx, functionidx, 0, false, arm64::reg_size_t::SIZE_64BIT));
-        machinecode.push_back(
-            arm64::encode_ldr_register(functionidx, functionidx, tableidx, arm64::index_extend_type_t::INDEX_LSL, 2, arm64::reg_size_t::SIZE_32BIT));
 
+        // load function index from function_table using the tableidx register as offset
+        machinecode.push_back(arm64::encode_adrp(functionidxReg, 0));
+        machinecode.push_back(arm64::encode_add_immediate(functionidxReg, functionidxReg, 0, false, arm64::reg_size_t::SIZE_64BIT));
+        machinecode.push_back(arm64::encode_ldr_register(functionidxReg, functionidxReg, tableidx, arm64::index_extend_type_t::INDEX_LSL, 2,
+                                                         arm64::reg_size_t::SIZE_32BIT));
+
+        // free tableidx register
         registerPool.freeRegister(tableidx);
 
-        auto baseAddress = registerPool.allocateRegister();
+        // allocate a register to hold the base address of the executable memory
+        auto baseAddressReg = registerPool.allocateRegister();
 
-        // encode base address location using movk instructions
+        // encode base address location to be loaded from global variable using mov/movk instructions
         auto absoluteAddress = reinterpret_cast<std::uintptr_t>(executableMemoryAddressPtr);
-        for (uint8_t i = 0; i < 4; i++) {
-          uint16_t chunk = uint16_t((absoluteAddress >> (i << 4)) & 0xFFFF);
-          if (i == 0) {
-            machinecode.push_back(arm64::encode_mov_immediate(baseAddress, chunk, 0, arm64::reg_size_t::SIZE_64BIT));
-          } else if (chunk != 0) {
-            machinecode.push_back(arm64::encode_movk(baseAddress, chunk, i << 4, arm64::reg_size_t::SIZE_64BIT));
-          }
-        }
-        machinecode.push_back(arm64::encode_ldr_register(baseAddress, baseAddress, arm64::reg_t::XZR, arm64::index_extend_type_t::INDEX_LSL, 0,
+        arm64::emit_mov_large_immediate(baseAddressReg, uint64_t(absoluteAddress), arm64::reg_size_t::SIZE_64BIT, machinecode);
+
+        // load base address of executable memory from pointer
+        machinecode.push_back(arm64::encode_ldr_register(baseAddressReg, baseAddressReg, arm64::reg_t::XZR, arm64::index_extend_type_t::INDEX_LSL, 0,
                                                          arm64::reg_size_t::SIZE_64BIT));
 
-        // add base address of executable memory to function index to get actual function address
-        machinecode.push_back(
-            arm64::encode_add_register(functionidx, baseAddress, functionidx, 0, arm64::reg_shift_t::SHIFT_LSL, arm64::reg_size_t::SIZE_64BIT));
-        registerPool.freeRegister(baseAddress);
+        // add base address of executable memory to function index to get actual function address to call
+        machinecode.push_back(arm64::encode_add_register(functionidxReg, baseAddressReg, functionidxReg, 0, arm64::reg_shift_t::SHIFT_LSL,
+                                                         arm64::reg_size_t::SIZE_64BIT));
+        registerPool.freeRegister(baseAddressReg);
 
-        std::cout << std::hex << "executableMemoryAddress: content=0x" << executableMemoryAddress << " location=0x" << executableMemoryAddressPtr
-                  << std::dec << std::endl;
+        // std::cout << std::hex << "executableMemoryAddress: content=0x" << executableMemoryAddress << " location=0x" << executableMemoryAddressPtr
+        //           << std::dec << std::endl;
 
         // move parameters into argument registers
         auto targetRegisterNum = expectedParameterTypes.size() - 1;
@@ -799,14 +804,15 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
         }
 
         // branch to function via branch link register
-        machinecode.push_back(arm64::encode_branch_link_register(functionidx));
-        registerPool.freeRegister(functionidx);
+        machinecode.push_back(arm64::encode_branch_link_register(functionidxReg));
+        registerPool.freeRegister(functionidxReg);
 
         // push return value onto stack
-        auto reg = registerPool.allocateRegister();
-        machinecode.push_back(arm64::encode_mov_register(reg, arm64::X0, arm64::reg_size_t::SIZE_64BIT));
-        stack.emplace_back(reg);
-
+        if (expectedResultType->size() > 0) {
+          auto result = registerPool.allocateRegister();
+          machinecode.push_back(arm64::encode_mov_register(result, arm64::X0, arm64::reg_size_t::SIZE_64BIT));
+          stack.emplace_back(result);
+        }
         break;
       }
     case 0x00:

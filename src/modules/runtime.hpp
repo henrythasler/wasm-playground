@@ -120,8 +120,8 @@ public:
       return func_ptr_(args...);
     } else {
       // Returned via longjmp - handle the error
-      std::error_code ec(int32_t(trap_code), std::generic_category());
-      throw std::system_error(ec, wasm::trapCodeToString(trap_code));
+      std::error_code ec = make_trap_error(trap_code);
+      throw std::system_error(ec);
     }
   }
 
