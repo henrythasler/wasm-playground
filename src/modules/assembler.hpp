@@ -19,7 +19,8 @@
 extern jmp_buf g_jmpbuf;
 
 // Global variable to hold the base address for JIT-compiled code
-static uint64_t executableMemoryAddress = 0;
+extern uint64_t executableMemoryAddress;
+extern uint64_t *executableMemoryAddressPtr;
 
 namespace assembler {
 class RegisterPool {

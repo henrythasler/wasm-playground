@@ -86,23 +86,37 @@ uint32_t encode_str_unsigned_offset(reg_t rt, reg_t rn, uint16_t imm12, reg_size
   return instr;
 }
 
-uint32_t encode_ldr_register(reg_t rt, reg_t rn, reg_t rm, signed_variant_t variant, reg_size_t size) {
+/**
+ * This instruction loads a word or doubleword from memory and writes it to a register using the register offset addressing mode.
+ *
+ * `LDR rt, [rn, rm{, extend {#imm3}}]`
+ * @param rt destination register
+ * @param rn base register
+ * @param rm offset register
+ * @param option extension to be applied to the offset register
+ * @param shift_amount the left shift amount to be applied after extension in the range 0..4
+ * @param size 32-bit or 64-bit variant
+ * @return the encoded instruction
+ */
+uint32_t encode_ldr_register(reg_t rt, reg_t rn, reg_t rm, index_extend_type_t option, uint8_t shift_amount, reg_size_t size) {
   uint32_t instr = 0;
 
   // Base opcode for STR unsigned offset
   switch (size) {
-  case reg_size_t::SIZE_8BIT: // LDRB
-    instr = 0x38607800;
-    break;
+  // case reg_size_t::SIZE_8BIT: // LDRB
+  //   instr = 0x38607800;
+  //   break;
   // case reg_size_t::SIZE_16BIT: // LDRH
   //   instr = 0x79000000;
   //   break;
-  // case reg_size_t::SIZE_32BIT: // LDRW
-  //   instr = 0xB9000000;
-  //   break;
-  // case reg_size_t::SIZE_64BIT: // LDR
-  //   instr = 0xF9000000;
-  //   break;
+  case reg_size_t::SIZE_32BIT: // LDR with index shifted by 2 bits
+    asserte((shift_amount == 0) || (shift_amount == 2), "encode_ldr_register(): invalid shift amount for 32-bit load");
+    instr = 0xB8600800 | (shift_amount == 2 ? 0x1000 : 0) | (static_cast<uint32_t>(option) << 13);
+    break;
+  case reg_size_t::SIZE_64BIT: // LDR
+    asserte((shift_amount == 0) || (shift_amount == 3), "encode_ldr_register(): invalid shift amount for 64-bit load");
+    instr = 0xF8600800 | (shift_amount == 3 ? 0x1000 : 0) | (static_cast<uint32_t>(option) << 13);
+    break;
   default:
     asserte(false, "encode_ldr_register(): invalid size value");
     break;

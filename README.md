@@ -73,6 +73,14 @@ Start the executable:
 
 Set breakpoint in source code. Start Debugging (F5).
 
+## gdb cheat sheet
+
+add breakpoint at function: `b <fn_name>`
+add breakpoint at line in current file: `b <#line>`
+continue to next breakpoint: `c`
+show variable information: `info address <var>`
+
+
 ## Code Quality Tools
 
 ### Visual Studio Code Integration

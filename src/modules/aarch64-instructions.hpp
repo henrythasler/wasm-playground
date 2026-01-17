@@ -101,6 +101,9 @@ enum class extend_type_t {
   EXTEND_SXTX = 7  // Signed extend doubleword
 };
 
+// Index extend types for memory addressing
+enum class index_extend_type_t { INDEX_UXTW = 0b010, INDEX_LSL = 0b011, INDEX_SXTW = 0b110, INDEX_SXTX = 0b111 };
+
 enum class branch_condition_t {
   EQ = 0b0000, // equal
   NE = 0b0001, // not equal

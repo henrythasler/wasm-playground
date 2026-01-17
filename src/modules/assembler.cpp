@@ -1,6 +1,8 @@
 #include "assembler.hpp"
 
 jmp_buf g_jmpbuf;
+uint64_t executableMemoryAddress = 0;
+uint64_t *executableMemoryAddressPtr = &executableMemoryAddress;
 
 extern "C" void wasmTrapHandler(int error_code) {
   longjmp(g_jmpbuf, error_code);
@@ -116,7 +118,7 @@ void printStack(const std::vector<arm64::reg_t> &stack) {
 std::map<wasm::trap_code_t, int32_t> createTrapHandler(const std::vector<wasm::trap_code_t> trapCodes, std::vector<uint32_t> &machinecode) {
   std::map<wasm::trap_code_t, int32_t> trapcodeOffsets;
 
-  auto trapHandlerAddress = reinterpret_cast<uint64_t>(&wasmTrapHandler);
+  auto trapHandlerAddress = reinterpret_cast<uintptr_t>(&wasmTrapHandler);
 
   int32_t idx = 1;
   for (auto trapcode : trapCodes) {
@@ -753,27 +755,57 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
         stack.pop_back();
         auto functionidx = registerPool.allocateRegister();
 
-        // load base address of module's JIT area
-        
-
-
-        // machinecode.push_back(arm64::encode_adrp(functionidx, reinterpret_cast<uint64_t>(&executableMemoryAddress)));
-        // machinecode.push_back(arm64::encode_add_immediate(functionidx, functionidx, reinterpret_cast<uint64_t>(&executableMemoryAddress), false,
-        //                                                   arm64::reg_size_t::SIZE_64BIT));
-        // machinecode.push_back(arm64::encode_ldr_unsigned_offset(functionidx, functionidx, 0, arm64::reg_size_t::SIZE_64BIT));
-
-        // std::cout << std::hex << "executableMemoryAddress: content=0x" << executableMemoryAddress << " location=0x" << &executableMemoryAddress
-        //           << std::dec << std::endl;
-
-        // loadAddressPatches.push_back(LoadAddressPatchLocation{machinecode.size(), DataSegmentType::FUNCTION_TABLE});
-        // machinecode.push_back(arm64::encode_adrp(functionidx, 0));
-        // machinecode.push_back(arm64::encode_add_immediate(functionidx, functionidx, 0, false, arm64::reg_size_t::SIZE_64BIT));
-        // machinecode.push_back(
-        //     arm64::encode_ldr_register(functionidx, functionidx, tableidx, arm64::signed_variant_t::UNSIGNED, arm64::reg_size_t::SIZE_8BIT));
-        // machinecode.push_back(arm64::encode_branch_link_register(functionidx));
+        loadAddressPatches.push_back(LoadAddressPatchLocation{machinecode.size(), DataSegmentType::FUNCTION_TABLE});
+        // load function index from function_table using the tableidx register as offset
+        machinecode.push_back(arm64::encode_adrp(functionidx, 0));
+        machinecode.push_back(arm64::encode_add_immediate(functionidx, functionidx, 0, false, arm64::reg_size_t::SIZE_64BIT));
+        machinecode.push_back(
+            arm64::encode_ldr_register(functionidx, functionidx, tableidx, arm64::index_extend_type_t::INDEX_LSL, 2, arm64::reg_size_t::SIZE_32BIT));
 
         registerPool.freeRegister(tableidx);
-        stack.emplace_back(functionidx);
+
+        auto baseAddress = registerPool.allocateRegister();
+
+        // encode base address location using movk instructions
+        auto absoluteAddress = reinterpret_cast<std::uintptr_t>(executableMemoryAddressPtr);
+        for (uint8_t i = 0; i < 4; i++) {
+          uint16_t chunk = uint16_t((absoluteAddress >> (i << 4)) & 0xFFFF);
+          if (i == 0) {
+            machinecode.push_back(arm64::encode_mov_immediate(baseAddress, chunk, 0, arm64::reg_size_t::SIZE_64BIT));
+          } else if (chunk != 0) {
+            machinecode.push_back(arm64::encode_movk(baseAddress, chunk, i << 4, arm64::reg_size_t::SIZE_64BIT));
+          }
+        }
+        machinecode.push_back(arm64::encode_ldr_register(baseAddress, baseAddress, arm64::reg_t::XZR, arm64::index_extend_type_t::INDEX_LSL, 0,
+                                                         arm64::reg_size_t::SIZE_64BIT));
+
+        // add base address of executable memory to function index to get actual function address
+        machinecode.push_back(
+            arm64::encode_add_register(functionidx, baseAddress, functionidx, 0, arm64::reg_shift_t::SHIFT_LSL, arm64::reg_size_t::SIZE_64BIT));
+        registerPool.freeRegister(baseAddress);
+
+        std::cout << std::hex << "executableMemoryAddress: content=0x" << executableMemoryAddress << " location=0x" << executableMemoryAddressPtr
+                  << std::dec << std::endl;
+
+        // move parameters into argument registers
+        auto targetRegisterNum = expectedParameterTypes.size() - 1;
+        for (auto valtype : expectedParameterTypes) {
+          auto registerSize = map_valtype_to_regsize(valtype);
+          auto sourceReg = stack.back();
+          machinecode.push_back(arm64::encode_mov_register(arm64::reg_t(targetRegisterNum), sourceReg, registerSize));
+          targetRegisterNum--;
+          stack.pop_back();
+          registerPool.freeRegister(sourceReg);
+        }
+
+        // branch to function via branch link register
+        machinecode.push_back(arm64::encode_branch_link_register(functionidx));
+        registerPool.freeRegister(functionidx);
+
+        // push return value onto stack
+        auto reg = registerPool.allocateRegister();
+        machinecode.push_back(arm64::encode_mov_register(reg, arm64::X0, arm64::reg_size_t::SIZE_64BIT));
+        stack.emplace_back(reg);
 
         break;
       }

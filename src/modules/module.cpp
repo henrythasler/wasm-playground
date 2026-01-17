@@ -100,13 +100,15 @@ void WasmModule::compileModule() {
     const auto &element = *element_section->elements()->at(0);
 
     this->functionTable = new assembler::FunctionTable();
+    this->functionTable->offset = machinecode.size();
 
     asserte(table.elemtype() == webassembly_t::types_t::TYPES_ELEMENT,
             "Only funcref element type is supported in function tables. Found: " + std::to_string(table.elemtype()));
     auto limits = table.limits();
     asserte(limits->min()->value() < 0xff, "Function table size > 254: " + std::to_string(limits->min()->value()));
     for (auto i = 0; i < limits->min()->value(); i++) {
-      this->functionTable->entries.push_back({0xff, static_cast<uint32_t>(-1)});
+      this->functionTable->entries.push_back({0xff, static_cast<uint32_t>(machinecode.size())});
+      machinecode.push_back(-1);
     }
 
     // initialize function table with element section
@@ -137,16 +139,21 @@ void WasmModule::compileModule() {
     const auto &item = export_section->exports()->at(j);
     wasmFunctions.at(static_cast<size_t>(item->idx()->value()))->setName(item->name()->value());
   }
-
-  if (this->functionTable != nullptr) {
-    this->functionTable->offset = machinecode.size();
-  }
 }
 
 /**
  * Concatenate all compiled functions to create the final machinecode
  */
 void WasmModule::linkModule() {
+  if (this->functionTable != nullptr) {
+    for (size_t j = 0; j < this->functionTable->entries.size(); j++) {
+      if (this->functionTable->entries.at(j).index == 0xff)
+        continue;
+      machinecode[this->functionTable->entries.at(j).offset] =
+          wasmFunctions.at(this->functionTable->entries.at(j).index)->getMachinecodeOffset() * sizeof(uint32_t);
+    }
+  }
+
   for (auto wasmFunction : wasmFunctions) {
     for (auto functionCall : wasmFunction->getFunctionCalls()) {
       int32_t patchLocation = functionCall.offset;
@@ -158,16 +165,6 @@ void WasmModule::linkModule() {
       asserte(patchLocation < machinecode.size(),
               "linkModule(): patch location out of bounds in '" + wasmFunction->getName() + "()': 0x" + message.str());
       arm64::patch_branch_link(machinecode[patchLocation], targetFunctionOffset);
-    }
-
-    if (this->functionTable != nullptr) {
-      for (size_t j = 0; j < this->functionTable->entries.size(); j++) {
-        if (this->functionTable->entries.at(j).index == 0xff)
-          continue;
-
-        this->functionTable->entries.at(j).offset =
-            wasmFunctions.at(this->functionTable->entries.at(j).index)->getMachinecodeOffset() * sizeof(uint32_t);
-      }
     }
 
     for (auto loadAddressPatch : wasmFunction->getLoadAddressPatches()) {
@@ -189,13 +186,13 @@ const std::vector<uint32_t> &WasmModule::linkMachinecode() const {
   auto &linkedCode = const_cast<std::vector<uint32_t> &>(linkedMachinecode);
   linkedCode.insert(linkedCode.end(), machinecode.begin(), machinecode.end());
 
-  if (functionTable != nullptr) {
-    std::vector<uint32_t> jumpTable;
-    for (const auto &entry : functionTable->entries) {
-      jumpTable.push_back(entry.offset);
-    }
-    linkedCode.insert(linkedCode.end(), jumpTable.begin(), jumpTable.end());
-  }
+  // if (functionTable != nullptr) {
+  //   std::vector<uint32_t> jumpTable;
+  //   for (const auto &entry : functionTable->entries) {
+  //     jumpTable.push_back(entry.offset);
+  //   }
+  //   linkedCode.insert(linkedCode.end(), jumpTable.begin(), jumpTable.end());
+  // }
   return linkedMachinecode;
 }
 
