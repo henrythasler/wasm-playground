@@ -35,4 +35,39 @@ uint32_t encode_rbit(reg_t rd, reg_t rn, reg_size_t size) {
   return instr;
 }
 
+/**
+ * Unsigned bitfield move
+ *
+ * `UBFM rd, rn, #immr, #imms`
+ * @param rd destination register
+ * @param rn source register
+ * @param immr6 6-bit immediate value for right rotate amount
+ * @param imms6 6-bit immediate value for the leftmost bit number to be moved from the source
+ * @param size 32-bit or 64-bit variant
+ * @return the encoded instruction
+ */
+uint32_t encode_ubfm(reg_t rd, reg_t rn, uint8_t immr6, uint8_t imms6, reg_size_t size) {
+  uint32_t instr = select_instruction(size, 0x53000000, 0xD3400000, "encode_ubfm");
+  instr |= (immr6 & 0x3F) << 16; // immr
+  instr |= (imms6 & 0x3F) << 10; // imms
+  instr |= (rn & 0x1F) << 5;     // Rn (source register)
+  instr |= (rd & 0x1F);          // Rd (destination register)
+  return instr;
+}
+
+/**
+ * Logical Shift Right (immediate). This instruction shifts a register value right by an immediate number of bits, shifting in zeros, and writes the
+ * result to the destination register.
+ *
+ * `LSR rd, rn, #shift`
+ * @param rd destination register
+ * @param rn source register
+ * @param shift amount to shift
+ * @param size 32-bit or 64-bit variant
+ * @return the encoded instruction
+ */
+uint32_t encode_lsr_immediate(reg_t rd, reg_t rn, uint8_t shift, reg_size_t size) {
+  return encode_ubfm(rd, rn, shift, (size == reg_size_t::SIZE_32BIT) ? 31 : 63, size);
+}
+
 } // namespace arm64

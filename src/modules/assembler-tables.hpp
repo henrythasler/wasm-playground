@@ -7,6 +7,7 @@ namespace assembler {
 struct FunctionTableEntry {
   uint32_t index;
   uint32_t offset;
+  uint32_t typeIndex;
 };
 
 class FunctionTable {

@@ -142,6 +142,8 @@ std::map<wasm::trap_code_t, int32_t> createTrapHandler(const std::vector<wasm::t
 
 inline int32_t getTraphandlerOffset(wasm::trap_code_t trapCode, const std::map<wasm::trap_code_t, int32_t> &trapHandler,
                                     const std::vector<uint32_t> &machinecode) {
+  asserte(trapHandler.find(trapCode) != trapHandler.end(),
+          "getTraphandlerOffset(): trap code '" + std::to_string(static_cast<int>(trapCode)) + "' not found in trap handler map: ");
   return trapHandler.at(trapCode) - int32_t(machinecode.size() << 2);
 }
 
@@ -764,11 +766,29 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
         // record location for load address patching
         loadAddressPatches.push_back(LoadAddressPatchLocation{machinecode.size(), DataSegmentType::FUNCTION_TABLE});
 
-        // load function index from function_table using the tableidx register as offset
+        // load [function index, type index] pair from function_table using the tableidx register as offset
+        // lower 32bit = function index; upper 32bit = type index
+        // FIXME: investigate if adrp/add using `0` as page/offset is the best way to encode this
         machinecode.push_back(arm64::encode_adrp(functionidxReg, 0));
         machinecode.push_back(arm64::encode_add_immediate(functionidxReg, functionidxReg, 0, false, arm64::reg_size_t::SIZE_64BIT));
-        machinecode.push_back(arm64::encode_ldr_register(functionidxReg, functionidxReg, tableidx, arm64::index_extend_type_t::INDEX_LSL, 2,
-                                                         arm64::reg_size_t::SIZE_32BIT));
+        machinecode.push_back(arm64::encode_ldr_register(functionidxReg, functionidxReg, tableidx, arm64::index_extend_type_t::INDEX_LSL, 3,
+                                                         arm64::reg_size_t::SIZE_64BIT));
+
+        // runtime check that the function index is not uninitialized (0xffffffff)
+        // CMN = Compare Negative → adds operand and sets flags; If w0 == 0xFFFFFFFF, then w0 + 1 == 0; Z flag is set on match
+        machinecode.push_back(arm64::encode_cmn_immediate(functionidxReg, 1, false, arm64::reg_size_t::SIZE_64BIT));
+        machinecode.push_back(arm64::encode_branch_cond(arm64::branch_condition_t::EQ,
+                                                        getTraphandlerOffset(wasm::trap_code_t::IndirectCallToNull, trapHandler, machinecode)));
+
+        // runtime check that the type index from the function table matches the expected type index
+        auto actualTypeIndexReg = registerPool.allocateRegister();
+        // copy upper 32bit from functionidxReg into actualTypeIndexReg to extract type index
+        machinecode.push_back(arm64::encode_lsr_immediate(actualTypeIndexReg, functionidxReg, 32, arm64::reg_size_t::SIZE_64BIT));
+        // compare actual type index with expected type index
+        machinecode.push_back(arm64::encode_cmp_immediate(actualTypeIndexReg, static_cast<uint32_t>(typeidx), false, arm64::reg_size_t::SIZE_32BIT));
+        machinecode.push_back(arm64::encode_branch_cond(arm64::branch_condition_t::NE,
+                                                        getTraphandlerOffset(wasm::trap_code_t::BadSignature, trapHandler, machinecode)));
+        registerPool.freeRegister(actualTypeIndexReg);
 
         // free tableidx register
         registerPool.freeRegister(tableidx);
@@ -784,6 +804,8 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
         machinecode.push_back(arm64::encode_ldr_register(baseAddressReg, baseAddressReg, arm64::reg_t::XZR, arm64::index_extend_type_t::INDEX_LSL, 0,
                                                          arm64::reg_size_t::SIZE_64BIT));
 
+        // clear upper 32bit from functionidxReg to remove typeidx and keep the offset before adding as offset to base address
+        machinecode.push_back(arm64::encode_mov_register(functionidxReg, functionidxReg, arm64::reg_size_t::SIZE_32BIT));
         // add base address of executable memory to function index to get actual function address to call
         machinecode.push_back(arm64::encode_add_register(functionidxReg, baseAddressReg, functionidxReg, 0, arm64::reg_shift_t::SHIFT_LSL,
                                                          arm64::reg_size_t::SIZE_64BIT));

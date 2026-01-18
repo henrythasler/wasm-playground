@@ -24,11 +24,13 @@ Progress:
 ## Feature Highlights
 
 - Uses Kaitai Struct to parse wasm-files
+- Custom ELF writer to save generated machinecode to object files that can be disassembled with aarch64-linux-gnu-objdump
 - gtest is fetched on demand by cmake (no local installation required)
 
 ## Limitations and Known Issues
 
 - Wasm-Stack can not exceed 7 items as the current design stores all stack elements in registers (X9-X15).
+- Machinecode can not exceed 64KiB
 
 ## Prerequisites
 
@@ -75,11 +77,11 @@ Set breakpoint in source code. Start Debugging (F5).
 
 ## gdb cheat sheet
 
-add breakpoint at function: `b <fn_name>`
-add breakpoint at line in current file: `b <#line>`
-continue to next breakpoint: `c`
-show variable information: `info address <var>`
-
+- add breakpoint at function: `b <fn_name>`
+- add breakpoint at line in current file: `b <#line>`
+- continue to next breakpoint: `c`
+- step to next machinecode instruction: `stepi`
+- show variable information: `info address <var>`
 
 ## Code Quality Tools
 

@@ -168,10 +168,6 @@ uint32_t encode_madd_register(reg_t rd, reg_t rn, reg_t rm, reg_t ra, reg_size_t
 uint32_t encode_mul_register(reg_t rd, reg_t rn, reg_t rm, reg_size_t size);
 uint32_t encode_div_register(reg_t rd, reg_t rn, reg_t rm, signed_variant_t variant, reg_size_t size);
 
-/** bit handling */
-uint32_t encode_clz(reg_t rd, reg_t rn, reg_size_t size);
-uint32_t encode_rbit(reg_t rd, reg_t rn, reg_size_t size);
-
 /** register handling */
 uint32_t encode_mov_register(reg_t rd, reg_t rm, reg_size_t size);
 uint32_t encode_mov_sp(reg_t rd, reg_t rn, reg_size_t size);

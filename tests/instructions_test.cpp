@@ -5,6 +5,7 @@
 #include <iomanip>
 
 #include "../src/modules/aarch64-instructions.hpp"
+#include "../src/modules/aarch64-instructions-bit.hpp"
 #include "../src/modules/aarch64-instructions-mem.hpp"
 #include "../src/modules/aarch64-instructions-branch.hpp"
 
@@ -229,6 +230,13 @@ TEST(instruction, ardp) {
   EXPECT_EQ_HEX(encode_adrp(X1, 0x12345000), 0xB0091A21);
   // adrp x15, #0xffffffffFFFFF000
   EXPECT_EQ_HEX(encode_adrp(X15, 0xffffffffFFFFF000), 0xF0FFFFEF);
+}
+
+TEST(instruction, bitshift) {
+  // lsr x10, x11, #32
+  EXPECT_EQ_HEX(encode_lsr_immediate(X10, X11, 32, reg_size_t::SIZE_64BIT), 0xD360FD6A);
+  // lsr w3, w7, #3
+  EXPECT_EQ_HEX(encode_lsr_immediate(W3, W7, 3, reg_size_t::SIZE_32BIT), 0x53037CE3);
 }
 
 TEST(instruction, misc) {

@@ -46,9 +46,28 @@ void writer_test() {
 }
 
 TEST(objdump, wasm) {
-  std::vector<std::string> wasmFiles = {"abs",     "arithmetic.0",   "arithmetic.1", "bit",    "block-extended",     "block.0",      "branch",
-                                        "compare", "conditionals.0", "division",     "echo",   "empty-fn",           "functions",    "local.0",
-                                        "local.1", "local.2",        "loop.0",       "call.0", "functions_indirect", "call_indirect.0"};
+  std::vector<std::string> wasmFiles = {"abs",
+                                        "arithmetic.0",
+                                        "arithmetic.1",
+                                        "bit",
+                                        "block-extended",
+                                        "block.0",
+                                        "branch",
+                                        "compare",
+                                        "conditionals.0",
+                                        "division",
+                                        "echo",
+                                        "empty-fn",
+                                        "functions",
+                                        "local.0",
+                                        "local.1",
+                                        "local.2",
+                                        "loop.0",
+                                        "call.0",
+                                        "functions_indirect",
+                                        "call_indirect.0",
+                                        "call_indirect.1",
+                                        "call_indirect.2"};
 
   for (const auto &wasmFile : wasmFiles) {
     auto wasmModule = helper::loadModule(wasmFile + ".wasm");
@@ -70,8 +89,8 @@ TEST(objdump, wasm) {
 
     auto functionTable = wasmModule.getFunctionTable();
     if (functionTable != nullptr) {
-      writer.add_symbol(functionTable->name, functionTable->offset * sizeof(uint32_t), functionTable->entries.size() * sizeof(uint32_t), 1,
-                        STT_NOTYPE);
+      writer.add_symbol(functionTable->name, functionTable->offset * sizeof(uint32_t), functionTable->entries.size() * sizeof(uint64_t), 1,
+                        STT_OBJECT);
     }
 
     writer.write_elf(wasmFile + ".o");

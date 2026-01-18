@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "aarch64-compounds.hpp"
+#include "aarch64-instructions-bit.hpp"
 #include "aarch64-instructions-branch.hpp"
 #include "aarch64-instructions-mem.hpp"
 #include "aarch64-instructions.hpp"

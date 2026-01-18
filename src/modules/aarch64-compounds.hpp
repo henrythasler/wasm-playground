@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <vector>
 
+#include "aarch64-instructions-bit.hpp"
 #include "aarch64-instructions.hpp"
 
 namespace arm64 {
