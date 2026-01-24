@@ -224,6 +224,31 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
         machinecode.push_back(arm64::encode_str_unsigned_offset(reg, arm64::SP, uint16_t(locals.get(idx)), registerSize));
         break;
       }
+    case 0x23:
+      /** global.get */
+      {
+        // get the global index
+        auto globalidx = uint32_t(decoder::LEB128Decoder::decodeUnsigned(stream, streamEnd));
+
+        // FIXME: load globalidx as placeholder
+        auto reg = registerPool.allocateRegister();
+        stack.emplace_back(reg);
+        arm64::emit_mov_large_immediate(reg, uint64_t(globalidx), arm64::reg_size_t::SIZE_32BIT, machinecode);
+
+        break;
+      }
+    case 0x24:
+      /** global.set */
+      {
+        // get the global index
+        auto globalidx = uint32_t(decoder::LEB128Decoder::decodeUnsigned(stream, streamEnd));
+
+        // FIXME: just remove register from stack and free it
+        registerPool.freeRegister(stack.back());
+        stack.pop_back();
+
+        break;
+      }
     case 0x6A:
     case 0x7c:
       /** (i32|i64).add */

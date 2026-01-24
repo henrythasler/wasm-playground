@@ -108,6 +108,7 @@ add_executable(all_tests
   block_extended_test.cpp
   bit_test.cpp
   functions_test.cpp
+  globals_extended_test.cpp
 )
 
 # GoogleTest requires at least C++17

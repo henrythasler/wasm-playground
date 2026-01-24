@@ -46,28 +46,34 @@ void writer_test() {
 }
 
 TEST(objdump, wasm) {
-  std::vector<std::string> wasmFiles = {"abs",
-                                        "arithmetic.0",
-                                        "arithmetic.1",
-                                        "bit",
-                                        "block-extended",
-                                        "block.0",
-                                        "branch",
-                                        "compare",
-                                        "conditionals.0",
-                                        "division",
-                                        "echo",
-                                        "empty-fn",
-                                        "functions",
-                                        "local.0",
-                                        "local.1",
-                                        "local.2",
-                                        "loop.0",
-                                        "call.0",
-                                        "functions_indirect",
-                                        "call_indirect.0",
-                                        "call_indirect.1",
-                                        "call_indirect.2"};
+  std::vector<std::string> wasmFiles = {
+      // extended tests
+      "abs",
+      "bit",
+      "block-extended",
+      "branch",
+      "compare",
+      "echo",
+      "functions",
+      "functions_indirect",
+      "globals-extended",
+      // tutorial chapters (in sequence)
+      "empty-fn",
+      "local.0",
+      "local.1",
+      "local.2",
+      "arithmetic.0",
+      "arithmetic.1",
+      "conditionals.0",
+      "division",
+      "block.0",
+      "loop.0",
+      "call.0",
+      "call_indirect.0",
+      "call_indirect.1",
+      "call_indirect.2",
+      "global.0",
+  };
 
   for (const auto &wasmFile : wasmFiles) {
     auto wasmModule = helper::loadModule(wasmFile + ".wasm");
