@@ -35,8 +35,20 @@ TEST(functions_indirect, calculate) {
   auto wasmModule = helper::loadModule("functions_indirect.wasm");
   auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t, wasm::wasm_i32_t, wasm::wasm_i32_t, wasm::wasm_i32_t>(wasmModule, "calculate");
 
-  EXPECT_EQ(wasmFunction(0, 10, 20), 30);
-  EXPECT_EQ(wasmFunction(1, 10, 20), 200);
+  EXPECT_EQ(wasmFunction(0, 10, 20), 30);  // add
+  EXPECT_EQ(wasmFunction(1, 10, 20), 200); // multiply
+
+  // Test for indirect call to out-of-bounds table index (5)
+  EXPECT_THROW(
+      {
+        try {
+          wasmFunction(5, 0, 0);
+        } catch (const std::system_error &e) {
+          EXPECT_EQ(static_cast<wasm::trap_code_t>(e.code().value()), wasm::trap_code_t::TableOutOfBounds);
+          throw; // Re-throw for EXPECT_THROW to catch
+        }
+      },
+      std::system_error);
 
   // Test for indirect call to uninitialized table entry (4)
   EXPECT_THROW(
@@ -49,19 +61,18 @@ TEST(functions_indirect, calculate) {
         }
       },
       std::system_error);
-      
+
   // Test for indirect call to function with wrong signature (square function has signature (i32) -> i32)
   EXPECT_THROW(
       {
         try {
-          wasmFunction(2, 20, 0);
+          wasmFunction(2, 20, 0); // square
         } catch (const std::system_error &e) {
           EXPECT_EQ(static_cast<wasm::trap_code_t>(e.code().value()), wasm::trap_code_t::BadSignature);
           throw; // Re-throw for EXPECT_THROW to catch
         }
       },
       std::system_error);
-
 }
 
 } // namespace
