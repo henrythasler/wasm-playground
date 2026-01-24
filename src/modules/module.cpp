@@ -97,36 +97,8 @@ void WasmModule::compileModule() {
 
   // Process table and element sections to create and inline literal pool to store the data
   if (table_section != nullptr && element_section != nullptr) {
-    // emitFunctionTable(this->functionTable, function_section, table_section, element_section, machinecode);
-    // first table and first element is used
-    const auto &table = *table_section->tables()->at(0);
-    const auto &element = *element_section->elements()->at(0);
-
-    this->functionTable = new assembler::FunctionTable();
-    this->functionTable->offset = machinecode.size();
-
-    asserte(table.elemtype() == webassembly_t::types_t::TYPES_ELEMENT,
-            "Only funcref element type is supported in function tables. Found: " + std::to_string(table.elemtype()));
-    auto limits = table.limits();
-    asserte(limits->min()->value() < 0xff, "Function table size > 254: " + std::to_string(limits->min()->value()));
-    for (auto i = 0; i < limits->min()->value(); i++) {
-      this->functionTable->entries.push_back({0xff, static_cast<uint32_t>(machinecode.size()), 0xffffffff});
-      // emit placeholder for function address and type index
-      machinecode.push_back(-1);
-      machinecode.push_back(-1);
-    }
-
-    // initialize function table with element section
-    auto table_index = element.tableidx()->value(); // currently only one table is supported
-    asserte(table_index == 0, "Only one function table is supported. Found table index: " + std::to_string(table_index));
-    for (int32_t i = 0; i < element.num_init()->value(); i++) {
-      auto value = element.init_vec()->at(i)->value();
-      asserte(value < 0xff, "Function index in table >254: " + std::to_string(value));
-      this->functionTable->entries.at(i).index = static_cast<uint8_t>(value);
-      this->functionTable->entries.at(i).typeIndex = function_section->typeidx()->at(static_cast<size_t>(value))->value();
-    }
-
-    this->functionTable->name = "function_table";
+    functionTable = std::make_unique<assembler::FunctionTable>();
+    emitFunctionTable(*functionTable, function_section, table_section, element_section, machinecode);
   }
 
   // Compile each function in the code section
@@ -151,7 +123,7 @@ void WasmModule::compileModule() {
  * Concatenate all compiled functions to create the final machinecode
  */
 void WasmModule::linkModule() {
-  if (this->functionTable != nullptr) {
+  if (this->functionTable) {
     for (size_t j = 0; j < this->functionTable->entries.size(); j++) {
       if (this->functionTable->entries.at(j).index == 0xff)
         continue;

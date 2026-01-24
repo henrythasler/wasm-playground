@@ -22,7 +22,7 @@ private:
   std::vector<WasmFunction *> wasmFunctions;
   std::vector<uint32_t> machinecode;
   std::vector<uint32_t> linkedMachinecode;
-  assembler::FunctionTable *functionTable = nullptr;
+  std::unique_ptr<assembler::FunctionTable> functionTable;
 
   template <typename Derived, typename Base>
   Derived *getSectionContent(const std::vector<std::unique_ptr<Base>> &sections, webassembly_t::section_id_t section_type);
@@ -59,7 +59,7 @@ public:
   // }
 
   const assembler::FunctionTable *getFunctionTable() const {
-    return functionTable;
+    return functionTable.get();
   }
 
   const WasmFunction *getWasmFunction(std::string name);

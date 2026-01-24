@@ -32,7 +32,7 @@ public:
 
   size_t compile(const webassembly_t::func_t *func, const std::unique_ptr<webassembly_t::functype_t> &funcType,
                  webassembly_t::type_section_t *type_section, webassembly_t::function_section_t *function_section,
-                 const std::map<wasm::trap_code_t, int32_t> &trapHandler, assembler::FunctionTable *functionTable,
+                 const std::map<wasm::trap_code_t, int32_t> &trapHandler, std::unique_ptr<assembler::FunctionTable> &functionTable,
                  std::vector<uint32_t> &machinecode);
 
   std::string getName() const {
