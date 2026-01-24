@@ -5,6 +5,12 @@
 #include "helper.hpp"
 namespace {
 
+/** compare the typeidx provided with the wasm-instruction with the type index given as argument (callee) using a simple CMP instruction */
+#define ENABLE_SIGNATURE_CHECK_STRICT
+
+/** Explicitly require the jit-compiler to deduplicate type section entries that have identical meaning/structure */
+#undef ENABLE_SIGNATURE_CHECK_CANONICALIZATION
+
 TEST(call_indirect, callt1) {
   auto wasmModule = helper::loadModule("call_indirect.0.wasm");
   auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t, wasm::wasm_i32_t>(wasmModule, "callt");
@@ -12,10 +18,36 @@ TEST(call_indirect, callt1) {
   EXPECT_EQ(wasmFunction(0), 1);
   EXPECT_EQ(wasmFunction(1), 2);
   EXPECT_EQ(wasmFunction(2), 3);
-  // EXPECT_EQ(wasmFunction(3), 4);
-  // EXPECT_EQ(wasmFunction(4), 5);
   EXPECT_EQ(wasmFunction(5), 1);
   EXPECT_EQ(wasmFunction(6), 3);
+
+#ifdef ENABLE_SIGNATURE_CHECK_STRICT
+  EXPECT_THROW(
+      {
+        try {
+          wasmFunction(3);
+        } catch (const std::system_error &e) {
+          EXPECT_EQ(static_cast<wasm::trap_code_t>(e.code().value()), wasm::trap_code_t::BadSignature);
+          throw; // Re-throw for EXPECT_THROW to catch
+        }
+      },
+      std::system_error);
+
+  EXPECT_THROW(
+      {
+        try {
+          wasmFunction(4);
+        } catch (const std::system_error &e) {
+          EXPECT_EQ(static_cast<wasm::trap_code_t>(e.code().value()), wasm::trap_code_t::BadSignature);
+          throw; // Re-throw for EXPECT_THROW to catch
+        }
+      },
+      std::system_error);
+
+#elif defined ENABLE_SIGNATURE_CHECK_CANONICALIZATION
+  EXPECT_EQ(wasmFunction(3), 4);
+  EXPECT_EQ(wasmFunction(4), 5);
+#endif
 
   EXPECT_THROW(
       {
@@ -53,13 +85,72 @@ TEST(call_indirect, callu1) {
   auto wasmModule = helper::loadModule("call_indirect.0.wasm");
   auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t, wasm::wasm_i32_t>(wasmModule, "callu");
 
-  // EXPECT_EQ(wasmFunction(0), 1);
-  // EXPECT_EQ(wasmFunction(1), 2);
-  // EXPECT_EQ(wasmFunction(2), 3);
   EXPECT_EQ(wasmFunction(3), 4);
   EXPECT_EQ(wasmFunction(4), 5);
-  // EXPECT_EQ(wasmFunction(5), 1);
-  // EXPECT_EQ(wasmFunction(6), 3);
+
+#ifdef ENABLE_SIGNATURE_CHECK_STRICT
+  EXPECT_THROW(
+      {
+        try {
+          wasmFunction(0);
+        } catch (const std::system_error &e) {
+          EXPECT_EQ(static_cast<wasm::trap_code_t>(e.code().value()), wasm::trap_code_t::BadSignature);
+          throw; // Re-throw for EXPECT_THROW to catch
+        }
+      },
+      std::system_error);
+
+  EXPECT_THROW(
+      {
+        try {
+          wasmFunction(1);
+        } catch (const std::system_error &e) {
+          EXPECT_EQ(static_cast<wasm::trap_code_t>(e.code().value()), wasm::trap_code_t::BadSignature);
+          throw; // Re-throw for EXPECT_THROW to catch
+        }
+      },
+      std::system_error);
+
+  EXPECT_THROW(
+      {
+        try {
+          wasmFunction(2);
+        } catch (const std::system_error &e) {
+          EXPECT_EQ(static_cast<wasm::trap_code_t>(e.code().value()), wasm::trap_code_t::BadSignature);
+          throw; // Re-throw for EXPECT_THROW to catch
+        }
+      },
+      std::system_error);
+
+  EXPECT_THROW(
+      {
+        try {
+          wasmFunction(5);
+        } catch (const std::system_error &e) {
+          EXPECT_EQ(static_cast<wasm::trap_code_t>(e.code().value()), wasm::trap_code_t::BadSignature);
+          throw; // Re-throw for EXPECT_THROW to catch
+        }
+      },
+      std::system_error);
+
+  EXPECT_THROW(
+      {
+        try {
+          wasmFunction(6);
+        } catch (const std::system_error &e) {
+          EXPECT_EQ(static_cast<wasm::trap_code_t>(e.code().value()), wasm::trap_code_t::BadSignature);
+          throw; // Re-throw for EXPECT_THROW to catch
+        }
+      },
+      std::system_error);
+
+#elif defined ENABLE_SIGNATURE_CHECK_CANONICALIZATION
+  EXPECT_EQ(wasmFunction(0), 1);
+  EXPECT_EQ(wasmFunction(1), 2);
+  EXPECT_EQ(wasmFunction(2), 3);
+  EXPECT_EQ(wasmFunction(5), 1);
+  EXPECT_EQ(wasmFunction(6), 3);
+#endif
 
   EXPECT_THROW(
       {
@@ -90,7 +181,7 @@ TEST(call_indirect, callu1) {
           throw; // Re-throw for EXPECT_THROW to catch
         }
       },
-      std::system_error);  
+      std::system_error);
 }
 
 TEST(call_indirect, callt2) {
@@ -106,16 +197,16 @@ TEST(call_indirect, call_indirect) {
   auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t, wasm::wasm_i32_t, wasm::wasm_i32_t>(wasmModule, "call_indirect");
 
   EXPECT_EQ(wasmFunction(0, 10), 11);
-  // EXPECT_THROW(
-  //     {
-  //       try {
-  //         wasmFunction(1, 10);
-  //       } catch (const std::system_error &e) {
-  //         EXPECT_EQ(static_cast<wasm::trap_code_t>(e.code().value()), wasm::trap_code_t::BadSignature);
-  //         throw; // Re-throw for EXPECT_THROW to catch
-  //       }
-  //     },
-  //     std::system_error);  
+  EXPECT_THROW(
+      {
+        try {
+          wasmFunction(1, 10);
+        } catch (const std::system_error &e) {
+          EXPECT_EQ(static_cast<wasm::trap_code_t>(e.code().value()), wasm::trap_code_t::BadSignature);
+          throw; // Re-throw for EXPECT_THROW to catch
+        }
+      },
+      std::system_error);
 }
 
 } // namespace

@@ -15,7 +15,7 @@ Progress:
 - Chapter06: ✅
 - Chapter07: ✅
 - Chapter08: ✅
-- Chapter09: 80%
+- Chapter09: 95%
 - Chapter10: 0%
 - Chapter11: 0%
 - Chapter12: 0%
@@ -31,6 +31,7 @@ Progress:
 
 - Wasm-Stack can not exceed 7 items as the current design stores all stack elements in registers (X9-X15).
 - Machinecode can not exceed 64KiB
+- Entries in the type section are not canonicalization and different entries with the same structure/meaning are treated as different.
 
 ## Prerequisites
 

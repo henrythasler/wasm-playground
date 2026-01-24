@@ -97,6 +97,7 @@ void WasmModule::compileModule() {
 
   // Process table and element sections to create and inline literal pool to store the data
   if (table_section != nullptr && element_section != nullptr) {
+    // emitFunctionTable(this->functionTable, function_section, table_section, element_section, machinecode);
     // first table and first element is used
     const auto &table = *table_section->tables()->at(0);
     const auto &element = *element_section->elements()->at(0);
