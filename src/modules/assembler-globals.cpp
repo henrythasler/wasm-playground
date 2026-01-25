@@ -4,7 +4,7 @@ namespace assembler {
 
 std::vector<uint32_t> Globals::serialize() {
   std::vector<uint32_t> serialized;
-  for(auto entry: entries) {
+  for (auto entry : entries) {
     serialized.push_back(entry.value);
   }
   return serialized;

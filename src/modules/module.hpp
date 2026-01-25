@@ -63,7 +63,7 @@ public:
     return functionTable.get();
   }
 
-  const std::unique_ptr<assembler::Globals>& getGlobals() const {
+  const std::unique_ptr<assembler::Globals> &getGlobals() const {
     return globals;
   }
 

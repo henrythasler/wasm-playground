@@ -98,14 +98,13 @@ int main(int argc, char const *argv[]) {
       // std::cout << "  Executing machine code (break *0x" << machinecode.data() << ")... ";
       // auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t, wasm::wasm_i32_t, wasm::wasm_i32_t>(
       //     machinecode, wasmModule->getFunctionOffset(function->getName()));
-      auto wasmFunction =
-          tiny::make_wasm_function<wasm::wasm_i32_t>(*wasmModule, function->getName());
+      auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t>(*wasmModule, function->getName());
       try {
         std::cout << std::hex << "executableMemoryAddress: content=0x" << executableMemoryAddress << " location=0x" << &executableMemoryAddress
                   << std::dec << std::endl;
 
-        std::cout << std::hex << "globalsMemoryAddress: content=0x" << globalsMemoryAddress << " location=0x" << &globalsMemoryAddress
-                  << std::dec << std::endl;
+        std::cout << std::hex << "globalsMemoryAddress: content=0x" << globalsMemoryAddress << " location=0x" << &globalsMemoryAddress << std::dec
+                  << std::endl;
 
         auto res = wasmFunction.call();
         std::cout << res << " ";

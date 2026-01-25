@@ -78,11 +78,13 @@ Set breakpoint in source code. Start Debugging (F5).
 
 ## gdb cheat sheet
 
+- run debugger: `gdb-multiarch -q --nh -ex 'set architecture aarch64' -ex 'file build/src/tiny-wasm' -ex 'target remote localhost:1234' -ex 'layout split' -ex 'layout regs'`
 - add breakpoint at function: `b <fn_name>`
 - add breakpoint at line in current file: `b <#line>`
 - continue to next breakpoint: `c`
 - step to next machinecode instruction: `stepi`
 - show variable information: `info address <var>`
+- show memory content (4 hex uint32_t) : `x/4xw <addr>`
 
 ## Code Quality Tools
 

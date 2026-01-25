@@ -92,7 +92,8 @@ private:
 
 public:
   explicit WasmExecutable(const std::vector<uint8_t> &machine_code, const std::vector<uint32_t> &globals, size_t offset = 0)
-      : exec_mem_(machine_code, PROT_READ | PROT_EXEC), globals_mem_(globals, PROT_READ | PROT_WRITE), func_ptr_(reinterpret_cast<FuncPtr>(static_cast<char *>(exec_mem_.get()) + offset)) {
+      : exec_mem_(machine_code, PROT_READ | PROT_EXEC), globals_mem_(globals, PROT_READ | PROT_WRITE),
+        func_ptr_(reinterpret_cast<FuncPtr>(static_cast<char *>(exec_mem_.get()) + offset)) {
     executableMemoryAddress = reinterpret_cast<uint64_t>(exec_mem_.get());
     globalsMemoryAddress = reinterpret_cast<uint64_t>(globals_mem_.get());
     if (func_ptr_ == nullptr) {
@@ -102,7 +103,8 @@ public:
 
   // Constructor for uint32_t vector
   explicit WasmExecutable(const std::vector<uint32_t> &machine_code, const std::vector<uint32_t> &globals, size_t offset = 0)
-      : exec_mem_(machine_code, PROT_READ | PROT_EXEC), globals_mem_(globals, PROT_READ | PROT_WRITE), func_ptr_(reinterpret_cast<FuncPtr>(static_cast<char *>(exec_mem_.get()) + offset)) {
+      : exec_mem_(machine_code, PROT_READ | PROT_EXEC), globals_mem_(globals, PROT_READ | PROT_WRITE),
+        func_ptr_(reinterpret_cast<FuncPtr>(static_cast<char *>(exec_mem_.get()) + offset)) {
     executableMemoryAddress = reinterpret_cast<uint64_t>(exec_mem_.get());
     globalsMemoryAddress = reinterpret_cast<uint64_t>(globals_mem_.get());
     if (func_ptr_ == nullptr) {

@@ -35,7 +35,7 @@ TEST(globals_extended, get_const1) {
 TEST(globals_extended, get_mut0) {
   auto wasmModule = helper::loadModule("globals-extended.wasm");
   auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t>(wasmModule, "get_mut0");
-  // EXPECT_EQ(wasmFunction(), -12);
+  EXPECT_EQ(wasmFunction(), -12);
 }
 
 } // namespace
