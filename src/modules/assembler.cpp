@@ -258,7 +258,8 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
           machinecode.push_back(arm64::encode_add_immediate(reg, reg, globalidx * sizeof(uint64_t), false, arm64::reg_size_t::SIZE_64BIT));
 
           // load actual global from memory location
-          machinecode.push_back(arm64::encode_ldr_register(reg, reg, arm64::reg_t::XZR, arm64::index_extend_type_t::INDEX_LSL, 0, arm64::reg_size_t::SIZE_64BIT));
+          machinecode.push_back(
+              arm64::encode_ldr_register(reg, reg, arm64::reg_t::XZR, arm64::index_extend_type_t::INDEX_LSL, 0, arm64::reg_size_t::SIZE_64BIT));
         }
         break;
       }
