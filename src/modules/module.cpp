@@ -71,6 +71,7 @@ void WasmModule::compileModule() {
   auto type_section = getSectionContent<webassembly_t::type_section_t>(*(wasm->sections()), webassembly_t::SECTION_ID_TYPE_SECTION);
   auto table_section = getSectionContent<webassembly_t::table_section_t>(*(wasm->sections()), webassembly_t::SECTION_ID_TABLE_SECTION);
   auto element_section = getSectionContent<webassembly_t::element_section_t>(*(wasm->sections()), webassembly_t::SECTION_ID_ELEMENT_SECTION);
+  auto global_section = getSectionContent<webassembly_t::global_section_t>(*(wasm->sections()), webassembly_t::SECTION_ID_GLOBAL_SECTION);
 
   asserte(code_section != nullptr, "WasmModule: Invalid Code Section");
   asserte(code_section->entries() != nullptr, "WasmModule: Code section is empty");
@@ -101,6 +102,12 @@ void WasmModule::compileModule() {
     emitFunctionTable(*functionTable, function_section, table_section, element_section, machinecode);
   }
 
+  // process global section
+  if (global_section != nullptr) {
+    globals = std::make_unique<assembler::Globals>();
+    assembler::parseGlobalsSection(*globals, *global_section);
+  }
+
   // Compile each function in the code section
   for (size_t j = 0; j < code_section->entries()->size(); ++j) {
     const auto &code = code_section->entries()->at(j);
@@ -108,7 +115,7 @@ void WasmModule::compileModule() {
     const auto &funcType = type_section->functypes()->at(static_cast<size_t>(func->value()));
 
     auto wasmFunction = new WasmFunction();
-    wasmFunction->compile(code->func(), funcType, type_section, function_section, trapHandler, functionTable, machinecode);
+    wasmFunction->compile(code->func(), funcType, type_section, function_section, globals, trapHandler, functionTable, machinecode);
     wasmFunctions.push_back(wasmFunction);
   }
 

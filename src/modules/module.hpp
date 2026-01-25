@@ -23,6 +23,7 @@ private:
   std::vector<uint32_t> machinecode;
   std::vector<uint32_t> linkedMachinecode;
   std::unique_ptr<assembler::FunctionTable> functionTable;
+  std::unique_ptr<assembler::Globals> globals;
 
   template <typename Derived, typename Base>
   Derived *getSectionContent(const std::vector<std::unique_ptr<Base>> &sections, webassembly_t::section_id_t section_type);

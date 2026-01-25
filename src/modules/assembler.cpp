@@ -187,8 +187,8 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
                         RegisterPool &registerPool, std::vector<ControlBlock> &controlStack, std::vector<arm64::reg_t> &stack,
                         const std::map<wasm::trap_code_t, int32_t> &trapHandler, std::vector<FunctionCallPatchLocation> &functionCallPatchLocations,
                         std::vector<LoadAddressPatchLocation> &loadAddressPatches, webassembly_t::type_section_t *type_section,
-                        webassembly_t::function_section_t *function_section, std::unique_ptr<assembler::FunctionTable> &functionTable,
-                        std::vector<uint32_t> &machinecode) {
+                        webassembly_t::function_section_t *function_section, std::unique_ptr<assembler::Globals> &globals,
+                        std::unique_ptr<assembler::FunctionTable> &functionTable, std::vector<uint32_t> &machinecode) {
   while (stream != streamEnd) {
     switch (*stream++) {
     case 0x20:
@@ -227,14 +227,26 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
     case 0x23:
       /** global.get */
       {
+        // do we even have a global section to work with?
+        asserte(globals, "global section not initialized");
+
         // get the global index
         auto globalidx = uint32_t(decoder::LEB128Decoder::decodeUnsigned(stream, streamEnd));
+        auto global = globals->entries.at(globalidx);
 
-        // FIXME: load globalidx as placeholder
-        auto reg = registerPool.allocateRegister();
-        stack.emplace_back(reg);
-        arm64::emit_mov_large_immediate(reg, uint64_t(globalidx), arm64::reg_size_t::SIZE_32BIT, machinecode);
-
+        // immutable globals are compiled as const
+        if (!global.isMutable) {
+          auto registerSize =
+              (global.valType == webassembly_t::val_types_t::VAL_TYPES_F32) ? arm64::reg_size_t::SIZE_32BIT : arm64::reg_size_t::SIZE_64BIT;
+          auto reg = registerPool.allocateRegister();
+          stack.emplace_back(reg);
+          arm64::emit_mov_large_immediate(reg, uint64_t(global.value), registerSize, machinecode);
+        } else {
+          // FIXME: load globalidx as placeholder
+          auto reg = registerPool.allocateRegister();
+          stack.emplace_back(reg);
+          arm64::emit_mov_large_immediate(reg, uint64_t(globalidx), arm64::reg_size_t::SIZE_32BIT, machinecode);
+        }
         break;
       }
     case 0x24:
