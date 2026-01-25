@@ -20,6 +20,8 @@ public:
 
   Globals() = default;
   ~Globals() = default;
+
+  std::vector<uint32_t> serialize();
 };
 
 void parseGlobalsSection(Globals &globals, webassembly_t::global_section_t &global_section);

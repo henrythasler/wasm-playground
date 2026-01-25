@@ -2,6 +2,14 @@
 
 namespace assembler {
 
+std::vector<uint32_t> Globals::serialize() {
+  std::vector<uint32_t> serialized;
+  for(auto entry: entries) {
+    serialized.push_back(entry.value);
+  }
+  return serialized;
+}
+
 void parseGlobalsSection(Globals &globals, webassembly_t::global_section_t &global_section) {
   auto &wasm_globals = *global_section.globals();
 

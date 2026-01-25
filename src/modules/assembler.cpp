@@ -4,6 +4,9 @@ jmp_buf g_jmpbuf;
 uint64_t executableMemoryAddress = 0;
 uint64_t *executableMemoryAddressPtr = &executableMemoryAddress;
 
+uint64_t globalsMemoryAddress = 0;
+uint64_t *globalsMemoryAddressPtr = &globalsMemoryAddress;
+
 extern "C" void wasmTrapHandler(int error_code) {
   longjmp(g_jmpbuf, error_code);
 }
@@ -234,18 +237,29 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
         auto globalidx = uint32_t(decoder::LEB128Decoder::decodeUnsigned(stream, streamEnd));
         auto global = globals->entries.at(globalidx);
 
+        auto registerSize =
+            (global.valType == webassembly_t::val_types_t::VAL_TYPES_I32) ? arm64::reg_size_t::SIZE_32BIT : arm64::reg_size_t::SIZE_64BIT;
+        auto reg = registerPool.allocateRegister();
+        stack.emplace_back(reg);
+
         // immutable globals are compiled as const
         if (!global.isMutable) {
-          auto registerSize =
-              (global.valType == webassembly_t::val_types_t::VAL_TYPES_I32) ? arm64::reg_size_t::SIZE_32BIT : arm64::reg_size_t::SIZE_64BIT;
-          auto reg = registerPool.allocateRegister();
-          stack.emplace_back(reg);
           arm64::emit_mov_large_immediate(reg, uint64_t(global.value), registerSize, machinecode);
         } else {
-          // FIXME: load globalidx as placeholder
-          auto reg = registerPool.allocateRegister();
-          stack.emplace_back(reg);
-          arm64::emit_mov_large_immediate(reg, uint64_t(globalidx), arm64::reg_size_t::SIZE_32BIT, machinecode);
+          // encode address location to be loaded from global variable
+          auto absoluteAddress = reinterpret_cast<std::uintptr_t>(globalsMemoryAddressPtr);
+          arm64::emit_mov_large_immediate(reg, uint64_t(absoluteAddress), arm64::reg_size_t::SIZE_64BIT, machinecode);
+
+          // load address of globals memory from pointer
+          machinecode.push_back(
+              arm64::encode_ldr_register(reg, reg, arm64::reg_t::XZR, arm64::index_extend_type_t::INDEX_LSL, 0, arm64::reg_size_t::SIZE_64BIT));
+
+          // add base address of executable memory to function index to get actual function address to call
+          machinecode.push_back(arm64::encode_add_immediate(reg, reg, globalidx << 3, false, arm64::reg_size_t::SIZE_64BIT));
+
+          // load actual global from memory location
+          machinecode.push_back(
+              arm64::encode_ldr_register(reg, reg, arm64::reg_t::XZR, arm64::index_extend_type_t::INDEX_LSL, 0, arm64::reg_size_t::SIZE_64BIT));
         }
         break;
       }

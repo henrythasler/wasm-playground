@@ -24,6 +24,10 @@ extern jmp_buf g_jmpbuf;
 extern uint64_t executableMemoryAddress;
 extern uint64_t *executableMemoryAddressPtr;
 
+// Variable to hold the address of wasm-globals
+extern uint64_t globalsMemoryAddress;
+extern uint64_t *globalsMemoryAddressPtr;
+
 namespace assembler {
 class RegisterPool {
 private:

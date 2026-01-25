@@ -86,22 +86,25 @@ public:
 template <typename ReturnType, typename... Args> class WasmExecutable {
 private:
   CustomMemory exec_mem_;
+  CustomMemory globals_mem_;
   using FuncPtr = ReturnType (*)(Args...);
   FuncPtr func_ptr_;
 
 public:
-  explicit WasmExecutable(const std::vector<uint8_t> &machine_code, size_t offset = 0)
-      : exec_mem_(machine_code, PROT_READ | PROT_EXEC), func_ptr_(reinterpret_cast<FuncPtr>(static_cast<char *>(exec_mem_.get()) + offset)) {
+  explicit WasmExecutable(const std::vector<uint8_t> &machine_code, const std::vector<uint32_t> &globals, size_t offset = 0)
+      : exec_mem_(machine_code, PROT_READ | PROT_EXEC), globals_mem_(globals, PROT_READ | PROT_WRITE), func_ptr_(reinterpret_cast<FuncPtr>(static_cast<char *>(exec_mem_.get()) + offset)) {
     executableMemoryAddress = reinterpret_cast<uint64_t>(exec_mem_.get());
+    globalsMemoryAddress = reinterpret_cast<uint64_t>(globals_mem_.get());
     if (func_ptr_ == nullptr) {
       throw std::runtime_error("Invalid function pointer");
     }
   }
 
   // Constructor for uint32_t vector
-  explicit WasmExecutable(const std::vector<uint32_t> &machine_code, size_t offset = 0)
-      : exec_mem_(machine_code, PROT_READ | PROT_EXEC), func_ptr_(reinterpret_cast<FuncPtr>(static_cast<char *>(exec_mem_.get()) + offset)) {
+  explicit WasmExecutable(const std::vector<uint32_t> &machine_code, const std::vector<uint32_t> &globals, size_t offset = 0)
+      : exec_mem_(machine_code, PROT_READ | PROT_EXEC), globals_mem_(globals, PROT_READ | PROT_WRITE), func_ptr_(reinterpret_cast<FuncPtr>(static_cast<char *>(exec_mem_.get()) + offset)) {
     executableMemoryAddress = reinterpret_cast<uint64_t>(exec_mem_.get());
+    globalsMemoryAddress = reinterpret_cast<uint64_t>(globals_mem_.get());
     if (func_ptr_ == nullptr) {
       throw std::runtime_error("Invalid function pointer");
     }
@@ -152,19 +155,20 @@ public:
  */
 template <typename ReturnType, typename... Args>
 WasmExecutable<ReturnType, Args...> make_wasm_function(const std::vector<uint8_t> &code, size_t offset = 0) {
-  return WasmExecutable<ReturnType, Args...>(code, offset);
+  return WasmExecutable<ReturnType, Args...>(code, std::vector<uint32_t>(), offset);
 }
 
 template <typename ReturnType, typename... Args>
 WasmExecutable<ReturnType, Args...> make_wasm_function(const std::vector<uint32_t> &code, size_t offset = 0) {
-  return WasmExecutable<ReturnType, Args...>(code, offset);
+  return WasmExecutable<ReturnType, Args...>(code, std::vector<uint32_t>(), offset);
 }
 
 template <typename ReturnType, typename... Args>
 WasmExecutable<ReturnType, Args...> make_wasm_function(tiny::WasmModule &wasmModule, const std::string &funcName) {
   const auto &linkedCode = wasmModule.linkMachinecode();
   size_t exportFunctionOffset = wasmModule.getFunctionOffset(funcName);
-  auto wasmExecutable = WasmExecutable<ReturnType, Args...>(linkedCode, exportFunctionOffset);
+  auto globalMemory = wasmModule.getGlobals() ? wasmModule.getGlobals()->serialize() : std::vector<uint32_t>();
+  auto wasmExecutable = WasmExecutable<ReturnType, Args...>(linkedCode, globalMemory, exportFunctionOffset);
 
   // auto fnTableAddress = wasmExecutable.get_fntable_memory_address();
   // auto codeAddress = wasmExecutable.get_code_memory_address();

@@ -5,10 +5,18 @@
   (global $mut1 (mut i64) (i64.const -15))
   (export "get_const0" (func $get_const0))
   (export "get_const1" (func $get_const1))
+  (export "get_mut0" (func $get_mut0))
+  (export "get_mut1" (func $get_mut1))
   (func $get_const0 (result i32)
     global.get $const0
   )
   (func $get_const1 (result i64)
     global.get $const1
+  )
+  (func $get_mut0 (result i32)
+    global.get $mut0
+  )
+  (func $get_mut1 (result i64)
+    global.get $mut1
   )
 )

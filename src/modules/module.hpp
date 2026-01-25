@@ -63,6 +63,10 @@ public:
     return functionTable.get();
   }
 
+  const std::unique_ptr<assembler::Globals>& getGlobals() const {
+    return globals;
+  }
+
   const WasmFunction *getWasmFunction(std::string name);
   size_t getFunctionOffset(std::string name);
 };
