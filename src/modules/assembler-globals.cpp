@@ -2,8 +2,11 @@
 
 namespace assembler {
 
-std::vector<uint32_t> Globals::serialize() {
-  std::vector<uint32_t> serialized;
+/**
+ * serialize globals into a vector
+ */
+std::vector<uint64_t> Globals::serialize() {
+  std::vector<uint64_t> serialized;
   for (auto entry : entries) {
     serialized.push_back(entry.value);
   }

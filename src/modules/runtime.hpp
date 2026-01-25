@@ -29,8 +29,18 @@ private:
     return data.size() * sizeof(uint32_t);
   }
 
+  // Helper to get byte size from uint64_t vector
+  static size_t get_byte_size(const std::vector<uint64_t> &data) {
+    return data.size() * sizeof(uint64_t);
+  }
+
   // Helper to get byte pointer from uint32_t vector
   static const uint8_t *get_byte_ptr(const std::vector<uint32_t> &code) {
+    return reinterpret_cast<const uint8_t *>(code.data());
+  }
+
+  // Helper to get byte pointer from uint64_t vector
+  static const uint8_t *get_byte_ptr(const std::vector<uint64_t> &code) {
     return reinterpret_cast<const uint8_t *>(code.data());
   }
 
@@ -46,6 +56,12 @@ public:
 
   // Constructor for uint32_t vector (word array)
   CustomMemory(const std::vector<uint32_t> &data, int protectionMode) : mem_(nullptr), size_(get_byte_size(data)) {
+    if (size_ > 0) {
+      allocate_and_copy(get_byte_ptr(data), size_, protectionMode);
+    }
+  }
+
+  CustomMemory(const std::vector<uint64_t> &data, int protectionMode) : mem_(nullptr), size_(get_byte_size(data)) {
     if (size_ > 0) {
       allocate_and_copy(get_byte_ptr(data), size_, protectionMode);
     }
@@ -91,7 +107,7 @@ private:
   FuncPtr func_ptr_;
 
 public:
-  explicit WasmExecutable(const std::vector<uint8_t> &machine_code, const std::vector<uint32_t> &globals, size_t offset = 0)
+  explicit WasmExecutable(const std::vector<uint8_t> &machine_code, const std::vector<uint64_t> &globals, size_t offset = 0)
       : exec_mem_(machine_code, PROT_READ | PROT_EXEC), globals_mem_(globals, PROT_READ | PROT_WRITE),
         func_ptr_(reinterpret_cast<FuncPtr>(static_cast<char *>(exec_mem_.get()) + offset)) {
     executableMemoryAddress = reinterpret_cast<uint64_t>(exec_mem_.get());
@@ -102,7 +118,7 @@ public:
   }
 
   // Constructor for uint32_t vector
-  explicit WasmExecutable(const std::vector<uint32_t> &machine_code, const std::vector<uint32_t> &globals, size_t offset = 0)
+  explicit WasmExecutable(const std::vector<uint32_t> &machine_code, const std::vector<uint64_t> &globals, size_t offset = 0)
       : exec_mem_(machine_code, PROT_READ | PROT_EXEC), globals_mem_(globals, PROT_READ | PROT_WRITE),
         func_ptr_(reinterpret_cast<FuncPtr>(static_cast<char *>(exec_mem_.get()) + offset)) {
     executableMemoryAddress = reinterpret_cast<uint64_t>(exec_mem_.get());
@@ -157,19 +173,19 @@ public:
  */
 template <typename ReturnType, typename... Args>
 WasmExecutable<ReturnType, Args...> make_wasm_function(const std::vector<uint8_t> &code, size_t offset = 0) {
-  return WasmExecutable<ReturnType, Args...>(code, std::vector<uint32_t>(), offset);
+  return WasmExecutable<ReturnType, Args...>(code, std::vector<uint64_t>(), offset);
 }
 
 template <typename ReturnType, typename... Args>
 WasmExecutable<ReturnType, Args...> make_wasm_function(const std::vector<uint32_t> &code, size_t offset = 0) {
-  return WasmExecutable<ReturnType, Args...>(code, std::vector<uint32_t>(), offset);
+  return WasmExecutable<ReturnType, Args...>(code, std::vector<uint64_t>(), offset);
 }
 
 template <typename ReturnType, typename... Args>
 WasmExecutable<ReturnType, Args...> make_wasm_function(tiny::WasmModule &wasmModule, const std::string &funcName) {
   const auto &linkedCode = wasmModule.linkMachinecode();
   size_t exportFunctionOffset = wasmModule.getFunctionOffset(funcName);
-  auto globalMemory = wasmModule.getGlobals() ? wasmModule.getGlobals()->serialize() : std::vector<uint32_t>();
+  auto globalMemory = wasmModule.getGlobals() ? wasmModule.getGlobals()->serialize() : std::vector<uint64_t>();
   auto wasmExecutable = WasmExecutable<ReturnType, Args...>(linkedCode, globalMemory, exportFunctionOffset);
 
   // auto fnTableAddress = wasmExecutable.get_fntable_memory_address();
