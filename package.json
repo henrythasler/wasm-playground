@@ -11,7 +11,7 @@
     "wast2gtest": "python3 spec-test/wast_to_gtest.py ./spec-test/ ./tests/",
     "coverage": "npm test && mkdir -p coverage && lcov -d build/ -c -o coverage/coverage.info && lcov -r coverage/coverage.info '*/build/*' '*/11/*' '*/extern/*' '*/tests/*' -o coverage/coverage.filtered.info && genhtml coverage/coverage.filtered.info --output-directory coverage/report && lcov --summary coverage/coverage.filtered.info",
     "linter": "find src -regex '.*\\.\\(cpp\\|hpp\\|c\\|h\\)' -not -path '**/kaitai/**' | xargs clang-format -style=file:.clang-format --Werror --dry-run",
-    "kaitai": "kaitai-struct-compiler --target cpp_stl --outdir src/kaitai src/kaitai/webassembly.ksy"
+    "kaitai": "kaitai-struct-compiler --target cpp_stl --cpp-standard 11 --outdir src/kaitai src/kaitai/webassembly.ksy"
   },
   "repository": {
     "type": "git",

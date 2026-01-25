@@ -156,7 +156,7 @@ types:
             'import_types::func_type': vlq_base128_le
             'import_types::table_type': table
             'import_types::mem_type': memory
-            'import_types::global_type': global
+            'import_types::global_type': global_import
   
   table:
     seq:
@@ -185,14 +185,16 @@ types:
       - id: limits
         type: limits
 
-  global:
+  global_import:
     seq:
       - id: valtype
         type: u1
         enum: val_types
-      - id: is_mutable
+      - id: mutability
         type: u1
-        doc: the `is_` prefix avoids conflicts with the C++ keyword `mutable` in generated code
+        enum: mutability_types
+        valid:
+          any-of: [mutability_types::const, mutability_types::var]
 
   function_section:
     doc: (id 3) - Vector of type indices (see `Type Section`) for all functions in the `Code Section`
@@ -233,6 +235,19 @@ types:
       - id: globals
         type: global
         repeat: eos
+
+  global:
+    seq:
+      - id: valtype
+        type: u1
+        enum: val_types
+      - id: mutability
+        type: u1
+        enum: mutability_types
+        valid:
+          any-of: [mutability_types::const, mutability_types::var]
+      - id: init_expr
+        terminator: 0x0b
 
   export_section:
     doc: (id 7) - Exported entities
@@ -377,6 +392,10 @@ enums:
     0x01: table_type
     0x02: mem_type
     0x03: global_type
+
+  mutability_types:
+    0x00: const
+    0x01: var
 
   import_types:
     0x00: func_type

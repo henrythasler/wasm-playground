@@ -1,4 +1,7 @@
+#include <iomanip>
+
 #include "helper.hpp"
+#include "leb128.hpp"
 #include "wasm.hpp"
 #include "webassembly.h"
 
@@ -20,6 +23,6 @@ public:
 };
 
 void parseGlobalsSection(Globals &globals, webassembly_t::global_section_t &global_section);
-uint64_t parseInitExpr(void);
+uint64_t parseInitExpr(std::vector<uint8_t> &initExpr);
 
 } // namespace assembler

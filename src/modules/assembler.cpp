@@ -237,7 +237,7 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
         // immutable globals are compiled as const
         if (!global.isMutable) {
           auto registerSize =
-              (global.valType == webassembly_t::val_types_t::VAL_TYPES_F32) ? arm64::reg_size_t::SIZE_32BIT : arm64::reg_size_t::SIZE_64BIT;
+              (global.valType == webassembly_t::val_types_t::VAL_TYPES_I32) ? arm64::reg_size_t::SIZE_32BIT : arm64::reg_size_t::SIZE_64BIT;
           auto reg = registerPool.allocateRegister();
           stack.emplace_back(reg);
           arm64::emit_mov_large_immediate(reg, uint64_t(global.value), registerSize, machinecode);

@@ -45,6 +45,7 @@ public:
     class function_section_t;
     class functype_t;
     class global_t;
+    class global_import_t;
     class global_section_t;
     class import_t;
     class import_section_t;
@@ -83,6 +84,17 @@ public:
 
 private:
     static const std::set<import_types_t> _values_import_types_t;
+
+public:
+
+    enum mutability_types_t {
+        MUTABILITY_TYPES_CONST = 0,
+        MUTABILITY_TYPES_VAR = 1
+    };
+    static bool _is_defined_mutability_types_t(mutability_types_t v);
+
+private:
+    static const std::set<mutability_types_t> _values_mutability_types_t;
 
 public:
 
@@ -523,7 +535,7 @@ public:
 
     public:
 
-        global_t(kaitai::kstream* p__io, kaitai::kstruct* p__parent = nullptr, webassembly_t* p__root = nullptr);
+        global_t(kaitai::kstream* p__io, webassembly_t::global_section_t* p__parent = nullptr, webassembly_t* p__root = nullptr);
 
     private:
         void _read();
@@ -534,19 +546,43 @@ public:
 
     private:
         val_types_t m_valtype;
-        uint8_t m_is_mutable;
+        mutability_types_t m_mutability;
+        std::string m_init_expr;
         webassembly_t* m__root;
-        kaitai::kstruct* m__parent;
+        webassembly_t::global_section_t* m__parent;
 
     public:
         val_types_t valtype() const { return m_valtype; }
-
-        /**
-         * the `is_` prefix avoids conflicts with the C++ keyword `mutable` in generated code
-         */
-        uint8_t is_mutable() const { return m_is_mutable; }
+        mutability_types_t mutability() const { return m_mutability; }
+        std::string init_expr() const { return m_init_expr; }
         webassembly_t* _root() const { return m__root; }
-        kaitai::kstruct* _parent() const { return m__parent; }
+        webassembly_t::global_section_t* _parent() const { return m__parent; }
+    };
+
+    class global_import_t : public kaitai::kstruct {
+
+    public:
+
+        global_import_t(kaitai::kstream* p__io, webassembly_t::import_t* p__parent = nullptr, webassembly_t* p__root = nullptr);
+
+    private:
+        void _read();
+        void _clean_up();
+
+    public:
+        ~global_import_t();
+
+    private:
+        val_types_t m_valtype;
+        mutability_types_t m_mutability;
+        webassembly_t* m__root;
+        webassembly_t::import_t* m__parent;
+
+    public:
+        val_types_t valtype() const { return m_valtype; }
+        mutability_types_t mutability() const { return m_mutability; }
+        webassembly_t* _root() const { return m__root; }
+        webassembly_t::import_t* _parent() const { return m__parent; }
     };
 
     /**

@@ -20,6 +20,13 @@ const std::set<webassembly_t::import_types_t> webassembly_t::_values_import_type
 bool webassembly_t::_is_defined_import_types_t(webassembly_t::import_types_t v) {
     return webassembly_t::_values_import_types_t.find(v) != webassembly_t::_values_import_types_t.end();
 }
+const std::set<webassembly_t::mutability_types_t> webassembly_t::_values_mutability_types_t{
+    webassembly_t::MUTABILITY_TYPES_CONST,
+    webassembly_t::MUTABILITY_TYPES_VAR,
+};
+bool webassembly_t::_is_defined_mutability_types_t(webassembly_t::mutability_types_t v) {
+    return webassembly_t::_values_mutability_types_t.find(v) != webassembly_t::_values_mutability_types_t.end();
+}
 const std::set<webassembly_t::section_id_t> webassembly_t::_values_section_id_t{
     webassembly_t::SECTION_ID_CUSTOM_SECTION,
     webassembly_t::SECTION_ID_TYPE_SECTION,
@@ -380,7 +387,7 @@ webassembly_t::functype_t::~functype_t() {
 void webassembly_t::functype_t::_clean_up() {
 }
 
-webassembly_t::global_t::global_t(kaitai::kstream* p__io, kaitai::kstruct* p__parent, webassembly_t* p__root) : kaitai::kstruct(p__io) {
+webassembly_t::global_t::global_t(kaitai::kstream* p__io, webassembly_t::global_section_t* p__parent, webassembly_t* p__root) : kaitai::kstruct(p__io) {
     m__parent = p__parent;
     m__root = p__root;
     _read();
@@ -388,7 +395,11 @@ webassembly_t::global_t::global_t(kaitai::kstream* p__io, kaitai::kstruct* p__pa
 
 void webassembly_t::global_t::_read() {
     m_valtype = static_cast<webassembly_t::val_types_t>(m__io->read_u1());
-    m_is_mutable = m__io->read_u1();
+    m_mutability = static_cast<webassembly_t::mutability_types_t>(m__io->read_u1());
+    if (!( ((m_mutability == webassembly_t::MUTABILITY_TYPES_CONST) || (m_mutability == webassembly_t::MUTABILITY_TYPES_VAR)) )) {
+        throw kaitai::validation_not_any_of_error<webassembly_t::mutability_types_t>(m_mutability, m__io, std::string("/types/global/seq/1"));
+    }
+    m_init_expr = m__io->read_bytes_term(11, false, true, true);
 }
 
 webassembly_t::global_t::~global_t() {
@@ -396,6 +407,27 @@ webassembly_t::global_t::~global_t() {
 }
 
 void webassembly_t::global_t::_clean_up() {
+}
+
+webassembly_t::global_import_t::global_import_t(kaitai::kstream* p__io, webassembly_t::import_t* p__parent, webassembly_t* p__root) : kaitai::kstruct(p__io) {
+    m__parent = p__parent;
+    m__root = p__root;
+    _read();
+}
+
+void webassembly_t::global_import_t::_read() {
+    m_valtype = static_cast<webassembly_t::val_types_t>(m__io->read_u1());
+    m_mutability = static_cast<webassembly_t::mutability_types_t>(m__io->read_u1());
+    if (!( ((m_mutability == webassembly_t::MUTABILITY_TYPES_CONST) || (m_mutability == webassembly_t::MUTABILITY_TYPES_VAR)) )) {
+        throw kaitai::validation_not_any_of_error<webassembly_t::mutability_types_t>(m_mutability, m__io, std::string("/types/global_import/seq/1"));
+    }
+}
+
+webassembly_t::global_import_t::~global_import_t() {
+    _clean_up();
+}
+
+void webassembly_t::global_import_t::_clean_up() {
 }
 
 webassembly_t::global_section_t::global_section_t(kaitai::kstream* p__io, webassembly_t::section_t* p__parent, webassembly_t* p__root) : kaitai::kstruct(p__io) {
@@ -446,7 +478,7 @@ void webassembly_t::import_t::_read() {
     }
     case webassembly_t::IMPORT_TYPES_GLOBAL_TYPE: {
         n_importdesc = false;
-        m_importdesc = std::unique_ptr<global_t>(new global_t(m__io, this, m__root));
+        m_importdesc = std::unique_ptr<global_import_t>(new global_import_t(m__io, this, m__root));
         break;
     }
     case webassembly_t::IMPORT_TYPES_MEM_TYPE: {
