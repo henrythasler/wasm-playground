@@ -254,7 +254,7 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
           machinecode.push_back(
               arm64::encode_ldr_register(reg, reg, arm64::reg_t::XZR, arm64::index_extend_type_t::INDEX_LSL, 0, arm64::reg_size_t::SIZE_64BIT));
 
-          // add base address of executable memory to function index to get actual function address to call
+          // add globalidx offset to get the actual address of the global
           machinecode.push_back(arm64::encode_add_immediate(reg, reg, globalidx * sizeof(uint64_t), false, arm64::reg_size_t::SIZE_64BIT));
 
           // load actual global from memory location
@@ -266,11 +266,34 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
     case 0x24:
       /** global.set */
       {
+        asserte(stack.size() >= 1, "insufficient operands on stack for global.set");
+
         // get the global index
         auto globalidx = uint32_t(decoder::LEB128Decoder::decodeUnsigned(stream, streamEnd));
+        auto global = globals->entries.at(globalidx);
+        asserte(global.isMutable, "global.set: global variable at index " + std::to_string(globalidx) + " is not mutable");
 
-        // FIXME: just remove register from stack and free it
-        registerPool.freeRegister(stack.back());
+        auto addressRegister = registerPool.allocateRegister();
+        auto valueRegister = stack.back();
+
+        // encode address location to be loaded from global variable
+        auto absoluteAddress = reinterpret_cast<std::uintptr_t>(globalsMemoryAddressPtr);
+        arm64::emit_mov_large_immediate(addressRegister, uint64_t(absoluteAddress), arm64::reg_size_t::SIZE_64BIT, machinecode);
+
+        // load address of globals memory from pointer
+        machinecode.push_back(arm64::encode_ldr_register(addressRegister, addressRegister, arm64::reg_t::XZR, arm64::index_extend_type_t::INDEX_LSL,
+                                                         0, arm64::reg_size_t::SIZE_64BIT));
+
+        // add globalidx offset to get the actual address of the global
+        machinecode.push_back(
+            arm64::encode_add_immediate(addressRegister, addressRegister, globalidx * sizeof(uint64_t), false, arm64::reg_size_t::SIZE_64BIT));
+
+        // store value in address
+        machinecode.push_back(arm64::encode_str_register(valueRegister, addressRegister, arm64::reg_t::XZR, arm64::index_extend_type_t::INDEX_LSL, 0,
+                                                         arm64::reg_size_t::SIZE_64BIT));
+
+        registerPool.freeRegister(addressRegister);
+        registerPool.freeRegister(valueRegister);
         stack.pop_back();
 
         break;

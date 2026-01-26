@@ -101,7 +101,7 @@ uint32_t encode_str_unsigned_offset(reg_t rt, reg_t rn, uint16_t imm12, reg_size
 uint32_t encode_ldr_register(reg_t rt, reg_t rn, reg_t rm, index_extend_type_t option, uint8_t shift_amount, reg_size_t size) {
   uint32_t instr = 0;
 
-  // Base opcode for STR unsigned offset
+  // Base opcode for LDR register
   switch (size) {
   // case reg_size_t::SIZE_8BIT: // LDRB
   //   instr = 0x38607800;
@@ -121,7 +121,50 @@ uint32_t encode_ldr_register(reg_t rt, reg_t rn, reg_t rm, index_extend_type_t o
     asserte(false, "encode_ldr_register(): invalid size value");
     break;
   }
-  instr |= (rm & 0x1F) << 16; // Rm (offset register)
+  instr |= (rm & 0x1F) << 16; // Rm (index register)
+  instr |= (rn & 0x1F) << 5;  // Rn (base register)
+  instr |= (rt & 0x1F);       // Rt (source register)
+
+  return instr;
+}
+
+/**
+ * This instruction calculates an address from a base register value and an offset register value, and stores a 32-bit word or a 64-bit doubleword to
+ * the calculated address, from a register.
+ *
+ * `STR w0, [x0, x0, lsl #2]`
+ * @param rt source register
+ * @param rn base register
+ * @param rm index register
+ * @param option extension to be applied to the index register
+ * @param shift_amount the left shift amount to be applied after extension in the range 0..4
+ * @param size 32-bit or 64-bit variant
+ * @return the encoded instruction
+ */
+uint32_t encode_str_register(reg_t rt, reg_t rn, reg_t rm, index_extend_type_t option, uint8_t shift_amount, reg_size_t size) {
+  uint32_t instr = 0;
+
+  // Base opcode for STR register
+  switch (size) {
+  // case reg_size_t::SIZE_8BIT: // STRB
+  //   instr = 0x0;
+  //   break;
+  // case reg_size_t::SIZE_16BIT: // STRH
+  //   instr = 0x0;
+  //   break;
+  case reg_size_t::SIZE_32BIT: // STR with index shifted by 2 bits
+    asserte((shift_amount == 0) || (shift_amount == 2), "encode_str_register(): invalid shift amount for 32-bit load");
+    instr = 0xB8200800 | (shift_amount == 2 ? 0x1000 : 0) | (static_cast<uint32_t>(option) << 13);
+    break;
+  case reg_size_t::SIZE_64BIT: // STR
+    asserte((shift_amount == 0) || (shift_amount == 3), "encode_str_register(): invalid shift amount for 64-bit load");
+    instr = 0xF8200800 | (shift_amount == 3 ? 0x1000 : 0) | (static_cast<uint32_t>(option) << 13);
+    break;
+  default:
+    asserte(false, "encode_str_register(): invalid size value");
+    break;
+  }
+  instr |= (rm & 0x1F) << 16; // Rm (index register)
   instr |= (rn & 0x1F) << 5;  // Rn (base register)
   instr |= (rt & 0x1F);       // Rt (source register)
 
