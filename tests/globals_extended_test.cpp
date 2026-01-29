@@ -47,7 +47,13 @@ TEST(globals_extended, get_mut1) {
 TEST(globals_extended, store_mut0) {
   auto wasmModule = helper::loadModule("globals-extended.wasm");
   auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t, wasm::wasm_i32_t>(wasmModule, "store_mut0");
-  EXPECT_EQ(wasmFunction(42), 42);
+  EXPECT_EQ(wasmFunction(-42), -42);
+}
+
+TEST(globals_extended, store_mut1) {
+  auto wasmModule = helper::loadModule("globals-extended.wasm");
+  auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i64_t, wasm::wasm_i64_t>(wasmModule, "store_mut1");
+  EXPECT_EQ(wasmFunction(-42), -42);
 }
 
 } // namespace

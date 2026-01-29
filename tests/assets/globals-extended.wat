@@ -8,6 +8,7 @@
   (export "get_mut0" (func $get_mut0))
   (export "get_mut1" (func $get_mut1))
   (export "store_mut0" (func $store_mut0))
+  (export "store_mut1" (func $store_mut1))
   (func $get_const0 (result i32)
     global.get $const0
   )
@@ -24,5 +25,10 @@
     local.get $arg
     global.set $mut0
     global.get $mut0    
+  )
+  (func $store_mut1 (param $arg i64) (result i64)
+    local.get $arg
+    global.set $mut1
+    global.get $mut1    
   )
 )

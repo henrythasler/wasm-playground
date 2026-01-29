@@ -16,7 +16,7 @@ Progress:
 - Chapter07: ✅
 - Chapter08: ✅
 - Chapter09: ✅
-- Chapter10: 50%
+- Chapter10: 95%
 - Chapter11: 0%
 - Chapter12: 0%
 - Chapter13: 0%
@@ -95,6 +95,12 @@ Set breakpoint in source code. Start Debugging (F5).
 ## Kaitai Struct
 
 `kaitai-struct-compiler --target cpp_stl webassembly.ksy`
+
+## Machinecode Layout
+
+ [trap-handler]
+ [function table]
+ [functions]
 
 ## References
 
