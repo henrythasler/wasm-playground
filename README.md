@@ -16,7 +16,7 @@ Progress:
 - Chapter07: ✅
 - Chapter08: ✅
 - Chapter09: ✅
-- Chapter10: 95%
+- Chapter10: ✅
 - Chapter11: 0%
 - Chapter12: 0%
 - Chapter13: 0%
@@ -96,11 +96,14 @@ Set breakpoint in source code. Start Debugging (F5).
 
 `kaitai-struct-compiler --target cpp_stl webassembly.ksy`
 
-## Machinecode Layout
+## Design Documentation
 
- [trap-handler]
- [function table]
- [functions]
+### Globals
+
+- Globals are stored in a separate dynamically allocated memory region at runtime. 
+- All globals (const and mut) are stored as 64-bit values in memory
+- Constant globals are inlined using mov/movk instructions
+- Mutable globals are accessed using a pointer to the memory location of the globals calculated from a base address and the index of the global
 
 ## References
 

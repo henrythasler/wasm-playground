@@ -99,6 +99,13 @@ TEST(objdump, wasm) {
                         STT_OBJECT);
     }
 
+    if (wasmModule.getGlobals()) {
+      auto globalMemory = wasmModule.getGlobals()->serialize();
+      writer.add_data(reinterpret_cast<const uint8_t *>(globalMemory.data()), globalMemory.size() * sizeof(uint64_t));
+      writer.add_symbol("globals", 0, globalMemory.size() * sizeof(uint64_t), 2, STT_OBJECT);
+
+    }
+
     writer.write_elf(wasmFile + ".o");
   }
   // writer_test();
