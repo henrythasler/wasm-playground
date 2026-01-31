@@ -17,7 +17,7 @@ private:
 public:
   int32_t minSize;
   int32_t maxSize;
-  InitData initData;
+  InitData init;
 
   int32_t currentSize;
 

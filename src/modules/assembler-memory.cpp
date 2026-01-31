@@ -23,17 +23,17 @@ void LinearMemory::parseMemorySection(webassembly_t::memory_section_t *memory_se
       // parse offset value
       auto rawExpr = data->offset_expr();
       std::vector<uint8_t> expression(rawExpr.begin(), rawExpr.end());
-      this->initData.offset = parseInitExpr(expression);
+      this->init.offset = parseInitExpr(expression);
 
       auto init_vec = data->init_vec();
       // verify size boundaries
-      asserte(init_vec.size() + this->initData.offset <= this->maxSize * wasm::LINEAR_MEMORY_PAGE_SIZE,
+      asserte(init_vec.size() + this->init.offset <= this->maxSize * wasm::LINEAR_MEMORY_PAGE_SIZE,
               "parseMemorySection(): Data segment does not fit into defined linear memory");
       // copy initializer vector from data section into linear memory structure
-      this->initData.data.assign(init_vec.begin(), init_vec.end());
+      this->init.data.assign(init_vec.begin(), init_vec.end());
 
       // calculate initial number of pages
-      this->currentSize = (this->initData.data.size() + this->initData.offset) / wasm::LINEAR_MEMORY_PAGE_SIZE + 1;
+      this->currentSize = (this->init.data.size() + this->init.offset) / wasm::LINEAR_MEMORY_PAGE_SIZE + 1;
     }
   }
 }

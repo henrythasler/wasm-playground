@@ -128,8 +128,8 @@ public:
     }
 
     if (linearMemory) {
-      linear_mem_ = std::make_unique<CustomMemory>(linearMemory->currentSize * wasm::LINEAR_MEMORY_PAGE_SIZE, linearMemory->initData.data,
-                                                   linearMemory->initData.offset, PROT_READ | PROT_WRITE);
+      linear_mem_ = std::make_unique<CustomMemory>(linearMemory->currentSize * wasm::LINEAR_MEMORY_PAGE_SIZE, linearMemory->init.data,
+                                                   linearMemory->init.offset, PROT_READ | PROT_WRITE);
       linearMemoryAddress = reinterpret_cast<uint64_t>(linear_mem_->getAddress());
     }
 

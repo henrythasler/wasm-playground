@@ -931,6 +931,9 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
       } else if (*(stream - 1) == 0x2D) {
         registerSize = arm64::reg_size_t::SIZE_8BIT;
         signedVariant = arm64::signed_variant_t::UNSIGNED;
+      } else if (*(stream - 1) == 0x28) {
+        registerSize = arm64::reg_size_t::SIZE_32BIT;
+        signedVariant = arm64::signed_variant_t::SIGNED;
       }
 
       // decode memarg immediate
