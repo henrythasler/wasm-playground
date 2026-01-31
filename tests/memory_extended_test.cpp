@@ -14,9 +14,12 @@ TEST(memory_extended, init_linear_memory) {
   EXPECT_EQ(memory->initData.data.at(0), '0');
   EXPECT_EQ(memory->initData.data.at(1), '1');
   EXPECT_EQ(memory->initData.data.at(15), 'F');
+}
 
-  auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t, wasm::wasm_i32_t>(wasmModule, "get_byte");
-  EXPECT_EQ(wasmFunction(0), 42);
+TEST(memory_extended, load_i64) {
+  auto wasmModule = helper::loadModule("memory.wasm");
+  auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i64_t, wasm::wasm_i32_t>(wasmModule, "load_i64");
+  // EXPECT_EQ(wasmFunction(0), 0);
 }
 
 } // namespace

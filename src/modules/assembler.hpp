@@ -29,6 +29,10 @@ extern uint64_t *executableMemoryAddressPtr;
 extern uint64_t globalsMemoryAddress;
 extern uint64_t *globalsMemoryAddressPtr;
 
+// Variable to hold the address of Linear Memory
+extern uint64_t linearMemoryAddress;
+extern uint64_t *linearMemoryAddressPtr;
+
 namespace assembler {
 class RegisterPool {
 private:

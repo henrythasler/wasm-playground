@@ -1,11 +1,15 @@
 #include "assembler.hpp"
 
 jmp_buf g_jmpbuf;
+
 uint64_t executableMemoryAddress = 0;
 uint64_t *executableMemoryAddressPtr = &executableMemoryAddress;
 
 uint64_t globalsMemoryAddress = 0;
 uint64_t *globalsMemoryAddressPtr = &globalsMemoryAddress;
+
+uint64_t linearMemoryAddress = 0;
+uint64_t *linearMemoryAddressPtr = &linearMemoryAddress;
 
 extern "C" void wasmTrapHandler(int error_code) {
   longjmp(g_jmpbuf, error_code);
@@ -913,6 +917,57 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
         }
         break;
       }
+    case 0x28: // i32.load
+    case 0x29: // i64.load
+    case 0x2C: // i32.load8_s
+    case 0x2D: // i32.load8_u
+    {
+      auto registerSize = arm64::reg_size_t::SIZE_64BIT;
+      auto signedVariant = arm64::signed_variant_t::UNSIGNED;
+
+      if (*(stream - 1) == 0x2C) {
+        registerSize = arm64::reg_size_t::SIZE_8BIT;
+        signedVariant = arm64::signed_variant_t::SIGNED;
+      } else if (*(stream - 1) == 0x2D) {
+        registerSize = arm64::reg_size_t::SIZE_8BIT;
+        signedVariant = arm64::signed_variant_t::UNSIGNED;
+      }
+
+      // decode memarg immediate
+      auto alignment = uint32_t(decoder::LEB128Decoder::decodeUnsigned(stream, streamEnd));
+      auto offset = uint32_t(decoder::LEB128Decoder::decodeUnsigned(stream, streamEnd));
+
+      // ensure that we have enough operands on the stack for the index
+      asserte(stack.size() >= 1, "insufficient operands on stack for load");
+
+      // get address from the stack
+      auto index = stack.back();
+      auto result = registerPool.allocateRegister();
+
+      // encode address location to be loaded from global variable
+      auto absoluteAddress = reinterpret_cast<std::uintptr_t>(linearMemoryAddressPtr);
+      arm64::emit_mov_large_immediate(result, uint64_t(absoluteAddress), arm64::reg_size_t::SIZE_64BIT, machinecode);
+
+      // load address of linear memory from pointer
+      machinecode.push_back(
+          arm64::encode_ldr_register(result, result, arm64::reg_t::XZR, arm64::index_extend_type_t::INDEX_LSL, 0, arm64::reg_size_t::SIZE_64BIT));
+
+      // optional: add offset immediate to base address
+      if (offset > 0) {
+        machinecode.push_back(arm64::encode_add_immediate(result, result, offset, false, arm64::reg_size_t::SIZE_64BIT));
+      }
+
+      // add index to address
+      machinecode.push_back(arm64::encode_add_register(result, result, index, 0, arm64::reg_shift_t::SHIFT_LSL, arm64::reg_size_t::SIZE_64BIT));
+
+      // load actual global from memory location
+      machinecode.push_back(arm64::encode_ldr_register(result, result, arm64::reg_t::XZR, arm64::index_extend_type_t::INDEX_LSL, 0, registerSize));
+
+      stack.pop_back();
+      registerPool.freeRegister(index);
+      stack.emplace_back(result);
+      break;
+    }
     case 0x00:
       /** unreachable */
       {
