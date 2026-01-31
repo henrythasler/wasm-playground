@@ -9,7 +9,7 @@ TEST(memory_extended, init_linear_memory) {
   auto wasmModule = helper::loadModule("memory.wasm");
   auto &memory = wasmModule.getMemory();
   EXPECT_EQ(memory->minSize, 0);
-  EXPECT_EQ(memory->maxSize, MAX_LINEAR_MEMORY_PAGES);
+  EXPECT_EQ(memory->maxSize, wasm::MAX_LINEAR_MEMORY_PAGES);
   EXPECT_EQ(memory->initData.offset, 768);
   EXPECT_EQ(memory->initData.data.at(0), '0');
   EXPECT_EQ(memory->initData.data.at(1), '1');

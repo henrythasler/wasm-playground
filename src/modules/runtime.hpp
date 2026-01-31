@@ -21,7 +21,7 @@ namespace tiny {
  */
 class CustomMemory {
 private:
-  void *mem_;
+  uint8_t *mem_;
   size_t size_;
 
   // Helper to get byte size from uint32_t vector
@@ -45,6 +45,7 @@ private:
   }
 
   void allocate_and_copy(const uint8_t *data, size_t byte_size, int protectionMode);
+  void allocate_and_copy(const uint8_t *init, size_t initSize, size_t initOffset, int protectionMode);
 
 public:
   // Constructor for uint8_t vector (byte array)
@@ -64,6 +65,12 @@ public:
   CustomMemory(const std::vector<uint64_t> &data, int protectionMode) : mem_(nullptr), size_(get_byte_size(data)) {
     if (size_ > 0) {
       allocate_and_copy(get_byte_ptr(data), size_, protectionMode);
+    }
+  }
+
+  CustomMemory(size_t size, const std::vector<uint8_t> &init, size_t initOffset, int protectionMode) : mem_(nullptr), size_(size) {
+    if (size_ > 0) {
+      allocate_and_copy(init.data(), init.size(), initOffset, protectionMode);
     }
   }
 
@@ -103,13 +110,14 @@ template <typename ReturnType, typename... Args> class WasmExecutable {
 private:
   std::unique_ptr<CustomMemory> exec_mem_;
   std::unique_ptr<CustomMemory> globals_mem_;
-  std::unique_ptr<CustomMemory> linearMemory;
+  std::unique_ptr<CustomMemory> linear_mem_;
   using FuncPtr = ReturnType (*)(Args...);
   FuncPtr func_ptr_;
 
 public:
   WasmExecutable() = default;
-  WasmExecutable(const std::vector<uint32_t> &machine_code, const std::unique_ptr<std::vector<uint64_t>> &globals, size_t offset = 0)
+  WasmExecutable(const std::vector<uint32_t> &machine_code, const std::unique_ptr<std::vector<uint64_t>> &globals,
+                 const std::unique_ptr<assembler::LinearMemory> &linearMemory, size_t offset = 0)
       : WasmExecutable() {
     exec_mem_ = std::make_unique<CustomMemory>(machine_code, PROT_READ | PROT_EXEC);
     executableMemoryAddress = reinterpret_cast<uint64_t>(exec_mem_->getAddress());
@@ -117,6 +125,12 @@ public:
     if (globals) {
       globals_mem_ = std::make_unique<CustomMemory>(*globals.get(), PROT_READ | PROT_WRITE);
       globalsMemoryAddress = reinterpret_cast<uint64_t>(globals_mem_->getAddress());
+    }
+
+    if (linearMemory) {
+      linear_mem_ = std::make_unique<CustomMemory>(linearMemory->currentSize * wasm::LINEAR_MEMORY_PAGE_SIZE, linearMemory->initData.data,
+                                                   linearMemory->initData.offset, PROT_READ | PROT_WRITE);
+      linearMemoryAddress = reinterpret_cast<uint64_t>(linear_mem_->getAddress());
     }
 
     func_ptr_ = reinterpret_cast<FuncPtr>(static_cast<char *>(exec_mem_->getAddress()) + offset);
@@ -158,7 +172,7 @@ public:
  */
 template <typename ReturnType, typename... Args>
 WasmExecutable<ReturnType, Args...> make_wasm_function(const std::vector<uint32_t> &code, size_t offset = 0) {
-  return WasmExecutable<ReturnType, Args...>(code, nullptr, offset);
+  return WasmExecutable<ReturnType, Args...>(code, nullptr, nullptr, offset);
 }
 
 template <typename ReturnType, typename... Args>
@@ -166,7 +180,7 @@ WasmExecutable<ReturnType, Args...> make_wasm_function(tiny::WasmModule &wasmMod
   const auto &linkedCode = wasmModule.linkMachinecode();
   size_t exportFunctionOffset = wasmModule.getFunctionOffset(funcName);
   const auto globalMemory = wasmModule.getGlobals() ? std::make_unique<std::vector<uint64_t>>(wasmModule.getGlobals()->serialize()) : nullptr;
-  auto wasmExecutable = WasmExecutable<ReturnType, Args...>(linkedCode, globalMemory, exportFunctionOffset);
+  auto wasmExecutable = WasmExecutable<ReturnType, Args...>(linkedCode, globalMemory, wasmModule.getMemory(), exportFunctionOffset);
   return wasmExecutable;
 }
 

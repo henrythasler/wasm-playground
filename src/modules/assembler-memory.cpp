@@ -9,11 +9,11 @@ void LinearMemory::parseMemorySection(webassembly_t::memory_section_t *memory_se
 
   auto limits = wasm_memory->limits();
   this->minSize = limits->min()->value();
-  this->maxSize = limits->flags() == 0x01 ? limits->max()->value() : MAX_LINEAR_MEMORY_PAGES;
+  this->maxSize = limits->flags() == 0x01 ? limits->max()->value() : wasm::MAX_LINEAR_MEMORY_PAGES;
 
   asserte(this->minSize <= this->minSize, "parseMemorySection(): minSize is larger than maxSize");
-  asserte(this->minSize <= MAX_LINEAR_MEMORY_PAGES, "parseMemorySection(): minSize of linear memory too large");
-  asserte(this->maxSize <= MAX_LINEAR_MEMORY_PAGES, "parseMemorySection(): maxSize of linear memory too large");
+  asserte(this->minSize <= wasm::MAX_LINEAR_MEMORY_PAGES, "parseMemorySection(): minSize of linear memory too large");
+  asserte(this->maxSize <= wasm::MAX_LINEAR_MEMORY_PAGES, "parseMemorySection(): maxSize of linear memory too large");
 
   if (data_section != nullptr) {
     asserte(data_section->num_data()->value() == 1, "parseMemorySection(): Found unsupported number of data sections");
@@ -27,10 +27,13 @@ void LinearMemory::parseMemorySection(webassembly_t::memory_section_t *memory_se
 
       auto init_vec = data->init_vec();
       // verify size boundaries
-      asserte(init_vec.size() + this->initData.offset <= this->maxSize * LINEAR_MEMORY_PAGE_SIZE,
+      asserte(init_vec.size() + this->initData.offset <= this->maxSize * wasm::LINEAR_MEMORY_PAGE_SIZE,
               "parseMemorySection(): Data segment does not fit into defined linear memory");
       // copy initializer vector from data section into linear memory structure
       this->initData.data.assign(init_vec.begin(), init_vec.end());
+
+      // calculate initial number of pages
+      this->currentSize = (this->initData.data.size() + this->initData.offset) / wasm::LINEAR_MEMORY_PAGE_SIZE + 1;
     }
   }
 }

@@ -5,8 +5,6 @@
 #include "wasm.hpp"
 #include "webassembly.h"
 
-#define MAX_LINEAR_MEMORY_PAGES 16
-#define LINEAR_MEMORY_PAGE_SIZE 0x10000
 namespace assembler {
 
 struct InitData {
@@ -20,6 +18,8 @@ public:
   int32_t minSize;
   int32_t maxSize;
   InitData initData;
+
+  int32_t currentSize;
 
   LinearMemory() = default;
   ~LinearMemory() = default;
