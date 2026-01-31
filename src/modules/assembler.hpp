@@ -11,6 +11,7 @@
 #include "aarch64-instructions-mem.hpp"
 #include "aarch64-instructions.hpp"
 #include "assembler-globals.hpp"
+#include "assembler-memory.hpp"
 #include "assembler-tables.hpp"
 #include "helper.hpp"
 #include "leb128.hpp"

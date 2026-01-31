@@ -72,6 +72,8 @@ void WasmModule::compileModule() {
   auto table_section = getSectionContent<webassembly_t::table_section_t>(*(wasm->sections()), webassembly_t::SECTION_ID_TABLE_SECTION);
   auto element_section = getSectionContent<webassembly_t::element_section_t>(*(wasm->sections()), webassembly_t::SECTION_ID_ELEMENT_SECTION);
   auto global_section = getSectionContent<webassembly_t::global_section_t>(*(wasm->sections()), webassembly_t::SECTION_ID_GLOBAL_SECTION);
+  auto memory_section = getSectionContent<webassembly_t::memory_section_t>(*(wasm->sections()), webassembly_t::SECTION_ID_MEMORY_SECTION);
+  auto data_section = getSectionContent<webassembly_t::data_section_t>(*(wasm->sections()), webassembly_t::SECTION_ID_DATA_SECTION);
 
   asserte(code_section != nullptr, "WasmModule: Invalid Code Section");
   asserte(code_section->entries() != nullptr, "WasmModule: Code section is empty");
@@ -107,6 +109,13 @@ void WasmModule::compileModule() {
     globals = std::make_unique<assembler::Globals>();
     assembler::parseGlobalsSection(*globals, *global_section);
   }
+
+  // process memory section
+  if (memory_section != nullptr) {
+    memory = std::make_unique<assembler::LinearMemory>();
+    memory->parseMemorySection(*memory_section, *data_section);
+  }
+
 
   // Compile each function in the code section
   for (size_t j = 0; j < code_section->entries()->size(); ++j) {

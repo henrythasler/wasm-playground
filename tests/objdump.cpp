@@ -57,6 +57,7 @@ TEST(objdump, wasm) {
       "functions",
       "functions_indirect",
       "globals-extended",
+      "memory",
       // tutorial chapters (in sequence)
       "empty-fn",
       "local.0",

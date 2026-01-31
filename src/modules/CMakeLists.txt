@@ -8,6 +8,7 @@ add_library(tiny_modules STATIC
     assembler.cpp
     assembler-tables.cpp
     assembler-globals.cpp
+    assembler-memory.cpp
     builtin.cpp
     function.cpp
     runtime.cpp
