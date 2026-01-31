@@ -70,7 +70,7 @@ public:
 
   const std::unique_ptr<assembler::LinearMemory> &getMemory() const {
     return memory;
-  }  
+  }
 
   const WasmFunction *getWasmFunction(std::string name);
   size_t getFunctionOffset(std::string name);

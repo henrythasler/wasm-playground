@@ -6,7 +6,7 @@
 #include "webassembly.h"
 
 #define MAX_LINEAR_MEMORY_PAGES 16
-
+#define LINEAR_MEMORY_PAGE_SIZE 0x10000
 namespace assembler {
 
 struct InitData {
@@ -24,7 +24,7 @@ public:
   LinearMemory() = default;
   ~LinearMemory() = default;
 
-  void parseMemorySection(webassembly_t::memory_section_t &memory_section, webassembly_t::data_section_t &data_section);
+  void parseMemorySection(webassembly_t::memory_section_t *memory_section, webassembly_t::data_section_t *data_section);
 };
 
 } // namespace assembler

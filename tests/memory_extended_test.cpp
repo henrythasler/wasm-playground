@@ -8,8 +8,12 @@ namespace {
 TEST(memory_extended, init_linear_memory) {
   auto wasmModule = helper::loadModule("memory.wasm");
   auto &memory = wasmModule.getMemory();
-  EXPECT_EQ(memory->minSize, 1);
-  EXPECT_EQ(memory->maxSize, 4);
+  EXPECT_EQ(memory->minSize, 0);
+  EXPECT_EQ(memory->maxSize, MAX_LINEAR_MEMORY_PAGES);
+  EXPECT_EQ(memory->initData.offset, 768);
+  EXPECT_EQ(memory->initData.data.at(0), '0');
+  EXPECT_EQ(memory->initData.data.at(1), '1');
+  EXPECT_EQ(memory->initData.data.at(15), 'F');
 
   auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t, wasm::wasm_i32_t>(wasmModule, "get_byte");
   EXPECT_EQ(wasmFunction(0), 42);
