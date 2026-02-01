@@ -103,12 +103,14 @@ uint32_t encode_ldr_register(reg_t rt, reg_t rn, reg_t rm, index_extend_type_t o
 
   // Base opcode for LDR register
   switch (size) {
-  // case reg_size_t::SIZE_8BIT: // LDRB
-  //   instr = 0x38607800;
-  //   break;
-  // case reg_size_t::SIZE_16BIT: // LDRH
-  //   instr = 0x79000000;
-  //   break;
+  case reg_size_t::SIZE_8BIT: // LDRB
+    asserte(shift_amount == 0, "encode_ldr_register(): invalid shift amount for 8-bit load");
+    instr = 0x38600800 | (shift_amount == 0 ? 0x1000 : 0) | (static_cast<uint32_t>(option) << 13);
+    break;
+  case reg_size_t::SIZE_16BIT: // LDRH
+    asserte((shift_amount == 0) || (shift_amount == 1), "encode_ldr_register(): invalid shift amount for 16-bit load");
+    instr = 0x78600800 | (shift_amount == 1 ? 0x1000 : 0) | (static_cast<uint32_t>(option) << 13);
+    break;
   case reg_size_t::SIZE_32BIT: // LDR with index shifted by 2 bits
     asserte((shift_amount == 0) || (shift_amount == 2), "encode_ldr_register(): invalid shift amount for 32-bit load");
     instr = 0xB8600800 | (shift_amount == 2 ? 0x1000 : 0) | (static_cast<uint32_t>(option) << 13);

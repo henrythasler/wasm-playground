@@ -25,6 +25,10 @@ TEST(instructions, ldr) {
 
   EXPECT_THROW(encode_ldr_unsigned_offset(X1, SP, 16, reg_size_t(12)), std::runtime_error);
 
+  // LDRB w0, [x0, x0]
+  EXPECT_EQ_HEX(encode_ldr_register(W0, X0, X0, index_extend_type_t::INDEX_LSL, 0, reg_size_t::SIZE_8BIT), 0x38607800);
+  // LDRH w0, [x0, x0, lsl #1]
+  EXPECT_EQ_HEX(encode_ldr_register(W0, X0, X0, index_extend_type_t::INDEX_LSL, 1, reg_size_t::SIZE_16BIT), 0x78607800);
   // LDR w0, [x0, x0, lsl #2]
   EXPECT_EQ_HEX(encode_ldr_register(W0, X0, X0, index_extend_type_t::INDEX_LSL, 2, reg_size_t::SIZE_32BIT), 0xB8607800);
   // LDR x0, [x0, x0, lsl #3]

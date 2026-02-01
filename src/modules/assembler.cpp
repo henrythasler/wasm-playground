@@ -921,6 +921,8 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
     case 0x29: // i64.load
     case 0x2C: // i32.load8_s
     case 0x2D: // i32.load8_u
+    case 0x2E: // i32.load16_s
+    case 0x2F: // i32.load16_u
     {
       auto registerSize = arm64::reg_size_t::SIZE_64BIT;
       auto signedVariant = arm64::signed_variant_t::UNSIGNED;
@@ -930,6 +932,12 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
         signedVariant = arm64::signed_variant_t::SIGNED;
       } else if (*(stream - 1) == 0x2D) {
         registerSize = arm64::reg_size_t::SIZE_8BIT;
+        signedVariant = arm64::signed_variant_t::UNSIGNED;
+      } else if (*(stream - 1) == 0x2E) {
+        registerSize = arm64::reg_size_t::SIZE_16BIT;
+        signedVariant = arm64::signed_variant_t::SIGNED;
+      } else if (*(stream - 1) == 0x2F) {
+        registerSize = arm64::reg_size_t::SIZE_16BIT;
         signedVariant = arm64::signed_variant_t::UNSIGNED;
       } else if (*(stream - 1) == 0x28) {
         registerSize = arm64::reg_size_t::SIZE_32BIT;
