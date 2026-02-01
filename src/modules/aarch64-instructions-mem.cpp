@@ -98,31 +98,127 @@ uint32_t encode_str_unsigned_offset(reg_t rt, reg_t rn, uint16_t imm12, reg_size
  * @param size 32-bit or 64-bit variant
  * @return the encoded instruction
  */
-uint32_t encode_ldr_register(reg_t rt, reg_t rn, reg_t rm, index_extend_type_t option, uint8_t shift_amount, reg_size_t size) {
+uint32_t encode_ldr_register(reg_t rt, reg_t rn, reg_t rm, index_extend_type_t option, uint8_t shift_amount, mem_size_t mem, reg_size_t size) {
   uint32_t instr = 0;
 
   // Base opcode for LDR register
-  switch (size) {
-  case reg_size_t::SIZE_8BIT: // LDRB
+  switch (mem) {
+  case mem_size_t::MEM_8BIT: // LDRB
     asserte(shift_amount == 0, "encode_ldr_register(): invalid shift amount for 8-bit load");
-    instr = 0x38600800 | (shift_amount == 0 ? 0x1000 : 0) | (static_cast<uint32_t>(option) << 13);
+    switch (size) {
+    case reg_size_t::SIZE_32BIT:
+      instr = 0x38600800 | (shift_amount == 0 ? 0x1000 : 0) | (static_cast<uint32_t>(option) << 13);
+      break;
+    default:
+      asserte(false, "encode_ldr_register(): invalid target register size for LDRB");
+      break;
+    }
     break;
-  case reg_size_t::SIZE_16BIT: // LDRH
+  case mem_size_t::MEM_16BIT: // LDRH
     asserte((shift_amount == 0) || (shift_amount == 1), "encode_ldr_register(): invalid shift amount for 16-bit load");
-    instr = 0x78600800 | (shift_amount == 1 ? 0x1000 : 0) | (static_cast<uint32_t>(option) << 13);
+    switch (size) {
+    case reg_size_t::SIZE_32BIT:
+      instr = 0x78600800 | (shift_amount == 1 ? 0x1000 : 0) | (static_cast<uint32_t>(option) << 13);
+      break;
+    default:
+      asserte(false, "encode_ldr_register(): invalid target register size for LDRH");
+      break;
+    }
     break;
-  case reg_size_t::SIZE_32BIT: // LDR with index shifted by 2 bits
+  case mem_size_t::MEM_32BIT: // LDR
     asserte((shift_amount == 0) || (shift_amount == 2), "encode_ldr_register(): invalid shift amount for 32-bit load");
-    instr = 0xB8600800 | (shift_amount == 2 ? 0x1000 : 0) | (static_cast<uint32_t>(option) << 13);
+    switch (size) {
+    case reg_size_t::SIZE_32BIT:
+      instr = 0xB8600800 | (shift_amount == 2 ? 0x1000 : 0) | (static_cast<uint32_t>(option) << 13);
+      break;
+    default:
+      asserte(false, "encode_ldr_register(): invalid target register size for LDRH");
+      break;
+    }
     break;
-  case reg_size_t::SIZE_64BIT: // LDR
+  case mem_size_t::MEM_64BIT:
     asserte((shift_amount == 0) || (shift_amount == 3), "encode_ldr_register(): invalid shift amount for 64-bit load");
-    instr = 0xF8600800 | (shift_amount == 3 ? 0x1000 : 0) | (static_cast<uint32_t>(option) << 13);
+    switch (size) {
+    case reg_size_t::SIZE_64BIT:
+      instr = 0xF8600800 | (shift_amount == 3 ? 0x1000 : 0) | (static_cast<uint32_t>(option) << 13);
+      break;
+    default:
+      asserte(false, "encode_ldr_register(): invalid target register size for LDRH");
+      break;
+    }
     break;
   default:
     asserte(false, "encode_ldr_register(): invalid size value");
     break;
   }
+  instr |= (rm & 0x1F) << 16; // Rm (index register)
+  instr |= (rn & 0x1F) << 5;  // Rn (base register)
+  instr |= (rt & 0x1F);       // Rt (source register)
+
+  return instr;
+}
+
+/**
+ * This instruction calculates an address from a base register value and an offset register value, loads a byte from memory, sign-extends it, and
+ * writes it to a register.
+ *
+ * `LDRSH w0, [x0, x0, LSL #1]`
+ * @param rt destination register
+ * @param rn base register
+ * @param rm offset register
+ * @param option extension to be applied to the offset register
+ * @param shift_amount the left shift amount to be applied after extension in the range 0..2
+ * @param size 32-bit or 64-bit variant
+ * @return the encoded instruction
+ */
+uint32_t encode_ldr_register_signed(reg_t rt, reg_t rn, reg_t rm, index_extend_type_t option, uint8_t shift_amount, mem_size_t mem, reg_size_t size) {
+  uint32_t instr = 0;
+
+  switch (mem) {
+  case mem_size_t::MEM_8BIT: // LDRSB
+    asserte(shift_amount == 0, "encode_ldr_register_signed(): invalid shift amount for 8-bit load");
+    switch (size) {
+    case reg_size_t::SIZE_32BIT:
+      instr = 0x38E00800 | (shift_amount == 0 ? 0x1000 : 0) | (static_cast<uint32_t>(option) << 13);
+      break;
+    case reg_size_t::SIZE_64BIT:
+      instr = 0x38A00800 | (shift_amount == 0 ? 0x1000 : 0) | (static_cast<uint32_t>(option) << 13);
+      break;
+    default:
+      asserte(false, "encode_ldr_register_signed(): invalid target register size for LDRSB");
+      break;
+    }
+    break;
+  case mem_size_t::MEM_16BIT: // LDRSH
+    asserte((shift_amount == 0) || (shift_amount == 1), "encode_ldr_register_signed(): invalid shift amount for 16-bit load");
+    switch (size) {
+    case reg_size_t::SIZE_32BIT:
+      instr = 0x78E00800 | (shift_amount == 1 ? 0x1000 : 0) | (static_cast<uint32_t>(option) << 13);
+      break;
+    case reg_size_t::SIZE_64BIT:
+      instr = 0x78A00800 | (shift_amount == 1 ? 0x1000 : 0) | (static_cast<uint32_t>(option) << 13);
+      break;
+    default:
+      asserte(false, "encode_ldr_register_signed(): invalid target register size for LDRSH");
+      break;
+    }
+    break;
+  case mem_size_t::MEM_32BIT: // LDRSW, always signs-extends to 64-bit
+    asserte((shift_amount == 0) || (shift_amount == 2), "encode_ldr_register_signed(): invalid shift amount for 32-bit load");
+    switch (size) {
+    case reg_size_t::SIZE_64BIT:
+      instr = 0xB8A00800 | (shift_amount == 2 ? 0x1000 : 0) | (static_cast<uint32_t>(option) << 13);
+      break;
+    default:
+      asserte(false, "encode_ldr_register_signed(): invalid target register size for LDRSW");
+      break;
+    }
+    break;
+  default:
+    asserte(false, "encode_ldr_register_signed(): invalid source memory size");
+    break;
+  }
+
   instr |= (rm & 0x1F) << 16; // Rm (index register)
   instr |= (rn & 0x1F) << 5;  // Rn (base register)
   instr |= (rt & 0x1F);       // Rt (source register)

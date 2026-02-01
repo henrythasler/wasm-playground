@@ -4,10 +4,10 @@
 #include <gtest/gtest.h>
 #include <iomanip>
 
-#include "../src/modules/aarch64-instructions.hpp"
 #include "../src/modules/aarch64-instructions-bit.hpp"
-#include "../src/modules/aarch64-instructions-mem.hpp"
 #include "../src/modules/aarch64-instructions-branch.hpp"
+#include "../src/modules/aarch64-instructions-mem.hpp"
+#include "../src/modules/aarch64-instructions.hpp"
 
 #define EXPECT_EQ_HEX(actual, expected) EXPECT_EQ(actual, expected) << "Expected: 0x" << std::hex << (expected) << ", Got: 0x" << std::hex << (actual)
 
@@ -26,13 +26,13 @@ TEST(instructions, ldr) {
   EXPECT_THROW(encode_ldr_unsigned_offset(X1, SP, 16, reg_size_t(12)), std::runtime_error);
 
   // LDRB w0, [x0, x0]
-  EXPECT_EQ_HEX(encode_ldr_register(W0, X0, X0, index_extend_type_t::INDEX_LSL, 0, reg_size_t::SIZE_8BIT), 0x38607800);
+  EXPECT_EQ_HEX(encode_ldr_register(W0, X0, X0, index_extend_type_t::INDEX_LSL, 0, arm64::mem_size_t::MEM_8BIT, reg_size_t::SIZE_32BIT), 0x38607800);
   // LDRH w0, [x0, x0, lsl #1]
-  EXPECT_EQ_HEX(encode_ldr_register(W0, X0, X0, index_extend_type_t::INDEX_LSL, 1, reg_size_t::SIZE_16BIT), 0x78607800);
+  EXPECT_EQ_HEX(encode_ldr_register(W0, X0, X0, index_extend_type_t::INDEX_LSL, 1, arm64::mem_size_t::MEM_16BIT, reg_size_t::SIZE_32BIT), 0x78607800);
   // LDR w0, [x0, x0, lsl #2]
-  EXPECT_EQ_HEX(encode_ldr_register(W0, X0, X0, index_extend_type_t::INDEX_LSL, 2, reg_size_t::SIZE_32BIT), 0xB8607800);
+  EXPECT_EQ_HEX(encode_ldr_register(W0, X0, X0, index_extend_type_t::INDEX_LSL, 2, arm64::mem_size_t::MEM_32BIT, reg_size_t::SIZE_32BIT), 0xB8607800);
   // LDR x0, [x0, x0, lsl #3]
-  EXPECT_EQ_HEX(encode_ldr_register(X0, X0, X0, index_extend_type_t::INDEX_LSL, 3, reg_size_t::SIZE_64BIT), 0xF8607800);
+  EXPECT_EQ_HEX(encode_ldr_register(X0, X0, X0, index_extend_type_t::INDEX_LSL, 3, arm64::mem_size_t::MEM_64BIT, reg_size_t::SIZE_64BIT), 0xF8607800);
 }
 
 TEST(instructions, str) {
@@ -187,7 +187,7 @@ TEST(instruction, subs) {
 
   // CMP X0, #5
   EXPECT_EQ_HEX(encode_cmp_immediate(X0, 5, false, reg_size_t::SIZE_64BIT), 0xF100141F);
-  
+
   // cmp w1, w0
   EXPECT_EQ_HEX(encode_cmp_shifted_register(W1, W0, reg_shift_t::SHIFT_LSL, 0, reg_size_t::SIZE_32BIT), 0x6B00003F);
   // cmp x0, x1
@@ -223,7 +223,7 @@ TEST(instruction, branch) {
   EXPECT_EQ_HEX(encode_cbnz(X7, 0x80, reg_size_t::SIZE_64BIT), 0xB5000407);
   // CBNZ W7, #32
   EXPECT_EQ_HEX(encode_cbnz(W7, 0x10, reg_size_t::SIZE_32BIT), 0x35000087);
-  EXPECT_THROW(encode_cbnz(W7, 0x10, reg_size_t::SIZE_8BIT), std::runtime_error);  
+  EXPECT_THROW(encode_cbnz(W7, 0x10, reg_size_t::SIZE_8BIT), std::runtime_error);
 }
 
 TEST(instruction, ret) {

@@ -255,15 +255,15 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
           arm64::emit_mov_large_immediate(reg, uint64_t(absoluteAddress), arm64::reg_size_t::SIZE_64BIT, machinecode);
 
           // load address of globals memory from pointer
-          machinecode.push_back(
-              arm64::encode_ldr_register(reg, reg, arm64::reg_t::XZR, arm64::index_extend_type_t::INDEX_LSL, 0, arm64::reg_size_t::SIZE_64BIT));
+          machinecode.push_back(arm64::encode_ldr_register(reg, reg, arm64::reg_t::XZR, arm64::index_extend_type_t::INDEX_LSL, 0,
+                                                           arm64::mem_size_t::MEM_64BIT, arm64::reg_size_t::SIZE_64BIT));
 
           // add globalidx offset to get the actual address of the global
           machinecode.push_back(arm64::encode_add_immediate(reg, reg, globalidx * sizeof(uint64_t), false, arm64::reg_size_t::SIZE_64BIT));
 
           // load actual global from memory location
-          machinecode.push_back(
-              arm64::encode_ldr_register(reg, reg, arm64::reg_t::XZR, arm64::index_extend_type_t::INDEX_LSL, 0, arm64::reg_size_t::SIZE_64BIT));
+          machinecode.push_back(arm64::encode_ldr_register(reg, reg, arm64::reg_t::XZR, arm64::index_extend_type_t::INDEX_LSL, 0,
+                                                           arm64::mem_size_t::MEM_64BIT, arm64::reg_size_t::SIZE_64BIT));
         }
         break;
       }
@@ -286,7 +286,7 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
 
         // load address of globals memory from pointer
         machinecode.push_back(arm64::encode_ldr_register(addressRegister, addressRegister, arm64::reg_t::XZR, arm64::index_extend_type_t::INDEX_LSL,
-                                                         0, arm64::reg_size_t::SIZE_64BIT));
+                                                         0, arm64::mem_size_t::MEM_64BIT, arm64::reg_size_t::SIZE_64BIT));
 
         // add globalidx offset to get the actual address of the global
         machinecode.push_back(
@@ -852,7 +852,7 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
         machinecode.push_back(arm64::encode_adrp(functionidxReg, 0));
         machinecode.push_back(arm64::encode_add_immediate(functionidxReg, functionidxReg, 0, false, arm64::reg_size_t::SIZE_64BIT));
         machinecode.push_back(arm64::encode_ldr_register(functionidxReg, functionidxReg, tableidx, arm64::index_extend_type_t::INDEX_LSL, 3,
-                                                         arm64::reg_size_t::SIZE_64BIT));
+                                                         arm64::mem_size_t::MEM_64BIT, arm64::reg_size_t::SIZE_64BIT));
 
         // runtime check that the function index is not uninitialized (0xffffffff)
         // CMN = Compare Negative → adds operand and sets flags; If w0 == 0xFFFFFFFF, then w0 + 1 == 0; Z flag is set on match
@@ -882,7 +882,7 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
 
         // load base address of executable memory from pointer
         machinecode.push_back(arm64::encode_ldr_register(baseAddressReg, baseAddressReg, arm64::reg_t::XZR, arm64::index_extend_type_t::INDEX_LSL, 0,
-                                                         arm64::reg_size_t::SIZE_64BIT));
+                                                         arm64::mem_size_t::MEM_64BIT, arm64::reg_size_t::SIZE_64BIT));
 
         // clear upper 32bit from functionidxReg to remove typeidx and keep the offset before adding as offset to base address
         machinecode.push_back(arm64::encode_mov_register(functionidxReg, functionidxReg, arm64::reg_size_t::SIZE_32BIT));
@@ -924,24 +924,30 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
     case 0x2E: // i32.load16_s
     case 0x2F: // i32.load16_u
     {
-      auto registerSize = arm64::reg_size_t::SIZE_64BIT;
+      auto registerSize = arm64::reg_size_t::SIZE_32BIT;
       auto signedVariant = arm64::signed_variant_t::UNSIGNED;
+      auto memorySize = arm64::mem_size_t::MEM_8BIT;
 
       if (*(stream - 1) == 0x2C) {
-        registerSize = arm64::reg_size_t::SIZE_8BIT;
+        memorySize = arm64::mem_size_t::MEM_8BIT;
         signedVariant = arm64::signed_variant_t::SIGNED;
       } else if (*(stream - 1) == 0x2D) {
-        registerSize = arm64::reg_size_t::SIZE_8BIT;
+        memorySize = arm64::mem_size_t::MEM_8BIT;
         signedVariant = arm64::signed_variant_t::UNSIGNED;
       } else if (*(stream - 1) == 0x2E) {
-        registerSize = arm64::reg_size_t::SIZE_16BIT;
+        memorySize = arm64::mem_size_t::MEM_16BIT;
         signedVariant = arm64::signed_variant_t::SIGNED;
       } else if (*(stream - 1) == 0x2F) {
-        registerSize = arm64::reg_size_t::SIZE_16BIT;
+        memorySize = arm64::mem_size_t::MEM_16BIT;
         signedVariant = arm64::signed_variant_t::UNSIGNED;
       } else if (*(stream - 1) == 0x28) {
-        registerSize = arm64::reg_size_t::SIZE_32BIT;
+        memorySize = arm64::mem_size_t::MEM_32BIT;
         signedVariant = arm64::signed_variant_t::SIGNED;
+        registerSize = arm64::reg_size_t::SIZE_64BIT;
+      } else if (*(stream - 1) == 0x29) {
+        memorySize = arm64::mem_size_t::MEM_64BIT;
+        signedVariant = arm64::signed_variant_t::UNSIGNED;
+        registerSize = arm64::reg_size_t::SIZE_64BIT;
       }
 
       // decode memarg immediate
@@ -960,8 +966,8 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
       arm64::emit_mov_large_immediate(result, uint64_t(absoluteAddress), arm64::reg_size_t::SIZE_64BIT, machinecode);
 
       // load address of linear memory from pointer
-      machinecode.push_back(
-          arm64::encode_ldr_register(result, result, arm64::reg_t::XZR, arm64::index_extend_type_t::INDEX_LSL, 0, arm64::reg_size_t::SIZE_64BIT));
+      machinecode.push_back(arm64::encode_ldr_register(result, result, arm64::reg_t::XZR, arm64::index_extend_type_t::INDEX_LSL, 0,
+                                                       arm64::mem_size_t::MEM_64BIT, arm64::reg_size_t::SIZE_64BIT));
 
       // optional: add offset immediate to base address
       if (offset > 0) {
@@ -972,7 +978,13 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
       machinecode.push_back(arm64::encode_add_register(result, result, index, 0, arm64::reg_shift_t::SHIFT_LSL, arm64::reg_size_t::SIZE_64BIT));
 
       // load actual global from memory location
-      machinecode.push_back(arm64::encode_ldr_register(result, result, arm64::reg_t::XZR, arm64::index_extend_type_t::INDEX_LSL, 0, registerSize));
+      if (signedVariant == arm64::signed_variant_t::SIGNED) {
+        machinecode.push_back(
+            arm64::encode_ldr_register_signed(result, result, arm64::reg_t::XZR, arm64::index_extend_type_t::INDEX_LSL, 0, memorySize, registerSize));
+      } else {
+        machinecode.push_back(
+            arm64::encode_ldr_register(result, result, arm64::reg_t::XZR, arm64::index_extend_type_t::INDEX_LSL, 0, memorySize, registerSize));
+      }
 
       stack.pop_back();
       registerPool.freeRegister(index);

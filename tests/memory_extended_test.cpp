@@ -60,10 +60,10 @@ TEST(memory_extended, load_u8) {
 TEST(memory_extended, load_i8) {
   auto wasmModule = helper::loadModule("memory.wasm");
   auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t, wasm::wasm_i32_t>(wasmModule, "load_i8");
-  // EXPECT_EQ(wasmFunction(0), 0);
-  // EXPECT_EQ(wasmFunction(200), 0);
-  // EXPECT_EQ(wasmFunction(767), -3);
-  // EXPECT_EQ(wasmFunction(768 + 16), 0x0);
+  EXPECT_EQ(wasmFunction(0), 0);
+  EXPECT_EQ(wasmFunction(200), 0);
+  EXPECT_EQ(wasmFunction(767), -3);
+  EXPECT_EQ(wasmFunction(768 + 16), 0x0);
 }
 
 } // namespace

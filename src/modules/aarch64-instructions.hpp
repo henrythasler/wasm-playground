@@ -87,6 +87,7 @@ typedef enum {
 } reg_t;
 
 enum class reg_size_t { SIZE_8BIT, SIZE_16BIT, SIZE_32BIT, SIZE_64BIT };
+enum class mem_size_t { MEM_8BIT, MEM_16BIT, MEM_32BIT, MEM_64BIT };
 enum class reg_shift_t { SHIFT_LSL, SHIFT_LSR, SHIFT_ASR, SHIFT_ROR };
 
 // Extend types for register operands
