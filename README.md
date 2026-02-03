@@ -45,6 +45,11 @@ Install the [Native Debug](https://marketplace.visualstudio.com/items?itemName=w
 
 `git submodule update --init --recursive`
 
+### Gtest Generator
+
+1. Install python and create a new virtual environment. Use uv (`uv venv && source .venv/bin/activate`) or any other venv manager.
+2. Install python dependencies using uv: `uv sync`.
+
 ## Build Instructions
 
 ```
