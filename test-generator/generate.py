@@ -13,4 +13,4 @@ def generate_from_json(json_input: str, output_file: str = "generated.cpp"):
         f.write(rendered)
 
 if __name__ == '__main__':
-    generate_from_json("./tests/assets/linear-memory-data.json", "./tests/linear_memory_data.cpp")
+    generate_from_json("./tests/assets/linear-memory-data.json", "./tests/linear_memory_data_test.cpp")

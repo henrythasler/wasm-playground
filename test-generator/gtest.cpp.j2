@@ -5,13 +5,18 @@
 #include "helper.hpp"
 namespace {
 
+{% set var = namespace(filename="") %}
 {% for command in data.commands %}
-//{{ loop.index }}
 {% if command.type == 'module' %}
-  auto wasmModule = helper::loadModule("{{ command.filename }}");
+{% set var.filename = command.filename %}
 {% endif %}
 {% if command.type == 'assert_return' %}
-  EXPECT_EQ(wasmFunction(0), 0);
+TEST({{ var.filename|replace("-", "_")|replace(".", "_") }}, {{ command.action.field }}_{{ loop.index0 }}) {
+  auto wasmModule = helper::loadModule("{{ var.filename }}");
+  auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t, wasm::wasm_i32_t>(wasmModule, "{{ command.action.field }}");
+  EXPECT_EQ(wasmFunction({{ command.action.args|join(', ', attribute='value') }}), {{ command.expected[0].value }});
+}
+
 {% endif %}
 {% endfor %}
 

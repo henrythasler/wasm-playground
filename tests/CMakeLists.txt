@@ -101,6 +101,7 @@ add_executable(all_tests
   loop_test.cpp
   call_test.cpp
   call_indirect_test.cpp
+  linear_memory_data_test.cpp
   # additional test cases
   echo_test.cpp
   compare_test.cpp
