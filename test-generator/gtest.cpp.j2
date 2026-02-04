@@ -5,19 +5,19 @@
 #include "helper.hpp"
 namespace {
 
+{% from "macros.j2" import get_signature %}
 {% set var = namespace(filename="") %}
 {% for command in data.commands %}
-{% if command.type == 'module' %}
-{% set var.filename = command.filename %}
-{% endif %}
-{% if command.type == 'assert_return' %}
-TEST({{ var.filename|replace("-", "_")|replace(".", "_") }}, {{ command.action.field }}_{{ loop.index0 }}) {
+  {% if command.type == 'module' %}
+    {% set var.filename = command.filename %}
+  {% endif %}
+  {% if command.type == 'assert_return' %}
+TEST({{ var.filename|replace("-", "_")|replace(".", "_") }}, {{ command.action.field }}_{{ loop.index0 - 1 }}) {
   auto wasmModule = helper::loadModule("{{ var.filename }}");
-  auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t, wasm::wasm_i32_t>(wasmModule, "{{ command.action.field }}");
+  auto wasmFunction = tiny::make_wasm_function<{{ get_signature(command.expected, command.action.args) }}>(wasmModule, "{{ command.action.field }}");
   EXPECT_EQ(wasmFunction({{ command.action.args|join(', ', attribute='value') }}), {{ command.expected[0].value }});
 }
 
-{% endif %}
+  {% endif %}
 {% endfor %}
-
 } // namespace

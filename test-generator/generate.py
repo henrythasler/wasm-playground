@@ -5,7 +5,7 @@ def generate_from_json(json_input: str, output_file: str = "generated.cpp"):
     with open(json_input, "r") as f:
         spectest = json.load(f)
 
-    env = Environment(loader=FileSystemLoader("test-generator"), trim_blocks=True)
+    env = Environment(loader=FileSystemLoader("test-generator"), trim_blocks=True, lstrip_blocks=True)
     template = env.get_template("gtest.cpp.j2")
     rendered = template.render(data=spectest)
 

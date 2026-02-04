@@ -1,0 +1,7 @@
+{# macros.j2 #}
+{% macro get_signature(expected, args) -%}
+    {%- set comma = joiner(', ') -%}
+    {%- for item in expected + args -%}
+        {{ comma() }}wasm::wasm_{{ item.type }}_t
+    {%- endfor -%}
+{%- endmacro %}
