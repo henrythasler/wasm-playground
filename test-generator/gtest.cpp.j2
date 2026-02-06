@@ -6,18 +6,24 @@
 namespace {
 
 {% from "macros.j2" import get_signature %}
-{% set var = namespace(filename="") %}
-{% for command in data.commands %}
-  {% if command.type == 'module' %}
-    {% set var.filename = command.filename %}
-  {% endif %}
-  {% if command.type == 'assert_return' %}
-TEST({{ var.filename|replace("-", "_")|replace(".", "_") }}, {{ command.action.field }}_{{ loop.index0 - 1 }}) {
-  auto wasmModule = helper::loadModule("{{ var.filename }}");
-  auto wasmFunction = tiny::make_wasm_function<{{ get_signature(command.expected, command.action.args) }}>(wasmModule, "{{ command.action.field }}");
-  EXPECT_EQ(wasmFunction({{ command.action.args|join(', ', attribute='value') }}), {{ command.expected[0].value }});
+{% for filename, module in data.items() %}
+  {% for function, asserts in module.items() %}
+TEST({{ filename|replace("-", "_")|replace(".", "_") }}, {{ function|replace("-", "_")|replace(".", "_") }}_{{ loop.index0 }}) {
+  auto wasmModule = helper::loadModule("{{ filename }}");
+  auto wasmFunction = tiny::make_wasm_function<{{ get_signature(asserts[0].expected, asserts[0].args) }}>(wasmModule, "{{ function }}");
+  {% for assert in asserts %}
+    {% if assert.type == "return" %}
+      {% if assert.expected|length %}
+  EXPECT_EQ(wasmFunction({{ assert.args|join(', ', attribute='value') }}), {{ assert.expected|join(', ', attribute='value') }});
+      {% else %}
+  wasmFunction({{ assert.args|join(', ', attribute='value') }});
+      {% endif %}
+    {% elif assert.type == "trap" %}
+  EXPECT_THROW(wasmFunction({{ assert.args|join(', ', attribute='value') }}), std::runtime_error);
+    {% endif %}
+  {% endfor %}
 }
 
-  {% endif %}
+  {% endfor %}
 {% endfor %}
 } // namespace

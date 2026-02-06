@@ -2,6 +2,7 @@ import sys
 from collections import defaultdict
 from pathlib import Path
 import json
+from pprint import pprint 
 from jinja2 import Environment, FileSystemLoader
 
 # defines
@@ -29,9 +30,9 @@ def load_spectest(input_file: Path) -> dict[str, defaultdict[str, list]] | None:
                 active_module = command["filename"]
                 spec_test[active_module] = defaultdict(lambda: [])
             elif command["type"].startswith("assert") and active_module:
-                spec_test[active_module][command["action"]["field"]].append({"args": command["action"]["args"], "expected": command["expected"]})
+                spec_test[active_module][command["action"]["field"]].append({"args": command["action"]["args"], "expected": command["expected"], "type": command["type"].split('_')[1]})
 
-        print(spec_test)
+        # pprint(spec_test)
         return spec_test
     
     return None
@@ -41,7 +42,12 @@ if __name__ == '__main__':
         print("Usage: python generate.py path_to_jsons [output_directory]")
         sys.exit(1)
     
-    allow_list = ["linear-memory-data.json"]
+    allow_list = [
+        "loop.json",
+        "div.json",
+        "linear-memory-data.json",
+        "linear-memory-load.json",
+        ]
 
     # find all json files
     for input_file in Path(sys.argv[1]).rglob('*.json'):

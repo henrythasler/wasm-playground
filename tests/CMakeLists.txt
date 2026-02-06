@@ -96,15 +96,17 @@ add_executable(all_tests
   local_test.cpp
   arithmetic_test.cpp
   conditionals_test.cpp
-  division_test.cpp
+  # div_test.cpp
   block_test.cpp
   loop_test.cpp
   call_test.cpp
   call_indirect_test.cpp
   linear-memory-data_test.cpp
+  # linear-memory-load_test.cpp
   # additional test cases
   echo_test.cpp
   compare_test.cpp
+  division_test.cpp
   branch_test.cpp
   block_extended_test.cpp
   bit_test.cpp

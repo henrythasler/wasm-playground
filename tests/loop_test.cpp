@@ -1,70 +1,60 @@
 #include <gmock/gmock.h> // This is the key include for EXPECT_THAT
 #include <gtest/gtest.h>
+
 #include "../src/modules/runtime.hpp"
 #include "helper.hpp"
+namespace {
 
-TEST(loop, loop_if_then) {
-    auto wasmModule = helper::loadModule("loop.0.wasm");
-    auto machinecode = wasmModule.getMachinecode();
-    auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t>(machinecode, wasmModule.getFunctionOffset("as-if-then"));
-
-    EXPECT_EQ(wasmFunction(), 1);
+TEST(loop_0_wasm, as_if_then_0) {
+  auto wasmModule = helper::loadModule("loop.0.wasm");
+  auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t>(wasmModule, "as-if-then");
+  EXPECT_EQ(wasmFunction(), 1);
 }
 
-TEST(loop, loop_if_else) {
-    auto wasmModule = helper::loadModule("loop.0.wasm");
-    auto machinecode = wasmModule.getMachinecode();
-    auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t>(machinecode, wasmModule.getFunctionOffset("as-if-else"));
-
-    EXPECT_EQ(wasmFunction(), 2);
+TEST(loop_0_wasm, as_if_else_1) {
+  auto wasmModule = helper::loadModule("loop.0.wasm");
+  auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t>(wasmModule, "as-if-else");
+  EXPECT_EQ(wasmFunction(), 2);
 }
 
-TEST(loop, loop_as_br_if_first) {
-    auto wasmModule = helper::loadModule("loop.0.wasm");
-    auto machinecode = wasmModule.getMachinecode();
-    auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t>(machinecode, wasmModule.getFunctionOffset("as-br_if-first"));
-
-    EXPECT_EQ(wasmFunction(), 1);
+TEST(loop_0_wasm, as_br_if_first_2) {
+  auto wasmModule = helper::loadModule("loop.0.wasm");
+  auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t>(wasmModule, "as-br_if-first");
+  EXPECT_EQ(wasmFunction(), 1);
 }
 
-TEST(loop, loop_as_br_if_last) {
-    auto wasmModule = helper::loadModule("loop.0.wasm");
-    auto machinecode = wasmModule.getMachinecode();
-    auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t>(machinecode, wasmModule.getFunctionOffset("as-br_if-last"));
-
-    EXPECT_EQ(wasmFunction(), 2);
+TEST(loop_0_wasm, as_br_if_last_3) {
+  auto wasmModule = helper::loadModule("loop.0.wasm");
+  auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t>(wasmModule, "as-br_if-last");
+  EXPECT_EQ(wasmFunction(), 2);
 }
 
-TEST(loop, loop_effects) {
-    auto wasmModule = helper::loadModule("loop.0.wasm");
-    auto machinecode = wasmModule.getMachinecode();
-    auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t>(machinecode, wasmModule.getFunctionOffset("effects"));
-
-    EXPECT_EQ(wasmFunction(), 1);
+TEST(loop_0_wasm, effects_4) {
+  auto wasmModule = helper::loadModule("loop.0.wasm");
+  auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t>(wasmModule, "effects");
+  EXPECT_EQ(wasmFunction(), 1);
 }
 
-TEST(loop, loop_while) {
-    auto wasmModule = helper::loadModule("loop.0.wasm");
-    auto machinecode = wasmModule.getMachinecode();
-    auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i64_t, wasm::wasm_i64_t>(machinecode, wasmModule.getFunctionOffset("while"));
-
-    EXPECT_EQ(wasmFunction(0LL), 1LL);
-    EXPECT_EQ(wasmFunction(1LL), 1LL);
-    EXPECT_EQ(wasmFunction(2LL), 2LL);
-    EXPECT_EQ(wasmFunction(3LL), 6LL);
-    EXPECT_EQ(wasmFunction(5LL), 120LL);
-    EXPECT_EQ(wasmFunction(20LL), 2432902008176640000LL);
+TEST(loop_0_wasm, while_5) {
+  auto wasmModule = helper::loadModule("loop.0.wasm");
+  auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i64_t, wasm::wasm_i64_t>(wasmModule, "while");
+  EXPECT_EQ(wasmFunction(0), 1);
+  EXPECT_EQ(wasmFunction(1), 1);
+  EXPECT_EQ(wasmFunction(2), 2);
+  EXPECT_EQ(wasmFunction(3), 6);
+  EXPECT_EQ(wasmFunction(5), 120);
+  EXPECT_EQ(wasmFunction(20), 2432902008176640000);
 }
 
-TEST(loop, loop_for) {
-    auto wasmModule = helper::loadModule("loop.0.wasm");
-    auto machinecode = wasmModule.getMachinecode();
-    auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i64_t, wasm::wasm_i64_t>(machinecode, wasmModule.getFunctionOffset("for"));
-
-    EXPECT_EQ(wasmFunction(0LL), 1LL);
-    EXPECT_EQ(wasmFunction(1LL), 1LL);
-    EXPECT_EQ(wasmFunction(2LL), 2LL);
-    EXPECT_EQ(wasmFunction(3LL), 6LL);
-    EXPECT_EQ(wasmFunction(5LL), 120LL);
-    EXPECT_EQ(wasmFunction(20LL), 2432902008176640000LL);
+TEST(loop_0_wasm, for_6) {
+  auto wasmModule = helper::loadModule("loop.0.wasm");
+  auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i64_t, wasm::wasm_i64_t>(wasmModule, "for");
+  EXPECT_EQ(wasmFunction(0), 1);
+  EXPECT_EQ(wasmFunction(1), 1);
+  EXPECT_EQ(wasmFunction(2), 2);
+  EXPECT_EQ(wasmFunction(3), 6);
+  EXPECT_EQ(wasmFunction(5), 120);
+  EXPECT_EQ(wasmFunction(20), 2432902008176640000);
 }
+
+} // namespace
