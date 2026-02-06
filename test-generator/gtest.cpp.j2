@@ -1,0 +1,29 @@
+#include <gmock/gmock.h> // This is the key include for EXPECT_THAT
+#include <gtest/gtest.h>
+
+#include "../src/modules/runtime.hpp"
+#include "helper.hpp"
+namespace {
+
+{% from "macros.j2" import get_signature %}
+{% for filename, module in data.items() %}
+  {% for function, asserts in module.items() %}
+TEST({{ filename|replace("-", "_")|replace(".", "_") }}, {{ function|replace("-", "_")|replace(".", "_") }}_{{ loop.index0 }}) {
+  auto wasmModule = helper::loadModule("{{ filename }}");
+  auto wasmFunction = tiny::make_wasm_function<{{ get_signature(asserts[0].expected, asserts[0].args) }}>(wasmModule, "{{ function }}");
+  {% for assert in asserts %}
+    {% if assert.type == "return" %}
+      {% if assert.expected|length %}
+  EXPECT_EQ(wasmFunction({{ assert.args|join(', ', attribute='value') }}), {{ assert.expected|join(', ', attribute='value') }});
+      {% else %}
+  wasmFunction({{ assert.args|join(', ', attribute='value') }});
+      {% endif %}
+    {% elif assert.type == "trap" %}
+  EXPECT_THROW(wasmFunction({{ assert.args|join(', ', attribute='value') }}), std::runtime_error);
+    {% endif %}
+  {% endfor %}
+}
+
+  {% endfor %}
+{% endfor %}
+} // namespace

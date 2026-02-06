@@ -68,6 +68,18 @@ LeakSanitizer is incompatible with emulator/debugging/tracing tools. Setting `de
 
 `./build/src/tiny-wasm wasm/nop-fn.wasm`
 
+## Gtest Generator
+
+To create unit-tests from spec-test files (`.wast`), the following workflow can be used:
+
+1. Install python and create a new virtual environment. Use uv (`uv venv && source .venv/bin/activate`) or any other venv manager.
+2. Install python dependencies using uv: `uv sync`.
+3. Copy new spectest wast-file to `tests/assets/`
+4. add new files to allow_list in `test-generator/generate.py`
+5. generate unit-tests with `npm run json2gtest`
+6. add new unit-tests to `tests/CMakeLists.txt`
+7. execute tests with `npm test`
+
 ## Debug 
 
 Start the executable:
