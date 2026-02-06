@@ -112,8 +112,8 @@ void WasmModule::compileModule() {
 
   // process memory section
   if (memory_section != nullptr) {
-    memory = std::make_unique<assembler::LinearMemory>();
-    memory->parseMemorySection(memory_section, data_section);
+    linearMemory = std::make_unique<assembler::LinearMemory>();
+    linearMemory->parseMemorySection(memory_section, data_section);
   }
 
   // Compile each function in the code section

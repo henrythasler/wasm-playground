@@ -11,6 +11,12 @@ uint64_t *globalsMemoryAddressPtr = &globalsMemoryAddress;
 uint64_t linearMemoryAddress = 0;
 uint64_t *linearMemoryAddressPtr = &linearMemoryAddress;
 
+uintptr_t wasmExecutableAddress = 0;
+uintptr_t *wasmExecutableAddressPtr = &wasmExecutableAddress;
+
+uintptr_t linearMemoryGrowAddress = 0;
+uintptr_t *linearMemoryGrowAddressPtr = &linearMemoryGrowAddress;
+
 extern "C" void wasmTrapHandler(int error_code) {
   longjmp(g_jmpbuf, error_code);
 }
@@ -1057,6 +1063,42 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
         stack.pop_back();
         registerPool.freeRegister(value_reg);
         registerPool.freeRegister(index_reg);
+        registerPool.freeRegister(address_reg);
+
+        break;
+      }
+    case 0x40:
+      /** memory.grow */
+      {
+        // decode memory_index immediate (currently unused)
+        auto memory_index = uint32_t(decoder::LEB128Decoder::decodeUnsigned(stream, streamEnd));
+
+        auto pages_reg = stack.at(stack.size() - 1);
+        auto result_reg = registerPool.allocateRegister();
+
+        auto growFnAddress = reinterpret_cast<std::uintptr_t>(linearMemoryGrowAddressPtr);
+        arm64::emit_mov_large_immediate(result_reg, uint64_t(growFnAddress), arm64::reg_size_t::SIZE_64BIT, machinecode);
+
+        // load address of memory.grow host function from pointer
+        machinecode.push_back(arm64::encode_ldr_register(result_reg, result_reg, arm64::reg_t::XZR, arm64::index_extend_type_t::INDEX_LSL, 0,
+                                                         arm64::mem_size_t::MEM_64BIT, arm64::reg_size_t::SIZE_64BIT));
+
+        arm64::emit_mov_large_immediate(arm64::X0, uint64_t(executableMemoryAddressPtr), arm64::reg_size_t::SIZE_64BIT, machinecode);
+        // load address of wasmExecutable object from pointer
+        machinecode.push_back(arm64::encode_ldr_register(arm64::X0, arm64::X0, arm64::reg_t::XZR, arm64::index_extend_type_t::INDEX_LSL, 0,
+                                                         arm64::mem_size_t::MEM_64BIT, arm64::reg_size_t::SIZE_64BIT));
+
+        machinecode.push_back(arm64::encode_mov_register(arm64::X1, pages_reg, arm64::reg_size_t::SIZE_64BIT));
+
+        // FIXME: save wasm-stack registers
+        machinecode.push_back(arm64::encode_branch_link_register(result_reg));
+        // FIXME: restore wasm-stack registers
+
+        machinecode.push_back(arm64::encode_mov_register(result_reg, arm64::X0, arm64::reg_size_t::SIZE_64BIT));
+
+        stack.pop_back();
+        registerPool.freeRegister(pages_reg);
+        stack.emplace_back(result_reg);
 
         break;
       }

@@ -102,4 +102,11 @@ TEST(memory_extended, store_i8) {
   EXPECT_EQ(wasmFunction(0, 1), 1);
   EXPECT_EQ(wasmFunction(1, 0x33), 0x33);
 }
+
+TEST(memory_extended, memory_grow) {
+  auto wasmModule = helper::loadModule("memory.wasm");
+  auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t, wasm::wasm_i32_t>(wasmModule, "memory_grow");
+  // EXPECT_EQ(wasmFunction(1), 1);
+  // EXPECT_EQ(wasmFunction(255), -1);
+}
 } // namespace

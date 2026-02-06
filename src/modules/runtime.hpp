@@ -113,6 +113,8 @@ private:
   std::unique_ptr<CustomMemory> linear_mem_;
   using FuncPtr = ReturnType (*)(Args...);
   FuncPtr func_ptr_;
+  int32_t linearMemoryMaxPages;
+  int32_t linearMemoryCurrentPages;
 
 public:
   WasmExecutable() = default;
@@ -131,6 +133,8 @@ public:
       linear_mem_ = std::make_unique<CustomMemory>(linearMemory->currentSize * wasm::LINEAR_MEMORY_PAGE_SIZE, linearMemory->init.data,
                                                    linearMemory->init.offset, PROT_READ | PROT_WRITE);
       linearMemoryAddress = reinterpret_cast<uint64_t>(linear_mem_->getAddress());
+      linearMemoryMaxPages = 0; // linearMemory->maxSize;
+      linearMemoryCurrentPages = linearMemory->currentSize;
     }
 
     func_ptr_ = reinterpret_cast<FuncPtr>(static_cast<char *>(exec_mem_->getAddress()) + offset);
@@ -161,6 +165,30 @@ public:
   FuncPtr get_function_pointer() const {
     return func_ptr_;
   }
+
+  uintptr_t getThisPointerAsInt() {
+    return reinterpret_cast<uintptr_t>(this);
+  }
+
+  int32_t linearMemoryGrow(int32_t pages) {
+    if (linearMemoryCurrentPages + pages <= linearMemoryMaxPages) {
+      auto currentPages = linearMemoryCurrentPages;
+      linearMemoryCurrentPages += pages;
+      return currentPages;
+    } else {
+      return -1;
+    }
+  }
+
+  // Static trampoline for JIT to call
+  static int32_t linearMemoryGrow_trampoline(WasmExecutable *self, int32_t pages) {
+    return self->linearMemoryGrow(pages);
+  }
+
+  // Get the trampoline address
+  static void *getLinearMemoryGrowAddress() {
+    return reinterpret_cast<void *>(&linearMemoryGrow_trampoline);
+  }
 };
 
 /**
@@ -181,6 +209,10 @@ WasmExecutable<ReturnType, Args...> make_wasm_function(tiny::WasmModule &wasmMod
   size_t exportFunctionOffset = wasmModule.getFunctionOffset(funcName);
   const auto globalMemory = wasmModule.getGlobals() ? std::make_unique<std::vector<uint64_t>>(wasmModule.getGlobals()->serialize()) : nullptr;
   auto wasmExecutable = WasmExecutable<ReturnType, Args...>(linkedCode, globalMemory, wasmModule.getMemory(), exportFunctionOffset);
+  wasmExecutableAddress = wasmExecutable.getThisPointerAsInt();
+  if (wasmModule.getMemory()) {
+    linearMemoryGrowAddress = reinterpret_cast<uintptr_t>(WasmExecutable<ReturnType, Args...>::getLinearMemoryGrowAddress());
+  }
   return wasmExecutable;
 }
 

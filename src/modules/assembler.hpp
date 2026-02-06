@@ -33,6 +33,12 @@ extern uint64_t *globalsMemoryAddressPtr;
 extern uint64_t linearMemoryAddress;
 extern uint64_t *linearMemoryAddressPtr;
 
+extern uintptr_t wasmExecutableAddress;
+extern uintptr_t *wasmExecutableAddressPtr;
+
+extern uintptr_t linearMemoryGrowAddress;
+extern uintptr_t *linearMemoryGrowAddressPtr;
+
 namespace assembler {
 class RegisterPool {
 private:

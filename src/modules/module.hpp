@@ -24,7 +24,7 @@ private:
   std::vector<uint32_t> linkedMachinecode;
   std::unique_ptr<assembler::FunctionTable> functionTable;
   std::unique_ptr<assembler::Globals> globals;
-  std::unique_ptr<assembler::LinearMemory> memory;
+  std::unique_ptr<assembler::LinearMemory> linearMemory;
 
   template <typename Derived, typename Base>
   Derived *getSectionContent(const std::vector<std::unique_ptr<Base>> &sections, webassembly_t::section_id_t section_type);
@@ -69,7 +69,7 @@ public:
   }
 
   const std::unique_ptr<assembler::LinearMemory> &getMemory() const {
-    return memory;
+    return linearMemory;
   }
 
   const WasmFunction *getWasmFunction(std::string name);
