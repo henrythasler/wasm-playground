@@ -294,7 +294,7 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
 
         // store value in address
         machinecode.push_back(arm64::encode_str_register(valueRegister, addressRegister, arm64::reg_t::XZR, arm64::index_extend_type_t::INDEX_LSL, 0,
-                                                         arm64::reg_size_t::SIZE_64BIT));
+                                                         arm64::mem_size_t::MEM_64BIT, arm64::reg_size_t::SIZE_64BIT));
 
         registerPool.freeRegister(addressRegister);
         registerPool.freeRegister(valueRegister);
@@ -958,39 +958,95 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
       asserte(stack.size() >= 1, "insufficient operands on stack for load");
 
       // get address from the stack
-      auto index = stack.back();
-      auto result = registerPool.allocateRegister();
+      auto index_reg = stack.back();
+      auto result_reg = registerPool.allocateRegister();
 
       // encode address location to be loaded from global variable
       auto absoluteAddress = reinterpret_cast<std::uintptr_t>(linearMemoryAddressPtr);
-      arm64::emit_mov_large_immediate(result, uint64_t(absoluteAddress), arm64::reg_size_t::SIZE_64BIT, machinecode);
+      arm64::emit_mov_large_immediate(result_reg, uint64_t(absoluteAddress), arm64::reg_size_t::SIZE_64BIT, machinecode);
 
       // load address of linear memory from pointer
-      machinecode.push_back(arm64::encode_ldr_register(result, result, arm64::reg_t::XZR, arm64::index_extend_type_t::INDEX_LSL, 0,
+      machinecode.push_back(arm64::encode_ldr_register(result_reg, result_reg, arm64::reg_t::XZR, arm64::index_extend_type_t::INDEX_LSL, 0,
                                                        arm64::mem_size_t::MEM_64BIT, arm64::reg_size_t::SIZE_64BIT));
 
       // optional: add offset immediate to base address
       if (offset > 0) {
-        machinecode.push_back(arm64::encode_add_immediate(result, result, offset, false, arm64::reg_size_t::SIZE_64BIT));
+        machinecode.push_back(arm64::encode_add_immediate(index_reg, index_reg, offset, false, arm64::reg_size_t::SIZE_64BIT));
       }
 
-      // add index to address
-      machinecode.push_back(arm64::encode_add_register(result, result, index, 0, arm64::reg_shift_t::SHIFT_LSL, arm64::reg_size_t::SIZE_64BIT));
+      // FIXME: add out-of-bounds memory access check
 
       // load actual global from memory location
       if (signedVariant == arm64::signed_variant_t::SIGNED) {
         machinecode.push_back(
-            arm64::encode_ldr_register_signed(result, result, arm64::reg_t::XZR, arm64::index_extend_type_t::INDEX_LSL, 0, memorySize, registerSize));
+            arm64::encode_ldr_register_signed(result_reg, result_reg, index_reg, arm64::index_extend_type_t::INDEX_LSL, 0, memorySize, registerSize));
       } else {
         machinecode.push_back(
-            arm64::encode_ldr_register(result, result, arm64::reg_t::XZR, arm64::index_extend_type_t::INDEX_LSL, 0, memorySize, registerSize));
+            arm64::encode_ldr_register(result_reg, result_reg, index_reg, arm64::index_extend_type_t::INDEX_LSL, 0, memorySize, registerSize));
       }
 
       stack.pop_back();
-      registerPool.freeRegister(index);
-      stack.emplace_back(result);
+      registerPool.freeRegister(index_reg);
+      stack.emplace_back(result_reg);
       break;
     }
+    case 0x36: // i32.store
+    case 0x37: // i64.store
+    case 0x3A: // i32.store8
+    case 0x3B: // i32.store16
+      /** memory store instruction */
+      {
+        auto registerSize = arm64::reg_size_t::SIZE_64BIT;
+        auto memorySize = arm64::mem_size_t::MEM_64BIT;
+
+        if (*(stream - 1) == 0x36) {
+          memorySize = arm64::mem_size_t::MEM_32BIT;
+          registerSize = arm64::reg_size_t::SIZE_32BIT;
+        } else if (*(stream - 1) == 0x3A) {
+          memorySize = arm64::mem_size_t::MEM_8BIT;
+          registerSize = arm64::reg_size_t::SIZE_32BIT;
+        } else if (*(stream - 1) == 0x3B) {
+          memorySize = arm64::mem_size_t::MEM_16BIT;
+          registerSize = arm64::reg_size_t::SIZE_32BIT;
+        }
+
+        // decode memarg immediate
+        auto alignment = uint32_t(decoder::LEB128Decoder::decodeUnsigned(stream, streamEnd));
+        auto offset = uint32_t(decoder::LEB128Decoder::decodeUnsigned(stream, streamEnd));
+
+        // ensure that we have enough operands on the stack for the index
+        asserte(stack.size() >= 2, "insufficient operands on stack for store");
+
+        auto value_reg = stack.at(stack.size() - 1);
+        auto index_reg = stack.at(stack.size() - 2);
+        auto address_reg = registerPool.allocateRegister();
+
+        // encode address location to be loaded from global variable
+        auto absoluteAddress = reinterpret_cast<std::uintptr_t>(linearMemoryAddressPtr);
+        arm64::emit_mov_large_immediate(address_reg, uint64_t(absoluteAddress), arm64::reg_size_t::SIZE_64BIT, machinecode);
+
+        // load address of linear memory from pointer
+        machinecode.push_back(arm64::encode_ldr_register(address_reg, address_reg, arm64::reg_t::XZR, arm64::index_extend_type_t::INDEX_LSL, 0,
+                                                         arm64::mem_size_t::MEM_64BIT, arm64::reg_size_t::SIZE_64BIT));
+
+        // optional: add offset immediate to index
+        if (offset > 0) {
+          machinecode.push_back(arm64::encode_add_immediate(index_reg, index_reg, offset, false, arm64::reg_size_t::SIZE_64BIT));
+        }
+
+        // FIXME: add out-of-bounds memory access check
+
+        // store value to memory location
+        machinecode.push_back(
+            arm64::encode_str_register(value_reg, address_reg, index_reg, arm64::index_extend_type_t::INDEX_LSL, 0, memorySize, registerSize));
+
+        stack.pop_back();
+        stack.pop_back();
+        registerPool.freeRegister(value_reg);
+        registerPool.freeRegister(index_reg);
+
+        break;
+      }
     case 0x00:
       /** unreachable */
       {

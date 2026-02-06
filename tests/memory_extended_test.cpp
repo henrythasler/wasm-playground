@@ -66,4 +66,40 @@ TEST(memory_extended, load_i8) {
   EXPECT_EQ(wasmFunction(768 + 16), 0x0);
 }
 
+TEST(memory_extended, load_u8_offset) {
+  auto wasmModule = helper::loadModule("memory.wasm");
+  auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t, wasm::wasm_i32_t>(wasmModule, "load_u8_offset");
+  EXPECT_EQ(wasmFunction(0), 0x30);
+  EXPECT_EQ(wasmFunction(1), 0x31);
+  EXPECT_EQ(wasmFunction(15), 0x46);
+  EXPECT_EQ(wasmFunction(16), 0x0);
+}
+
+TEST(memory_extended, store_i64) {
+  auto wasmModule = helper::loadModule("memory.wasm");
+  auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i64_t, wasm::wasm_i32_t, wasm::wasm_i64_t>(wasmModule, "store_i64");
+  EXPECT_EQ(wasmFunction(0, 1), 1);
+  EXPECT_EQ(wasmFunction(0, 0x3736353433323130), 0x3736353433323130);
+}
+
+TEST(memory_extended, store_i32) {
+  auto wasmModule = helper::loadModule("memory.wasm");
+  auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t, wasm::wasm_i32_t, wasm::wasm_i32_t>(wasmModule, "store_i32");
+  EXPECT_EQ(wasmFunction(0, 1), 1);
+  EXPECT_EQ(wasmFunction(1, 0x33323130), 0x33323130);
+}
+
+TEST(memory_extended, store_i16) {
+  auto wasmModule = helper::loadModule("memory.wasm");
+  auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t, wasm::wasm_i32_t, wasm::wasm_i32_t>(wasmModule, "store_i16");
+  EXPECT_EQ(wasmFunction(0, 1), 1);
+  EXPECT_EQ(wasmFunction(1, 0x3130), 0x3130);
+}
+
+TEST(memory_extended, store_i8) {
+  auto wasmModule = helper::loadModule("memory.wasm");
+  auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t, wasm::wasm_i32_t, wasm::wasm_i32_t>(wasmModule, "store_i8");
+  EXPECT_EQ(wasmFunction(0, 1), 1);
+  EXPECT_EQ(wasmFunction(1, 0x33), 0x33);
+}
 } // namespace

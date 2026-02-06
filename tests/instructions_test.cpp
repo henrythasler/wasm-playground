@@ -47,10 +47,14 @@ TEST(instructions, str) {
 
   EXPECT_THROW(encode_str_unsigned_offset(X1, SP, 16, reg_size_t(12)), std::runtime_error);
 
-  // STR x0, [x0, x0, lsl #3]
-  EXPECT_EQ_HEX(encode_str_register(X0, X0, X0, index_extend_type_t::INDEX_LSL, 3, reg_size_t::SIZE_64BIT), 0xF8207800);
+  // STRB w0, [x0, x0]
+  EXPECT_EQ_HEX(encode_str_register(W0, X0, X0, index_extend_type_t::INDEX_LSL, 0, arm64::mem_size_t::MEM_8BIT, reg_size_t::SIZE_32BIT), 0x38207800);
+  // STRH w0, [x0, x0, lsl #1]
+  EXPECT_EQ_HEX(encode_str_register(W0, X0, X0, index_extend_type_t::INDEX_LSL, 1, arm64::mem_size_t::MEM_16BIT, reg_size_t::SIZE_32BIT), 0x78207800);
   // STR w0, [x0, x0, lsl #2]
-  EXPECT_EQ_HEX(encode_str_register(W0, X0, X0, index_extend_type_t::INDEX_LSL, 2, reg_size_t::SIZE_32BIT), 0xB8207800);
+  EXPECT_EQ_HEX(encode_str_register(W0, X0, X0, index_extend_type_t::INDEX_LSL, 2, arm64::mem_size_t::MEM_32BIT, reg_size_t::SIZE_32BIT), 0xB8207800);
+  // STR x0, [x0, x0, lsl #3]
+  EXPECT_EQ_HEX(encode_str_register(X0, X0, X0, index_extend_type_t::INDEX_LSL, 3, arm64::mem_size_t::MEM_64BIT, reg_size_t::SIZE_64BIT), 0xF8207800);
 }
 
 TEST(instructions, stp) {

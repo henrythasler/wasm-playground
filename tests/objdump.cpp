@@ -74,6 +74,8 @@ TEST(objdump, wasm) {
       "call_indirect.1",
       "call_indirect.2",
       "global.0",
+      "linear-memory-data.0",
+      // "linear-memory-load.0",
   };
 
   for (const auto &wasmFile : wasmFiles) {

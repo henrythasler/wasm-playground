@@ -132,7 +132,7 @@ uint32_t encode_ldr_register(reg_t rt, reg_t rn, reg_t rm, index_extend_type_t o
       instr = 0xB8600800 | (shift_amount == 2 ? 0x1000 : 0) | (static_cast<uint32_t>(option) << 13);
       break;
     default:
-      asserte(false, "encode_ldr_register(): invalid target register size for LDRH");
+      asserte(false, "encode_ldr_register(): invalid target register size for LDR");
       break;
     }
     break;
@@ -143,7 +143,7 @@ uint32_t encode_ldr_register(reg_t rt, reg_t rn, reg_t rm, index_extend_type_t o
       instr = 0xF8600800 | (shift_amount == 3 ? 0x1000 : 0) | (static_cast<uint32_t>(option) << 13);
       break;
     default:
-      asserte(false, "encode_ldr_register(): invalid target register size for LDRH");
+      asserte(false, "encode_ldr_register(): invalid target register size for LDR");
       break;
     }
     break;
@@ -239,29 +239,59 @@ uint32_t encode_ldr_register_signed(reg_t rt, reg_t rn, reg_t rm, index_extend_t
  * @param size 32-bit or 64-bit variant
  * @return the encoded instruction
  */
-uint32_t encode_str_register(reg_t rt, reg_t rn, reg_t rm, index_extend_type_t option, uint8_t shift_amount, reg_size_t size) {
+uint32_t encode_str_register(reg_t rt, reg_t rn, reg_t rm, index_extend_type_t option, uint8_t shift_amount, mem_size_t mem, reg_size_t size) {
   uint32_t instr = 0;
 
-  // Base opcode for STR register
-  switch (size) {
-  // case reg_size_t::SIZE_8BIT: // STRB
-  //   instr = 0x0;
-  //   break;
-  // case reg_size_t::SIZE_16BIT: // STRH
-  //   instr = 0x0;
-  //   break;
-  case reg_size_t::SIZE_32BIT: // STR with index shifted by 2 bits
-    asserte((shift_amount == 0) || (shift_amount == 2), "encode_str_register(): invalid shift amount for 32-bit load");
-    instr = 0xB8200800 | (shift_amount == 2 ? 0x1000 : 0) | (static_cast<uint32_t>(option) << 13);
+  switch (mem) {
+  case mem_size_t::MEM_8BIT: // STRB
+    asserte(shift_amount == 0, "encode_str_register(): invalid shift amount for 8-bit store");
+    switch (size) {
+    case reg_size_t::SIZE_32BIT:
+      instr = 0x38200800 | (shift_amount == 0 ? 0x1000 : 0) | (static_cast<uint32_t>(option) << 13);
+      break;
+    default:
+      asserte(false, "encode_str_register(): invalid target register size for STRB");
+      break;
+    }
     break;
-  case reg_size_t::SIZE_64BIT: // STR
-    asserte((shift_amount == 0) || (shift_amount == 3), "encode_str_register(): invalid shift amount for 64-bit load");
-    instr = 0xF8200800 | (shift_amount == 3 ? 0x1000 : 0) | (static_cast<uint32_t>(option) << 13);
+  case mem_size_t::MEM_16BIT: // STRH
+    asserte((shift_amount == 0) || (shift_amount == 1), "encode_str_register(): invalid shift amount for 16-bit store");
+    switch (size) {
+    case reg_size_t::SIZE_32BIT:
+      instr = 0x78200800 | (shift_amount == 1 ? 0x1000 : 0) | (static_cast<uint32_t>(option) << 13);
+      break;
+    default:
+      asserte(false, "encode_str_register(): invalid target register size for STRH");
+      break;
+    }
+    break;
+  case mem_size_t::MEM_32BIT:
+    asserte((shift_amount == 0) || (shift_amount == 2), "encode_str_register(): invalid shift amount for 32-bit store");
+    switch (size) {
+    case reg_size_t::SIZE_32BIT:
+      instr = 0xB8200800 | (shift_amount == 2 ? 0x1000 : 0) | (static_cast<uint32_t>(option) << 13);
+      break;
+    default:
+      asserte(false, "encode_str_register(): invalid target register size for STR");
+      break;
+    }
+    break;
+  case mem_size_t::MEM_64BIT:
+    asserte((shift_amount == 0) || (shift_amount == 3), "encode_str_register(): invalid shift amount for 64-bit store");
+    switch (size) {
+    case reg_size_t::SIZE_64BIT:
+      instr = 0xF8200800 | (shift_amount == 3 ? 0x1000 : 0) | (static_cast<uint32_t>(option) << 13);
+      break;
+    default:
+      asserte(false, "encode_str_register(): invalid target register size for STR");
+      break;
+    }
     break;
   default:
     asserte(false, "encode_str_register(): invalid size value");
     break;
   }
+
   instr |= (rm & 0x1F) << 16; // Rm (index register)
   instr |= (rn & 0x1F) << 5;  // Rn (base register)
   instr |= (rt & 0x1F);       // Rt (source register)
