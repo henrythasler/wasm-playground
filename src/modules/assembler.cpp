@@ -439,16 +439,19 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
       }
     case 0x46: // i32.eq
     case 0x51: // i64.eq
-      /** Return 1 if i1​ equals i2​, 0 otherwise. */
+    case 0x47: // i32.ne
+    case 0x52: // i64.ne
+      /** Return 1 if reg1​ (not) equals reg2​, 0 otherwise. */
       {
-        asserte(stack.size() >= 1, "insufficient operands on stack for eqz");
+        asserte(stack.size() >= 2, "insufficient operands on stack for eq");
         auto registerSize = (*(stream - 1) == 0x46) ? arm64::reg_size_t::SIZE_32BIT : arm64::reg_size_t::SIZE_64BIT;
+        auto equal_operation = ((*(stream - 1) == 0x46) || (*(stream - 1) == 0x51)) ? true : false;
 
         auto reg2 = stack.at(stack.size() - 1);
         auto reg1 = stack.at(stack.size() - 2);
 
         machinecode.push_back(arm64::encode_cmp_shifted_register(reg1, reg2, arm64::reg_shift_t::SHIFT_LSL, 0, registerSize));
-        machinecode.push_back(arm64::encode_branch_cond(arm64::branch_condition_t::EQ, 3 * 4));
+        machinecode.push_back(arm64::encode_branch_cond(equal_operation ? arm64::branch_condition_t::EQ : arm64::branch_condition_t::NE, 3 * 4));
 
         // // load 0
         machinecode.push_back(arm64::encode_mov_immediate(reg1, 0, 0, arm64::reg_size_t::SIZE_32BIT));
@@ -553,6 +556,16 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
 
       break;
     }
+    case 0x67: // i32.clz
+    case 0x79: // i64.clz
+      /** count leading zero bits */
+      {
+        asserte(stack.size() >= 1, "insufficient operands on stack for clz");
+        auto registerSize = (*(stream - 1) == 0x68) ? arm64::reg_size_t::SIZE_32BIT : arm64::reg_size_t::SIZE_64BIT;
+        auto reg = stack.back();
+        arm64::encode_clz(reg, reg, registerSize);
+        break;
+      }
     case 0x68: // i32.ctz
     case 0x7A: // i64.ctz
       /** Return the count of trailing zero bits */

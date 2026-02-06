@@ -18,6 +18,14 @@ void emit_ctz(reg_t rd, reg_t rn, reg_size_t size, std::vector<uint32_t> &machin
   machinecode.push_back(arm64::encode_clz(rd, rd, size));
 }
 
+/**
+ * This instruction uses `mov` and `movk` instructions to load a 64-bit immediate into a register.
+ *
+ * @param rd destination register
+ * @param rm source register
+ * @param size 32-bit or 64-bit variant
+ * @param machinecode vector to which the emitted instructions will be appended
+ */
 void emit_mov_large_immediate(reg_t rd, uint64_t immediate, reg_size_t size, std::vector<uint32_t> &machinecode) {
   auto chunkLimit = (size == arm64::reg_size_t::SIZE_32BIT) ? 2 : 4;
   for (uint8_t i = 0; i < chunkLimit; i++) {

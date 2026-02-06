@@ -230,6 +230,13 @@ TEST(instruction, branch) {
   EXPECT_THROW(encode_cbnz(W7, 0x10, reg_size_t::SIZE_8BIT), std::runtime_error);
 }
 
+TEST(instruction, clz) { 
+  // clz x0, x0
+  EXPECT_EQ_HEX(encode_clz(X0, X0, reg_size_t::SIZE_64BIT), 0xDAC01000);
+  // clz w10, w6
+  EXPECT_EQ_HEX(encode_clz(W10, W6, reg_size_t::SIZE_32BIT), 0x5AC010CA); 
+}
+
 TEST(instruction, ret) {
   // ret
   EXPECT_EQ_HEX(encode_ret(), 0xD65F03C0);
