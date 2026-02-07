@@ -96,7 +96,7 @@ add_executable(all_tests
   local_test.cpp
   arithmetic_test.cpp
   conditionals_test.cpp
-  # div_test.cpp
+  div_test.cpp
   block_test.cpp
   loop_test.cpp
   call_test.cpp

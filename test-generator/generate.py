@@ -10,6 +10,11 @@ NC = "\033[0m"
 RED = "\033[0;31m"
 GREEN = "\033[0;32m"
 
+types_map = {
+    "i32": "int32_t",
+    "i64": "int64_t",
+}
+
 def generate_from_json(spectest: dict[str, defaultdict[str, list]], output_file: Path):
     env = Environment(loader=FileSystemLoader("test-generator"), trim_blocks=True, lstrip_blocks=True)
     template = env.get_template("gtest.cpp.j2")
@@ -30,6 +35,13 @@ def load_spectest(input_file: Path) -> dict[str, defaultdict[str, list]] | None:
                 active_module = command["filename"]
                 spec_test[active_module] = defaultdict(lambda: [])
             elif command["type"].startswith("assert") and active_module:
+                # wrap value into correct c++ type
+                for item in command["expected"]:
+                    if "value" in item:
+                        item["cpp_value"] = "static_cast<{}>({})".format(types_map[item["type"]], item["value"])
+                for item in command["action"]["args"]:
+                    if "value" in item:
+                        item["cpp_value"] = "static_cast<{}>({})".format(types_map[item["type"]], item["value"])
                 spec_test[active_module][command["action"]["field"]].append({"args": command["action"]["args"], "expected": command["expected"], "type": command["type"].split('_')[1]})
 
         # pprint(spec_test)

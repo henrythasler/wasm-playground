@@ -14,12 +14,12 @@ TEST({{ filename|replace("-", "_")|replace(".", "_") }}, {{ function|replace("-"
   {% for assert in asserts %}
     {% if assert.type == "return" %}
       {% if assert.expected|length %}
-  EXPECT_EQ(wasmFunction({{ assert.args|join(', ', attribute='value') }}), {{ assert.expected|join(', ', attribute='value') }});
+  EXPECT_EQ(wasmFunction({{ assert.args|join(', ', attribute='cpp_value') }}), ({{ assert.expected|join(', ', attribute='cpp_value') }}));
       {% else %}
-  wasmFunction({{ assert.args|join(', ', attribute='value') }});
+  wasmFunction({{ assert.args|join(', ', attribute='cpp_value') }});
       {% endif %}
     {% elif assert.type == "trap" %}
-  EXPECT_THROW(wasmFunction({{ assert.args|join(', ', attribute='value') }}), std::runtime_error);
+  EXPECT_THROW(wasmFunction({{ assert.args|join(', ', attribute='cpp_value') }}), std::runtime_error);
     {% endif %}
   {% endfor %}
 }
