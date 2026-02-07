@@ -14,6 +14,9 @@ uint64_t *linearMemoryAddressPtr = &linearMemoryAddress;
 uintptr_t wasmExecutableAddress = 0;
 uintptr_t *wasmExecutableAddressPtr = &wasmExecutableAddress;
 
+int32_t linearMemorySizeBytes = 0;
+int32_t *linearMemorySizeBytesPtr = &linearMemorySizeBytes;
+
 uintptr_t linearMemoryGrowAddress = 0;
 uintptr_t *linearMemoryGrowAddressPtr = &linearMemoryGrowAddress;
 
@@ -942,73 +945,86 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
     case 0x2D: // i32.load8_u
     case 0x2E: // i32.load16_s
     case 0x2F: // i32.load16_u
-    {
-      auto registerSize = arm64::reg_size_t::SIZE_32BIT;
-      auto signedVariant = arm64::signed_variant_t::UNSIGNED;
-      auto memorySize = arm64::mem_size_t::MEM_8BIT;
+      /** load from linear memory */
+      {
+        auto registerSize = arm64::reg_size_t::SIZE_32BIT;
+        auto signedVariant = arm64::signed_variant_t::UNSIGNED;
+        auto memorySize = arm64::mem_size_t::MEM_8BIT;
 
-      if (*(stream - 1) == 0x2C) {
-        memorySize = arm64::mem_size_t::MEM_8BIT;
-        signedVariant = arm64::signed_variant_t::SIGNED;
-      } else if (*(stream - 1) == 0x2D) {
-        memorySize = arm64::mem_size_t::MEM_8BIT;
-        signedVariant = arm64::signed_variant_t::UNSIGNED;
-      } else if (*(stream - 1) == 0x2E) {
-        memorySize = arm64::mem_size_t::MEM_16BIT;
-        signedVariant = arm64::signed_variant_t::SIGNED;
-      } else if (*(stream - 1) == 0x2F) {
-        memorySize = arm64::mem_size_t::MEM_16BIT;
-        signedVariant = arm64::signed_variant_t::UNSIGNED;
-      } else if (*(stream - 1) == 0x28) {
-        memorySize = arm64::mem_size_t::MEM_32BIT;
-        signedVariant = arm64::signed_variant_t::SIGNED;
-        registerSize = arm64::reg_size_t::SIZE_64BIT;
-      } else if (*(stream - 1) == 0x29) {
-        memorySize = arm64::mem_size_t::MEM_64BIT;
-        signedVariant = arm64::signed_variant_t::UNSIGNED;
-        registerSize = arm64::reg_size_t::SIZE_64BIT;
-      }
+        if (*(stream - 1) == 0x2C) {
+          memorySize = arm64::mem_size_t::MEM_8BIT;
+          signedVariant = arm64::signed_variant_t::SIGNED;
+        } else if (*(stream - 1) == 0x2D) {
+          memorySize = arm64::mem_size_t::MEM_8BIT;
+          signedVariant = arm64::signed_variant_t::UNSIGNED;
+        } else if (*(stream - 1) == 0x2E) {
+          memorySize = arm64::mem_size_t::MEM_16BIT;
+          signedVariant = arm64::signed_variant_t::SIGNED;
+        } else if (*(stream - 1) == 0x2F) {
+          memorySize = arm64::mem_size_t::MEM_16BIT;
+          signedVariant = arm64::signed_variant_t::UNSIGNED;
+        } else if (*(stream - 1) == 0x28) {
+          memorySize = arm64::mem_size_t::MEM_32BIT;
+          signedVariant = arm64::signed_variant_t::SIGNED;
+          registerSize = arm64::reg_size_t::SIZE_64BIT;
+        } else if (*(stream - 1) == 0x29) {
+          memorySize = arm64::mem_size_t::MEM_64BIT;
+          signedVariant = arm64::signed_variant_t::UNSIGNED;
+          registerSize = arm64::reg_size_t::SIZE_64BIT;
+        }
 
-      // decode memarg immediate
-      auto alignment = uint32_t(decoder::LEB128Decoder::decodeUnsigned(stream, streamEnd));
-      auto offset = uint32_t(decoder::LEB128Decoder::decodeUnsigned(stream, streamEnd));
+        // decode memarg immediate
+        auto alignment = uint32_t(decoder::LEB128Decoder::decodeUnsigned(stream, streamEnd));
+        auto offset = uint32_t(decoder::LEB128Decoder::decodeUnsigned(stream, streamEnd));
 
-      // ensure that we have enough operands on the stack for the index
-      asserte(stack.size() >= 1, "insufficient operands on stack for load");
+        // ensure that we have enough operands on the stack for the index
+        asserte(stack.size() >= 1, "insufficient operands on stack for load");
 
-      // get address from the stack
-      auto index_reg = stack.back();
-      auto result_reg = registerPool.allocateRegister();
+        // get address from the stack
+        auto index_reg = stack.back();
+        auto result_reg = registerPool.allocateRegister();
 
-      // encode address location to be loaded from global variable
-      auto absoluteAddress = reinterpret_cast<std::uintptr_t>(linearMemoryAddressPtr);
-      arm64::emit_mov_large_immediate(result_reg, uint64_t(absoluteAddress), arm64::reg_size_t::SIZE_64BIT, machinecode);
+        // encode address location to be loaded from global variable
+        auto absoluteAddress = reinterpret_cast<std::uintptr_t>(linearMemoryAddressPtr);
+        arm64::emit_mov_large_immediate(result_reg, uint64_t(absoluteAddress), arm64::reg_size_t::SIZE_64BIT, machinecode);
 
-      // load address of linear memory from pointer
-      machinecode.push_back(arm64::encode_ldr_register(result_reg, result_reg, arm64::reg_t::XZR, arm64::index_extend_type_t::INDEX_LSL, 0,
-                                                       arm64::mem_size_t::MEM_64BIT, arm64::reg_size_t::SIZE_64BIT));
+        // load address of linear memory from pointer
+        machinecode.push_back(arm64::encode_ldr_register(result_reg, result_reg, arm64::reg_t::XZR, arm64::index_extend_type_t::INDEX_LSL, 0,
+                                                         arm64::mem_size_t::MEM_64BIT, arm64::reg_size_t::SIZE_64BIT));
 
-      // optional: add offset immediate to base address
-      if (offset > 0) {
-        machinecode.push_back(arm64::encode_add_immediate(index_reg, index_reg, offset, false, arm64::reg_size_t::SIZE_64BIT));
-      }
+        // optional: add offset immediate to base address
+        if (offset > 0) {
+          machinecode.push_back(arm64::encode_add_immediate(index_reg, index_reg, offset, false, arm64::reg_size_t::SIZE_64BIT));
+        }
 
-      // FIXME: add out-of-bounds memory access check
-
-      // load actual global from memory location
-      if (signedVariant == arm64::signed_variant_t::SIGNED) {
+        // out-of-bounds memory access check
+        auto size_reg = registerPool.allocateRegister();
+        auto sizeAddress = reinterpret_cast<std::uintptr_t>(linearMemorySizeBytesPtr);
+        arm64::emit_mov_large_immediate(size_reg, uint64_t(sizeAddress), arm64::reg_size_t::SIZE_64BIT, machinecode);
+        machinecode.push_back(arm64::encode_ldr_register(size_reg, size_reg, arm64::reg_t::XZR, arm64::index_extend_type_t::INDEX_LSL, 0,
+                                                         arm64::mem_size_t::MEM_32BIT, arm64::reg_size_t::SIZE_32BIT));
+        // consider the last by that will be accessed based on the size of the load instruction
+        machinecode.push_back(arm64::encode_sub_immediate(size_reg, size_reg, memorySizeToBytes(memorySize), false, arm64::reg_size_t::SIZE_32BIT));
         machinecode.push_back(
-            arm64::encode_ldr_register_signed(result_reg, result_reg, index_reg, arm64::index_extend_type_t::INDEX_LSL, 0, memorySize, registerSize));
-      } else {
-        machinecode.push_back(
-            arm64::encode_ldr_register(result_reg, result_reg, index_reg, arm64::index_extend_type_t::INDEX_LSL, 0, memorySize, registerSize));
-      }
+            arm64::encode_cmp_shifted_register(index_reg, size_reg, arm64::reg_shift_t::SHIFT_LSL, 0, arm64::reg_size_t::SIZE_32BIT));
+        machinecode.push_back(arm64::encode_branch_cond(arm64::branch_condition_t::GE,
+                                                        getTraphandlerOffset(wasm::trap_code_t::MemoryOutOfBounds, trapHandler, machinecode)));
+        registerPool.freeRegister(size_reg);
 
-      stack.pop_back();
-      registerPool.freeRegister(index_reg);
-      stack.emplace_back(result_reg);
-      break;
-    }
+        // load actual global from memory location
+        if (signedVariant == arm64::signed_variant_t::SIGNED) {
+          machinecode.push_back(arm64::encode_ldr_register_signed(result_reg, result_reg, index_reg, arm64::index_extend_type_t::INDEX_LSL, 0,
+                                                                  memorySize, registerSize));
+        } else {
+          machinecode.push_back(
+              arm64::encode_ldr_register(result_reg, result_reg, index_reg, arm64::index_extend_type_t::INDEX_LSL, 0, memorySize, registerSize));
+        }
+
+        stack.pop_back();
+        registerPool.freeRegister(index_reg);
+        stack.emplace_back(result_reg);
+        break;
+      }
     case 0x36: // i32.store
     case 0x37: // i64.store
     case 0x3A: // i32.store8
@@ -1053,7 +1069,19 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
           machinecode.push_back(arm64::encode_add_immediate(index_reg, index_reg, offset, false, arm64::reg_size_t::SIZE_64BIT));
         }
 
-        // FIXME: add out-of-bounds memory access check
+        // out-of-bounds memory access check
+        auto size_reg = registerPool.allocateRegister();
+        auto sizeAddress = reinterpret_cast<std::uintptr_t>(linearMemorySizeBytesPtr);
+        arm64::emit_mov_large_immediate(size_reg, uint64_t(sizeAddress), arm64::reg_size_t::SIZE_64BIT, machinecode);
+        machinecode.push_back(arm64::encode_ldr_register(size_reg, size_reg, arm64::reg_t::XZR, arm64::index_extend_type_t::INDEX_LSL, 0,
+                                                         arm64::mem_size_t::MEM_32BIT, arm64::reg_size_t::SIZE_32BIT));
+        // consider the last by that will be accessed based on the size of the load instruction
+        machinecode.push_back(arm64::encode_sub_immediate(size_reg, size_reg, memorySizeToBytes(memorySize), false, arm64::reg_size_t::SIZE_32BIT));
+        machinecode.push_back(
+            arm64::encode_cmp_shifted_register(index_reg, size_reg, arm64::reg_shift_t::SHIFT_LSL, 0, arm64::reg_size_t::SIZE_32BIT));
+        machinecode.push_back(arm64::encode_branch_cond(arm64::branch_condition_t::GE,
+                                                        getTraphandlerOffset(wasm::trap_code_t::MemoryOutOfBounds, trapHandler, machinecode)));
+        registerPool.freeRegister(size_reg);
 
         // store value to memory location
         machinecode.push_back(

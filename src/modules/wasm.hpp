@@ -5,8 +5,8 @@
 
 namespace wasm {
 
-constexpr int MAX_LINEAR_MEMORY_PAGES = 16;
-constexpr int LINEAR_MEMORY_PAGE_SIZE = 0x10000; // 64 KiB
+constexpr int32_t MAX_LINEAR_MEMORY_PAGES = 16;
+constexpr int32_t LINEAR_MEMORY_PAGE_SIZE = 0x10000; // 64 KiB
 
 using wasm_i32_t = int32_t;
 using wasm_i64_t = int64_t;

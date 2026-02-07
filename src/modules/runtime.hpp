@@ -130,11 +130,11 @@ public:
     }
 
     if (linearMemory) {
-      linear_mem_ = std::make_unique<CustomMemory>(linearMemory->currentSize * wasm::LINEAR_MEMORY_PAGE_SIZE, linearMemory->init.data,
-                                                   linearMemory->init.offset, PROT_READ | PROT_WRITE);
-      linearMemoryAddress = reinterpret_cast<uint64_t>(linear_mem_->getAddress());
       linearMemoryMaxPages = linearMemory->maxSize;
       linearMemoryCurrentPages = linearMemory->currentSize;
+      linearMemorySizeBytes = linearMemoryCurrentPages * wasm::LINEAR_MEMORY_PAGE_SIZE;
+      linear_mem_ = std::make_unique<CustomMemory>(linearMemorySizeBytes, linearMemory->init.data, linearMemory->init.offset, PROT_READ | PROT_WRITE);
+      linearMemoryAddress = reinterpret_cast<uint64_t>(linear_mem_->getAddress());
     }
 
     func_ptr_ = reinterpret_cast<FuncPtr>(static_cast<char *>(exec_mem_->getAddress()) + offset);
@@ -176,6 +176,7 @@ public:
     if (linearMemoryCurrentPages + pages <= linearMemoryMaxPages) {
       auto currentPages = linearMemoryCurrentPages;
       linearMemoryCurrentPages += pages;
+      linearMemorySizeBytes = linearMemoryCurrentPages * wasm::LINEAR_MEMORY_PAGE_SIZE;
       return currentPages;
     } else {
       return -1;

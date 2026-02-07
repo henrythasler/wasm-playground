@@ -148,6 +148,7 @@ enum class addressing_mode_t {
 
 /** helper functions */
 uint32_t select_instruction(reg_size_t variant, uint32_t instruction_32bit, uint32_t instruction_64bit, std::string name);
+uint32_t memorySizeToBytes(arm64::mem_size_t size);
 
 /** arithmetic operations*/
 uint32_t encode_sub_immediate(reg_t rd, reg_t rn, uint16_t imm12, bool shift12, reg_size_t size);

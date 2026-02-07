@@ -36,6 +36,9 @@ extern uint64_t *linearMemoryAddressPtr;
 extern uintptr_t wasmExecutableAddress;
 extern uintptr_t *wasmExecutableAddressPtr;
 
+extern int32_t linearMemorySizeBytes;
+extern int32_t *linearMemorySizeBytesPtr;
+
 extern uintptr_t linearMemoryGrowAddress;
 extern uintptr_t *linearMemoryGrowAddressPtr;
 

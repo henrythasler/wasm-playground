@@ -18,6 +18,22 @@ uint32_t select_instruction(reg_size_t variant, uint32_t instruction_32bit, uint
   return 0;
 }
 
+uint32_t memorySizeToBytes(arm64::mem_size_t size) {
+  switch (size) {
+  case arm64::mem_size_t::MEM_8BIT:
+    return 1;
+  case arm64::mem_size_t::MEM_16BIT:
+    return 2;
+  case arm64::mem_size_t::MEM_32BIT:
+    return 4;
+  case arm64::mem_size_t::MEM_64BIT:
+    return 8;
+  default:
+    asserte(false, "memorySizeToBytes() invalid size");
+  }
+  return 0;
+}
+
 /**
  * This instruction subtracts an optionally-shifted immediate value from a register value, and writes the result to the destination register.
  *

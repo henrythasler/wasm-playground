@@ -112,12 +112,15 @@ int main(int argc, char const *argv[]) {
         std::cout << std::hex << "globalsMemoryAddress: content=0x" << globalsMemoryAddress << " location=0x" << &globalsMemoryAddress << std::dec
                   << std::endl;
 
+        std::cout << std::hex << "linearMemorySizeBytes: content=0x" << linearMemorySizeBytes << " location=0x" << &linearMemorySizeBytes << std::dec
+                  << std::endl;
+
         if (wasmModule->getMemory()) {
           std::cout << std::hex << "linearMemoryAddress: content=0x" << linearMemoryAddress << " location=0x" << &linearMemoryAddress << std::dec
                     << " size=" << wasmModule->getMemory()->currentSize * wasm::LINEAR_MEMORY_PAGE_SIZE << std::endl;
         }
 
-        auto res = wasmFunction.call(2);
+        auto res = wasmFunction.call(0xffff);
         std::cout << std::hex << res << " ";
       } catch (const std::exception &e) {
         std::cerr << RED << "Execution failed: " << e.what() << RESET << std::endl;

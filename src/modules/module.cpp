@@ -92,6 +92,7 @@ void WasmModule::compileModule() {
           wasm::trap_code_t::TableOutOfBounds,
           wasm::trap_code_t::IndirectCallToNull,
           wasm::trap_code_t::BadSignature,
+          wasm::trap_code_t::MemoryOutOfBounds,
       },
       machinecode);
   trapHandlerBuiltin->machinecodeSize = machinecode.size() - trapHandlerBuiltin->machinecodeOffset;

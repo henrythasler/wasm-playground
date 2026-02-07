@@ -108,12 +108,43 @@ TEST(memory_extended_grow, load_i32) {
   auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t, wasm::wasm_i32_t>(wasmModule, "load_i32");
   EXPECT_EQ(wasmFunction(0), 0);
   EXPECT_EQ(wasmFunction(0x1000), 0);
+  EXPECT_EQ(wasmFunction(0xFFFF - 4), 0); // last valid i32
+  EXPECT_THROW(
+      {
+        try {
+          wasmFunction(0xFFFF - 3);
+        } catch (const std::system_error &e) {
+          EXPECT_EQ(static_cast<wasm::trap_code_t>(e.code().value()), wasm::trap_code_t::MemoryOutOfBounds);
+          throw; // Re-throw for EXPECT_THROW to catch
+        }
+      },
+      std::system_error);  
+}
+
+TEST(memory_extended_grow, store_i32) {
+  auto wasmModule = helper::loadModule("memory-grow.wasm");
+  auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t, wasm::wasm_i32_t, wasm::wasm_i32_t>(wasmModule, "store_i32");
+  EXPECT_EQ(wasmFunction(0, 42), 42);
+  EXPECT_EQ(wasmFunction(0x1000, 42), 42);
+  EXPECT_EQ(wasmFunction(0xFFFF - 4, 42), 42); // last valid i32
+  EXPECT_THROW(
+      {
+        try {
+          wasmFunction(0xFFFF - 3, 42);
+        } catch (const std::system_error &e) {
+          EXPECT_EQ(static_cast<wasm::trap_code_t>(e.code().value()), wasm::trap_code_t::MemoryOutOfBounds);
+          throw; // Re-throw for EXPECT_THROW to catch
+        }
+      },
+      std::system_error);  
 }
 
 TEST(memory_extended_grow, memory_grow) {
   auto wasmModule = helper::loadModule("memory-grow.wasm");
   auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t, wasm::wasm_i32_t>(wasmModule, "memory_grow");
-  EXPECT_EQ(wasmFunction(1), 1);
   EXPECT_EQ(wasmFunction(255), -1);
+  EXPECT_EQ(wasmFunction(1), 1);
+  EXPECT_EQ(wasmFunction(14), 2);
+  EXPECT_EQ(wasmFunction(1), -1);
 }
 } // namespace
