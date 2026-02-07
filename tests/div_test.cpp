@@ -8,65 +8,65 @@ namespace {
 TEST(div_0_wasm, div_s_0) {
   auto wasmModule = helper::loadModule("div.0.wasm");
   auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t, wasm::wasm_i32_t, wasm::wasm_i32_t>(wasmModule, "div_s");
-  EXPECT_THROW(wasmFunction(static_cast<int32_t>(1), static_cast<int32_t>(0)), std::runtime_error);
-  EXPECT_THROW(wasmFunction(static_cast<int32_t>(0), static_cast<int32_t>(0)), std::runtime_error);
-  EXPECT_THROW(wasmFunction(static_cast<int32_t>(2147483648), static_cast<int32_t>(4294967295)), std::runtime_error);
-  EXPECT_THROW(wasmFunction(static_cast<int32_t>(2147483648), static_cast<int32_t>(0)), std::runtime_error);
-  EXPECT_EQ(wasmFunction(static_cast<int32_t>(1), static_cast<int32_t>(1)), (static_cast<int32_t>(1)));
-  EXPECT_EQ(wasmFunction(static_cast<int32_t>(0), static_cast<int32_t>(1)), (static_cast<int32_t>(0)));
-  EXPECT_EQ(wasmFunction(static_cast<int32_t>(0), static_cast<int32_t>(4294967295)), (static_cast<int32_t>(0)));
-  EXPECT_EQ(wasmFunction(static_cast<int32_t>(4294967295), static_cast<int32_t>(4294967295)), (static_cast<int32_t>(1)));
-  EXPECT_EQ(wasmFunction(static_cast<int32_t>(2147483648), static_cast<int32_t>(2)), (static_cast<int32_t>(3221225472)));
-  EXPECT_EQ(wasmFunction(static_cast<int32_t>(2147483649), static_cast<int32_t>(1000)), (static_cast<int32_t>(4292819813)));
-  EXPECT_EQ(wasmFunction(static_cast<int32_t>(5), static_cast<int32_t>(2)), (static_cast<int32_t>(2)));
-  EXPECT_EQ(wasmFunction(static_cast<int32_t>(4294967291), static_cast<int32_t>(2)), (static_cast<int32_t>(4294967294)));
-  EXPECT_EQ(wasmFunction(static_cast<int32_t>(5), static_cast<int32_t>(4294967294)), (static_cast<int32_t>(4294967294)));
-  EXPECT_EQ(wasmFunction(static_cast<int32_t>(4294967291), static_cast<int32_t>(4294967294)), (static_cast<int32_t>(2)));
-  EXPECT_EQ(wasmFunction(static_cast<int32_t>(7), static_cast<int32_t>(3)), (static_cast<int32_t>(2)));
-  EXPECT_EQ(wasmFunction(static_cast<int32_t>(4294967289), static_cast<int32_t>(3)), (static_cast<int32_t>(4294967294)));
-  EXPECT_EQ(wasmFunction(static_cast<int32_t>(7), static_cast<int32_t>(4294967293)), (static_cast<int32_t>(4294967294)));
-  EXPECT_EQ(wasmFunction(static_cast<int32_t>(4294967289), static_cast<int32_t>(4294967293)), (static_cast<int32_t>(2)));
-  EXPECT_EQ(wasmFunction(static_cast<int32_t>(11), static_cast<int32_t>(5)), (static_cast<int32_t>(2)));
-  EXPECT_EQ(wasmFunction(static_cast<int32_t>(17), static_cast<int32_t>(7)), (static_cast<int32_t>(2)));
+  EXPECT_THROW(wasmFunction(static_cast<int32_t>(1ULL), static_cast<int32_t>(0ULL)), std::runtime_error);
+  EXPECT_THROW(wasmFunction(static_cast<int32_t>(0ULL), static_cast<int32_t>(0ULL)), std::runtime_error);
+  EXPECT_THROW(wasmFunction(static_cast<int32_t>(2147483648ULL), static_cast<int32_t>(4294967295ULL)), std::runtime_error);
+  EXPECT_THROW(wasmFunction(static_cast<int32_t>(2147483648ULL), static_cast<int32_t>(0ULL)), std::runtime_error);
+  EXPECT_EQ(wasmFunction(static_cast<int32_t>(1ULL), static_cast<int32_t>(1ULL)), (static_cast<int32_t>(1ULL)));
+  EXPECT_EQ(wasmFunction(static_cast<int32_t>(0ULL), static_cast<int32_t>(1ULL)), (static_cast<int32_t>(0ULL)));
+  EXPECT_EQ(wasmFunction(static_cast<int32_t>(0ULL), static_cast<int32_t>(4294967295ULL)), (static_cast<int32_t>(0ULL)));
+  EXPECT_EQ(wasmFunction(static_cast<int32_t>(4294967295ULL), static_cast<int32_t>(4294967295ULL)), (static_cast<int32_t>(1ULL)));
+  EXPECT_EQ(wasmFunction(static_cast<int32_t>(2147483648ULL), static_cast<int32_t>(2ULL)), (static_cast<int32_t>(3221225472ULL)));
+  EXPECT_EQ(wasmFunction(static_cast<int32_t>(2147483649ULL), static_cast<int32_t>(1000ULL)), (static_cast<int32_t>(4292819813ULL)));
+  EXPECT_EQ(wasmFunction(static_cast<int32_t>(5ULL), static_cast<int32_t>(2ULL)), (static_cast<int32_t>(2ULL)));
+  EXPECT_EQ(wasmFunction(static_cast<int32_t>(4294967291ULL), static_cast<int32_t>(2ULL)), (static_cast<int32_t>(4294967294ULL)));
+  EXPECT_EQ(wasmFunction(static_cast<int32_t>(5ULL), static_cast<int32_t>(4294967294ULL)), (static_cast<int32_t>(4294967294ULL)));
+  EXPECT_EQ(wasmFunction(static_cast<int32_t>(4294967291ULL), static_cast<int32_t>(4294967294ULL)), (static_cast<int32_t>(2ULL)));
+  EXPECT_EQ(wasmFunction(static_cast<int32_t>(7ULL), static_cast<int32_t>(3ULL)), (static_cast<int32_t>(2ULL)));
+  EXPECT_EQ(wasmFunction(static_cast<int32_t>(4294967289ULL), static_cast<int32_t>(3ULL)), (static_cast<int32_t>(4294967294ULL)));
+  EXPECT_EQ(wasmFunction(static_cast<int32_t>(7ULL), static_cast<int32_t>(4294967293ULL)), (static_cast<int32_t>(4294967294ULL)));
+  EXPECT_EQ(wasmFunction(static_cast<int32_t>(4294967289ULL), static_cast<int32_t>(4294967293ULL)), (static_cast<int32_t>(2ULL)));
+  EXPECT_EQ(wasmFunction(static_cast<int32_t>(11ULL), static_cast<int32_t>(5ULL)), (static_cast<int32_t>(2ULL)));
+  EXPECT_EQ(wasmFunction(static_cast<int32_t>(17ULL), static_cast<int32_t>(7ULL)), (static_cast<int32_t>(2ULL)));
 }
 
 TEST(div_0_wasm, div_u_1) {
   auto wasmModule = helper::loadModule("div.0.wasm");
   auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t, wasm::wasm_i32_t, wasm::wasm_i32_t>(wasmModule, "div_u");
-  EXPECT_THROW(wasmFunction(static_cast<int32_t>(1), static_cast<int32_t>(0)), std::runtime_error);
-  EXPECT_THROW(wasmFunction(static_cast<int32_t>(0), static_cast<int32_t>(0)), std::runtime_error);
+  EXPECT_THROW(wasmFunction(static_cast<int32_t>(1ULL), static_cast<int32_t>(0ULL)), std::runtime_error);
+  EXPECT_THROW(wasmFunction(static_cast<int32_t>(0ULL), static_cast<int32_t>(0ULL)), std::runtime_error);
 }
 
 TEST(div_1_wasm, div_s_0) {
   auto wasmModule = helper::loadModule("div.1.wasm");
   auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i64_t, wasm::wasm_i64_t, wasm::wasm_i64_t>(wasmModule, "div_s");
-  EXPECT_THROW(wasmFunction(static_cast<int64_t>(1), static_cast<int64_t>(0)), std::runtime_error);
-  EXPECT_THROW(wasmFunction(static_cast<int64_t>(0), static_cast<int64_t>(0)), std::runtime_error);
-  EXPECT_THROW(wasmFunction(static_cast<int64_t>(9223372036854775808), static_cast<int64_t>(18446744073709551615)), std::runtime_error);
-  EXPECT_THROW(wasmFunction(static_cast<int64_t>(9223372036854775808), static_cast<int64_t>(0)), std::runtime_error);
-  EXPECT_EQ(wasmFunction(static_cast<int64_t>(1), static_cast<int64_t>(1)), (static_cast<int64_t>(1)));
-  EXPECT_EQ(wasmFunction(static_cast<int64_t>(0), static_cast<int64_t>(1)), (static_cast<int64_t>(0)));
-  EXPECT_EQ(wasmFunction(static_cast<int64_t>(0), static_cast<int64_t>(18446744073709551615)), (static_cast<int64_t>(0)));
-  EXPECT_EQ(wasmFunction(static_cast<int64_t>(18446744073709551615), static_cast<int64_t>(18446744073709551615)), (static_cast<int64_t>(1)));
-  EXPECT_EQ(wasmFunction(static_cast<int64_t>(9223372036854775808), static_cast<int64_t>(2)), (static_cast<int64_t>(13835058055282163712)));
-  EXPECT_EQ(wasmFunction(static_cast<int64_t>(9223372036854775809), static_cast<int64_t>(1000)), (static_cast<int64_t>(18437520701672696841)));
-  EXPECT_EQ(wasmFunction(static_cast<int64_t>(5), static_cast<int64_t>(2)), (static_cast<int64_t>(2)));
-  EXPECT_EQ(wasmFunction(static_cast<int64_t>(18446744073709551611), static_cast<int64_t>(2)), (static_cast<int64_t>(18446744073709551614)));
-  EXPECT_EQ(wasmFunction(static_cast<int64_t>(5), static_cast<int64_t>(18446744073709551614)), (static_cast<int64_t>(18446744073709551614)));
-  EXPECT_EQ(wasmFunction(static_cast<int64_t>(18446744073709551611), static_cast<int64_t>(18446744073709551614)), (static_cast<int64_t>(2)));
-  EXPECT_EQ(wasmFunction(static_cast<int64_t>(7), static_cast<int64_t>(3)), (static_cast<int64_t>(2)));
-  EXPECT_EQ(wasmFunction(static_cast<int64_t>(18446744073709551609), static_cast<int64_t>(3)), (static_cast<int64_t>(18446744073709551614)));
-  EXPECT_EQ(wasmFunction(static_cast<int64_t>(7), static_cast<int64_t>(18446744073709551613)), (static_cast<int64_t>(18446744073709551614)));
-  EXPECT_EQ(wasmFunction(static_cast<int64_t>(18446744073709551609), static_cast<int64_t>(18446744073709551613)), (static_cast<int64_t>(2)));
-  EXPECT_EQ(wasmFunction(static_cast<int64_t>(11), static_cast<int64_t>(5)), (static_cast<int64_t>(2)));
-  EXPECT_EQ(wasmFunction(static_cast<int64_t>(17), static_cast<int64_t>(7)), (static_cast<int64_t>(2)));
+  EXPECT_THROW(wasmFunction(static_cast<int64_t>(1ULL), static_cast<int64_t>(0ULL)), std::runtime_error);
+  EXPECT_THROW(wasmFunction(static_cast<int64_t>(0ULL), static_cast<int64_t>(0ULL)), std::runtime_error);
+  EXPECT_THROW(wasmFunction(static_cast<int64_t>(9223372036854775808ULL), static_cast<int64_t>(18446744073709551615ULL)), std::runtime_error);
+  EXPECT_THROW(wasmFunction(static_cast<int64_t>(9223372036854775808ULL), static_cast<int64_t>(0ULL)), std::runtime_error);
+  EXPECT_EQ(wasmFunction(static_cast<int64_t>(1ULL), static_cast<int64_t>(1ULL)), (static_cast<int64_t>(1ULL)));
+  EXPECT_EQ(wasmFunction(static_cast<int64_t>(0ULL), static_cast<int64_t>(1ULL)), (static_cast<int64_t>(0ULL)));
+  EXPECT_EQ(wasmFunction(static_cast<int64_t>(0ULL), static_cast<int64_t>(18446744073709551615ULL)), (static_cast<int64_t>(0ULL)));
+  EXPECT_EQ(wasmFunction(static_cast<int64_t>(18446744073709551615ULL), static_cast<int64_t>(18446744073709551615ULL)), (static_cast<int64_t>(1ULL)));
+  EXPECT_EQ(wasmFunction(static_cast<int64_t>(9223372036854775808ULL), static_cast<int64_t>(2ULL)), (static_cast<int64_t>(13835058055282163712ULL)));
+  EXPECT_EQ(wasmFunction(static_cast<int64_t>(9223372036854775809ULL), static_cast<int64_t>(1000ULL)), (static_cast<int64_t>(18437520701672696841ULL)));
+  EXPECT_EQ(wasmFunction(static_cast<int64_t>(5ULL), static_cast<int64_t>(2ULL)), (static_cast<int64_t>(2ULL)));
+  EXPECT_EQ(wasmFunction(static_cast<int64_t>(18446744073709551611ULL), static_cast<int64_t>(2ULL)), (static_cast<int64_t>(18446744073709551614ULL)));
+  EXPECT_EQ(wasmFunction(static_cast<int64_t>(5ULL), static_cast<int64_t>(18446744073709551614ULL)), (static_cast<int64_t>(18446744073709551614ULL)));
+  EXPECT_EQ(wasmFunction(static_cast<int64_t>(18446744073709551611ULL), static_cast<int64_t>(18446744073709551614ULL)), (static_cast<int64_t>(2ULL)));
+  EXPECT_EQ(wasmFunction(static_cast<int64_t>(7ULL), static_cast<int64_t>(3ULL)), (static_cast<int64_t>(2ULL)));
+  EXPECT_EQ(wasmFunction(static_cast<int64_t>(18446744073709551609ULL), static_cast<int64_t>(3ULL)), (static_cast<int64_t>(18446744073709551614ULL)));
+  EXPECT_EQ(wasmFunction(static_cast<int64_t>(7ULL), static_cast<int64_t>(18446744073709551613ULL)), (static_cast<int64_t>(18446744073709551614ULL)));
+  EXPECT_EQ(wasmFunction(static_cast<int64_t>(18446744073709551609ULL), static_cast<int64_t>(18446744073709551613ULL)), (static_cast<int64_t>(2ULL)));
+  EXPECT_EQ(wasmFunction(static_cast<int64_t>(11ULL), static_cast<int64_t>(5ULL)), (static_cast<int64_t>(2ULL)));
+  EXPECT_EQ(wasmFunction(static_cast<int64_t>(17ULL), static_cast<int64_t>(7ULL)), (static_cast<int64_t>(2ULL)));
 }
 
 TEST(div_1_wasm, div_u_1) {
   auto wasmModule = helper::loadModule("div.1.wasm");
   auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i64_t, wasm::wasm_i64_t, wasm::wasm_i64_t>(wasmModule, "div_u");
-  EXPECT_THROW(wasmFunction(static_cast<int64_t>(1), static_cast<int64_t>(0)), std::runtime_error);
-  EXPECT_THROW(wasmFunction(static_cast<int64_t>(0), static_cast<int64_t>(0)), std::runtime_error);
+  EXPECT_THROW(wasmFunction(static_cast<int64_t>(1ULL), static_cast<int64_t>(0ULL)), std::runtime_error);
+  EXPECT_THROW(wasmFunction(static_cast<int64_t>(0ULL), static_cast<int64_t>(0ULL)), std::runtime_error);
 }
 
 } // namespace

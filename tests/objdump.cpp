@@ -77,6 +77,7 @@ TEST(objdump, wasm) {
       "global.0",
       "linear-memory-data.0",
       "linear-memory-load.0",
+      "linear-memory-store.0",
   };
 
   for (const auto &wasmFile : wasmFiles) {

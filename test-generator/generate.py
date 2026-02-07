@@ -38,10 +38,10 @@ def load_spectest(input_file: Path) -> dict[str, defaultdict[str, list]] | None:
                 # wrap value into correct c++ type
                 for item in command["expected"]:
                     if "value" in item:
-                        item["cpp_value"] = "static_cast<{}>({})".format(types_map[item["type"]], item["value"])
+                        item["cpp_value"] = "static_cast<{}>({}ULL)".format(types_map[item["type"]], item["value"])
                 for item in command["action"]["args"]:
                     if "value" in item:
-                        item["cpp_value"] = "static_cast<{}>({})".format(types_map[item["type"]], item["value"])
+                        item["cpp_value"] = "static_cast<{}>({}ULL)".format(types_map[item["type"]], item["value"])
                 spec_test[active_module][command["action"]["field"]].append({"args": command["action"]["args"], "expected": command["expected"], "type": command["type"].split('_')[1]})
 
         # pprint(spec_test)
@@ -59,6 +59,7 @@ if __name__ == '__main__':
         "div.json",
         "linear-memory-data.json",
         "linear-memory-load.json",
+        "linear-memory-store.json",
         ]
 
     # find all json files

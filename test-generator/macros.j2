@@ -1,11 +1,14 @@
 {# macros.j2 #}
 {%- macro get_signature(expected, args) -%}
     {%- if (expected + args)|length -%}
-    {%- set comma = joiner(', ') -%}
-    {%- for item in expected + args -%}
-        {{ comma() }}wasm::wasm_{{ item.type }}_t
-    {%- endfor -%}
-    {%- else -%}
-        void
-    {%- endif -%}
+        {%- set comma = joiner(', ') -%}
+        {%- if expected|length -%}
+            {%- for item in expected -%}
+                {{ comma() }}wasm::wasm_{{ item.type }}_t
+            {%- endfor -%}
+        {%- else -%}void, {% endif -%}
+        {%- for item in args -%}
+            {{ comma() }}wasm::wasm_{{ item.type }}_t
+        {%- endfor -%}
+    {%- else -%}void{%- endif -%}
 {%- endmacro -%}

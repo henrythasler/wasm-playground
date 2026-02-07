@@ -8,25 +8,25 @@ namespace {
 TEST(linear_memory_data_0_wasm, read_byte_0) {
   auto wasmModule = helper::loadModule("linear-memory-data.0.wasm");
   auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t, wasm::wasm_i32_t>(wasmModule, "read_byte");
-  EXPECT_EQ(wasmFunction(static_cast<int32_t>(0)), (static_cast<int32_t>(72)));
-  EXPECT_EQ(wasmFunction(static_cast<int32_t>(1)), (static_cast<int32_t>(101)));
-  EXPECT_EQ(wasmFunction(static_cast<int32_t>(2)), (static_cast<int32_t>(108)));
-  EXPECT_EQ(wasmFunction(static_cast<int32_t>(3)), (static_cast<int32_t>(108)));
-  EXPECT_EQ(wasmFunction(static_cast<int32_t>(4)), (static_cast<int32_t>(111)));
-  EXPECT_EQ(wasmFunction(static_cast<int32_t>(5)), (static_cast<int32_t>(44)));
-  EXPECT_EQ(wasmFunction(static_cast<int32_t>(6)), (static_cast<int32_t>(32)));
-  EXPECT_EQ(wasmFunction(static_cast<int32_t>(7)), (static_cast<int32_t>(87)));
-  EXPECT_EQ(wasmFunction(static_cast<int32_t>(8)), (static_cast<int32_t>(101)));
-  EXPECT_EQ(wasmFunction(static_cast<int32_t>(9)), (static_cast<int32_t>(98)));
-  EXPECT_EQ(wasmFunction(static_cast<int32_t>(10)), (static_cast<int32_t>(65)));
-  EXPECT_EQ(wasmFunction(static_cast<int32_t>(11)), (static_cast<int32_t>(115)));
-  EXPECT_EQ(wasmFunction(static_cast<int32_t>(12)), (static_cast<int32_t>(115)));
-  EXPECT_EQ(wasmFunction(static_cast<int32_t>(13)), (static_cast<int32_t>(101)));
-  EXPECT_EQ(wasmFunction(static_cast<int32_t>(14)), (static_cast<int32_t>(109)));
-  EXPECT_EQ(wasmFunction(static_cast<int32_t>(15)), (static_cast<int32_t>(98)));
-  EXPECT_EQ(wasmFunction(static_cast<int32_t>(16)), (static_cast<int32_t>(108)));
-  EXPECT_EQ(wasmFunction(static_cast<int32_t>(17)), (static_cast<int32_t>(121)));
-  EXPECT_EQ(wasmFunction(static_cast<int32_t>(18)), (static_cast<int32_t>(33)));
+  EXPECT_EQ(wasmFunction(static_cast<int32_t>(0ULL)), (static_cast<int32_t>(72ULL)));
+  EXPECT_EQ(wasmFunction(static_cast<int32_t>(1ULL)), (static_cast<int32_t>(101ULL)));
+  EXPECT_EQ(wasmFunction(static_cast<int32_t>(2ULL)), (static_cast<int32_t>(108ULL)));
+  EXPECT_EQ(wasmFunction(static_cast<int32_t>(3ULL)), (static_cast<int32_t>(108ULL)));
+  EXPECT_EQ(wasmFunction(static_cast<int32_t>(4ULL)), (static_cast<int32_t>(111ULL)));
+  EXPECT_EQ(wasmFunction(static_cast<int32_t>(5ULL)), (static_cast<int32_t>(44ULL)));
+  EXPECT_EQ(wasmFunction(static_cast<int32_t>(6ULL)), (static_cast<int32_t>(32ULL)));
+  EXPECT_EQ(wasmFunction(static_cast<int32_t>(7ULL)), (static_cast<int32_t>(87ULL)));
+  EXPECT_EQ(wasmFunction(static_cast<int32_t>(8ULL)), (static_cast<int32_t>(101ULL)));
+  EXPECT_EQ(wasmFunction(static_cast<int32_t>(9ULL)), (static_cast<int32_t>(98ULL)));
+  EXPECT_EQ(wasmFunction(static_cast<int32_t>(10ULL)), (static_cast<int32_t>(65ULL)));
+  EXPECT_EQ(wasmFunction(static_cast<int32_t>(11ULL)), (static_cast<int32_t>(115ULL)));
+  EXPECT_EQ(wasmFunction(static_cast<int32_t>(12ULL)), (static_cast<int32_t>(115ULL)));
+  EXPECT_EQ(wasmFunction(static_cast<int32_t>(13ULL)), (static_cast<int32_t>(101ULL)));
+  EXPECT_EQ(wasmFunction(static_cast<int32_t>(14ULL)), (static_cast<int32_t>(109ULL)));
+  EXPECT_EQ(wasmFunction(static_cast<int32_t>(15ULL)), (static_cast<int32_t>(98ULL)));
+  EXPECT_EQ(wasmFunction(static_cast<int32_t>(16ULL)), (static_cast<int32_t>(108ULL)));
+  EXPECT_EQ(wasmFunction(static_cast<int32_t>(17ULL)), (static_cast<int32_t>(121ULL)));
+  EXPECT_EQ(wasmFunction(static_cast<int32_t>(18ULL)), (static_cast<int32_t>(33ULL)));
 }
 
 } // namespace
