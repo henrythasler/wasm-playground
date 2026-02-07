@@ -60,6 +60,7 @@ if __name__ == '__main__':
         "linear-memory-data.json",
         "linear-memory-load.json",
         "linear-memory-store.json",
+        "linear-memory-grow.json",
         ]
 
     # find all json files
