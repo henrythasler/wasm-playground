@@ -11,7 +11,6 @@
   (export "store_i32" (func $store_i32))
   (export "store_i16" (func $store_i16))
   (export "store_i8" (func $store_i8))
-  (export "memory_grow" (func $memory_grow))
   (func $load_i64 (param $index i32) (result i64)
     local.get $index
     i64.load
@@ -63,9 +62,5 @@
     i32.store8
     local.get $index
     i32.load8_u
-  )
-  (func $memory_grow (param $pages i32) (result i32)
-    local.get $pages
-    memory.grow
   )
 )

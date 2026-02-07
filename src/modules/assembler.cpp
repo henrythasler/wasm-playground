@@ -1076,6 +1076,7 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
         auto pages_reg = stack.at(stack.size() - 1);
         auto result_reg = registerPool.allocateRegister();
 
+        // load trampoline address; re-use result_reg
         auto growFnAddress = reinterpret_cast<std::uintptr_t>(linearMemoryGrowAddressPtr);
         arm64::emit_mov_large_immediate(result_reg, uint64_t(growFnAddress), arm64::reg_size_t::SIZE_64BIT, machinecode);
 
@@ -1083,7 +1084,7 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
         machinecode.push_back(arm64::encode_ldr_register(result_reg, result_reg, arm64::reg_t::XZR, arm64::index_extend_type_t::INDEX_LSL, 0,
                                                          arm64::mem_size_t::MEM_64BIT, arm64::reg_size_t::SIZE_64BIT));
 
-        arm64::emit_mov_large_immediate(arm64::X0, uint64_t(executableMemoryAddressPtr), arm64::reg_size_t::SIZE_64BIT, machinecode);
+        arm64::emit_mov_large_immediate(arm64::X0, uint64_t(wasmExecutableAddressPtr), arm64::reg_size_t::SIZE_64BIT, machinecode);
         // load address of wasmExecutable object from pointer
         machinecode.push_back(arm64::encode_ldr_register(arm64::X0, arm64::X0, arm64::reg_t::XZR, arm64::index_extend_type_t::INDEX_LSL, 0,
                                                          arm64::mem_size_t::MEM_64BIT, arm64::reg_size_t::SIZE_64BIT));

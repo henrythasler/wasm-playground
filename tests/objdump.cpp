@@ -58,6 +58,7 @@ TEST(objdump, wasm) {
       "functions_indirect",
       "globals-extended",
       "memory",
+      "memory-grow",
       // tutorial chapters (in sequence)
       "empty-fn",
       "local.0",
@@ -75,7 +76,7 @@ TEST(objdump, wasm) {
       "call_indirect.2",
       "global.0",
       "linear-memory-data.0",
-      // "linear-memory-load.0",
+      "linear-memory-load.0",
   };
 
   for (const auto &wasmFile : wasmFiles) {
@@ -106,7 +107,6 @@ TEST(objdump, wasm) {
       auto globalMemory = wasmModule.getGlobals()->serialize();
       writer.add_data(reinterpret_cast<const uint8_t *>(globalMemory.data()), globalMemory.size() * sizeof(uint64_t));
       writer.add_symbol("globals", 0, globalMemory.size() * sizeof(uint64_t), 2, STT_OBJECT);
-
     }
 
     writer.write_elf(wasmFile + ".o");

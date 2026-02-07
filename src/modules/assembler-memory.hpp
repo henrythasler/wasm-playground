@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <iomanip>
 
 #include "helper.hpp"

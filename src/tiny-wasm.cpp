@@ -98,8 +98,14 @@ int main(int argc, char const *argv[]) {
       // std::cout << "  Executing machine code (break *0x" << machinecode.data() << ")... ";
       // auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t, wasm::wasm_i32_t, wasm::wasm_i32_t>(
       //     machinecode, wasmModule->getFunctionOffset(function->getName()));
-      auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i64_t, wasm::wasm_i32_t>(*wasmModule, function->getName());
+      auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t, wasm::wasm_i32_t>(*wasmModule, function->getName());
       try {
+        std::cout << std::hex << "wasmExecutableAddress: content=0x" << wasmExecutableAddress << " location=0x" << &wasmExecutableAddress
+                  << " wasmFunction=0x" << &wasmFunction << std::dec << std::endl;
+
+        std::cout << std::hex << "linearMemoryGrowAddress: content=0x" << linearMemoryGrowAddress << " location=0x" << &linearMemoryGrowAddress
+                  << std::dec << std::endl;
+
         std::cout << std::hex << "executableMemoryAddress: content=0x" << executableMemoryAddress << " location=0x" << &executableMemoryAddress
                   << std::dec << std::endl;
 
@@ -110,7 +116,8 @@ int main(int argc, char const *argv[]) {
           std::cout << std::hex << "linearMemoryAddress: content=0x" << linearMemoryAddress << " location=0x" << &linearMemoryAddress << std::dec
                     << " size=" << wasmModule->getMemory()->currentSize * wasm::LINEAR_MEMORY_PAGE_SIZE << std::endl;
         }
-        auto res = wasmFunction.call(768);
+
+        auto res = wasmFunction.call(2);
         std::cout << std::hex << res << " ";
       } catch (const std::exception &e) {
         std::cerr << RED << "Execution failed: " << e.what() << RESET << std::endl;

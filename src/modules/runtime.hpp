@@ -133,7 +133,7 @@ public:
       linear_mem_ = std::make_unique<CustomMemory>(linearMemory->currentSize * wasm::LINEAR_MEMORY_PAGE_SIZE, linearMemory->init.data,
                                                    linearMemory->init.offset, PROT_READ | PROT_WRITE);
       linearMemoryAddress = reinterpret_cast<uint64_t>(linear_mem_->getAddress());
-      linearMemoryMaxPages = 0; // linearMemory->maxSize;
+      linearMemoryMaxPages = linearMemory->maxSize;
       linearMemoryCurrentPages = linearMemory->currentSize;
     }
 
@@ -171,6 +171,8 @@ public:
   }
 
   int32_t linearMemoryGrow(int32_t pages) {
+    // std::cout << "pages requested: " << pages << "  current pages: " << linearMemoryCurrentPages << "  limit: " << linearMemoryMaxPages <<
+    // std::endl;
     if (linearMemoryCurrentPages + pages <= linearMemoryMaxPages) {
       auto currentPages = linearMemoryCurrentPages;
       linearMemoryCurrentPages += pages;
@@ -182,6 +184,7 @@ public:
 
   // Static trampoline for JIT to call
   static int32_t linearMemoryGrow_trampoline(WasmExecutable *self, int32_t pages) {
+    // std::cout << std::hex << "self: " << self << std::dec << std::endl;
     return self->linearMemoryGrow(pages);
   }
 
