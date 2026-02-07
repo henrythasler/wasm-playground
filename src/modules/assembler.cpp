@@ -570,9 +570,9 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
       /** count leading zero bits */
       {
         asserte(stack.size() >= 1, "insufficient operands on stack for clz");
-        auto registerSize = (*(stream - 1) == 0x68) ? arm64::reg_size_t::SIZE_32BIT : arm64::reg_size_t::SIZE_64BIT;
+        auto registerSize = (*(stream - 1) == 0x67) ? arm64::reg_size_t::SIZE_32BIT : arm64::reg_size_t::SIZE_64BIT;
         auto reg = stack.back();
-        arm64::encode_clz(reg, reg, registerSize);
+        machinecode.push_back(arm64::encode_clz(reg, reg, registerSize));
         break;
       }
     case 0x68: // i32.ctz
@@ -1007,7 +1007,7 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
         machinecode.push_back(arm64::encode_sub_immediate(size_reg, size_reg, memorySizeToBytes(memorySize), false, arm64::reg_size_t::SIZE_32BIT));
         machinecode.push_back(
             arm64::encode_cmp_shifted_register(index_reg, size_reg, arm64::reg_shift_t::SHIFT_LSL, 0, arm64::reg_size_t::SIZE_32BIT));
-        machinecode.push_back(arm64::encode_branch_cond(arm64::branch_condition_t::GE,
+        machinecode.push_back(arm64::encode_branch_cond(arm64::branch_condition_t::HS,
                                                         getTraphandlerOffset(wasm::trap_code_t::MemoryOutOfBounds, trapHandler, machinecode)));
         registerPool.freeRegister(size_reg);
 
@@ -1079,7 +1079,7 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
         machinecode.push_back(arm64::encode_sub_immediate(size_reg, size_reg, memorySizeToBytes(memorySize), false, arm64::reg_size_t::SIZE_32BIT));
         machinecode.push_back(
             arm64::encode_cmp_shifted_register(index_reg, size_reg, arm64::reg_shift_t::SHIFT_LSL, 0, arm64::reg_size_t::SIZE_32BIT));
-        machinecode.push_back(arm64::encode_branch_cond(arm64::branch_condition_t::GE,
+        machinecode.push_back(arm64::encode_branch_cond(arm64::branch_condition_t::HS,
                                                         getTraphandlerOffset(wasm::trap_code_t::MemoryOutOfBounds, trapHandler, machinecode)));
         registerPool.freeRegister(size_reg);
 

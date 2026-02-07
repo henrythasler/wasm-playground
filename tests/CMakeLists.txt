@@ -102,7 +102,7 @@ add_executable(all_tests
   call_test.cpp
   call_indirect_test.cpp
   linear-memory-data_test.cpp
-  # linear-memory-load_test.cpp
+  linear-memory-load_test.cpp
   # additional test cases
   echo_test.cpp
   compare_test.cpp

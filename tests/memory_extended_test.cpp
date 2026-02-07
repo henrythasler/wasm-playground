@@ -118,7 +118,17 @@ TEST(memory_extended_grow, load_i32) {
           throw; // Re-throw for EXPECT_THROW to catch
         }
       },
-      std::system_error);  
+      std::system_error);
+  EXPECT_THROW(
+      {
+        try {
+          wasmFunction(0xFFFFFF00);
+        } catch (const std::system_error &e) {
+          EXPECT_EQ(static_cast<wasm::trap_code_t>(e.code().value()), wasm::trap_code_t::MemoryOutOfBounds);
+          throw; // Re-throw for EXPECT_THROW to catch
+        }
+      },
+      std::system_error);
 }
 
 TEST(memory_extended_grow, store_i32) {
@@ -136,7 +146,7 @@ TEST(memory_extended_grow, store_i32) {
           throw; // Re-throw for EXPECT_THROW to catch
         }
       },
-      std::system_error);  
+      std::system_error);
 }
 
 TEST(memory_extended_grow, memory_grow) {
