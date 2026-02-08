@@ -100,27 +100,27 @@ int main(int argc, char const *argv[]) {
       //     machinecode, wasmModule->getFunctionOffset(function->getName()));
       auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t, wasm::wasm_i32_t>(*wasmModule, function->getName());
       try {
-        std::cout << std::hex << "wasmExecutableAddress: content=0x" << wasmExecutableAddress << " location=0x" << &wasmExecutableAddress
+        std::cout << std::hex << "objectPointer: content=0x" << gRuntimeInfo.objectPointer << " location=0x" << &gRuntimeInfo.objectPointer
                   << " wasmFunction=0x" << &wasmFunction << std::dec << std::endl;
 
-        std::cout << std::hex << "linearMemoryGrowAddress: content=0x" << linearMemoryGrowAddress << " location=0x" << &linearMemoryGrowAddress
+        std::cout << std::hex << "linearMemoryGrowAddress: content=0x" << gLinearMemoryInfo.growFunctionAddress << " location=0x"
+                  << &gLinearMemoryInfo.growFunctionAddress << std::dec << std::endl;
+
+        std::cout << std::hex << "machineCodeAddress: content=0x" << gRuntimeInfo.machineCodeAddress << " location=0x"
+                  << &gRuntimeInfo.machineCodeAddress << std::dec << std::endl;
+
+        std::cout << std::hex << "globalsMemoryAddress: content=0x" << gRuntimeInfo.globalsMemoryAddress << " location=0x"
+                  << &gRuntimeInfo.globalsMemoryAddress << std::dec << std::endl;
+
+        std::cout << std::hex << "linearMemorySizeBytes: content=0x" << gLinearMemoryInfo.sizeBytes << " location=0x" << &gLinearMemoryInfo.sizeBytes
                   << std::dec << std::endl;
-
-        std::cout << std::hex << "executableMemoryAddress: content=0x" << executableMemoryAddress << " location=0x" << &executableMemoryAddress
-                  << std::dec << std::endl;
-
-        std::cout << std::hex << "globalsMemoryAddress: content=0x" << globalsMemoryAddress << " location=0x" << &globalsMemoryAddress << std::dec
-                  << std::endl;
-
-        std::cout << std::hex << "linearMemorySizeBytes: content=0x" << linearMemorySizeBytes << " location=0x" << &linearMemorySizeBytes << std::dec
-                  << std::endl;
 
         if (wasmModule->getMemory()) {
-          std::cout << std::hex << "linearMemoryAddress: content=0x" << linearMemoryAddress << " location=0x" << &linearMemoryAddress << std::dec
-                    << " size=" << wasmModule->getMemory()->currentSize * wasm::LINEAR_MEMORY_PAGE_SIZE << std::endl;
+          std::cout << std::hex << "linearMemoryAddress: content=0x" << gLinearMemoryInfo.address << " location=0x" << &gLinearMemoryInfo.address
+                    << std::dec << " size=" << wasmModule->getMemory()->initialSize * wasm::LINEAR_MEMORY_PAGE_SIZE << std::endl;
         }
 
-        auto res = wasmFunction.call(0xffff);
+        auto res = wasmFunction.call(1);
         std::cout << std::hex << res << " ";
       } catch (const std::exception &e) {
         std::cerr << RED << "Execution failed: " << e.what() << RESET << std::endl;

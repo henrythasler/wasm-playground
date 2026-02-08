@@ -9,7 +9,7 @@ void LinearMemory::parseMemorySection(webassembly_t::memory_section_t *memory_se
 
   auto limits = wasm_memory->limits();
   this->minSize = limits->min()->value();
-  this->currentSize = this->minSize;
+  this->initialSize = this->minSize;
   this->maxSize = limits->flags() == 0x01 ? limits->max()->value() : wasm::MAX_LINEAR_MEMORY_PAGES;
 
   asserte(this->minSize <= this->minSize, "parseMemorySection(): minSize is larger than maxSize");
@@ -34,8 +34,8 @@ void LinearMemory::parseMemorySection(webassembly_t::memory_section_t *memory_se
       this->init.data.assign(init_vec.begin(), init_vec.end());
 
       // calculate initial number of pages
-      this->currentSize =
-          std::max(this->currentSize, static_cast<int32_t>((this->init.data.size() + this->init.offset) / wasm::LINEAR_MEMORY_PAGE_SIZE + 1));
+      this->initialSize =
+          std::max(this->initialSize, static_cast<int32_t>((this->init.data.size() + this->init.offset) / wasm::LINEAR_MEMORY_PAGE_SIZE + 1));
     }
   }
 }

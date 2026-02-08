@@ -23,6 +23,7 @@ class CustomMemory {
 private:
   uint8_t *mem_;
   size_t size_;
+  int protectionMode_;
 
   // Helper to get byte size from uint32_t vector
   static size_t get_byte_size(const std::vector<uint32_t> &data) {
@@ -49,28 +50,29 @@ private:
 
 public:
   // Constructor for uint8_t vector (byte array)
-  CustomMemory(const std::vector<uint8_t> &data, int protectionMode) : mem_(nullptr), size_(data.size()) {
+  CustomMemory(const std::vector<uint8_t> &data, int protectionMode) : mem_(nullptr), size_(data.size()), protectionMode_(protectionMode) {
     if (size_ > 0) {
-      allocate_and_copy(data.data(), size_, protectionMode);
+      allocate_and_copy(data.data(), size_, protectionMode_);
     }
   }
 
   // Constructor for uint32_t vector (word array)
-  CustomMemory(const std::vector<uint32_t> &data, int protectionMode) : mem_(nullptr), size_(get_byte_size(data)) {
+  CustomMemory(const std::vector<uint32_t> &data, int protectionMode) : mem_(nullptr), size_(get_byte_size(data)), protectionMode_(protectionMode) {
     if (size_ > 0) {
-      allocate_and_copy(get_byte_ptr(data), size_, protectionMode);
+      allocate_and_copy(get_byte_ptr(data), size_, protectionMode_);
     }
   }
 
-  CustomMemory(const std::vector<uint64_t> &data, int protectionMode) : mem_(nullptr), size_(get_byte_size(data)) {
+  CustomMemory(const std::vector<uint64_t> &data, int protectionMode) : mem_(nullptr), size_(get_byte_size(data)), protectionMode_(protectionMode) {
     if (size_ > 0) {
-      allocate_and_copy(get_byte_ptr(data), size_, protectionMode);
+      allocate_and_copy(get_byte_ptr(data), size_, protectionMode_);
     }
   }
 
-  CustomMemory(size_t size, const std::vector<uint8_t> &init, size_t initOffset, int protectionMode) : mem_(nullptr), size_(size) {
+  CustomMemory(size_t size, const std::vector<uint8_t> &init, size_t initOffset, int protectionMode)
+      : mem_(nullptr), size_(size), protectionMode_(protectionMode) {
     if (size_ > 0) {
-      allocate_and_copy(init.data(), init.size(), initOffset, protectionMode);
+      allocate_and_copy(init.data(), init.size(), initOffset, protectionMode_);
     }
   }
 
@@ -97,6 +99,7 @@ public:
   size_t size() const {
     return size_;
   }
+  void grow(size_t size);
 };
 
 /**
@@ -122,19 +125,23 @@ public:
                  const std::unique_ptr<assembler::LinearMemory> &linearMemory, size_t offset = 0)
       : WasmExecutable() {
     exec_mem_ = std::make_unique<CustomMemory>(machine_code, PROT_READ | PROT_EXEC);
-    executableMemoryAddress = reinterpret_cast<uint64_t>(exec_mem_->getAddress());
+    gRuntimeInfo.machineCodeAddress = reinterpret_cast<uint64_t>(exec_mem_->getAddress());
 
     if (globals) {
       globals_mem_ = std::make_unique<CustomMemory>(*globals.get(), PROT_READ | PROT_WRITE);
-      globalsMemoryAddress = reinterpret_cast<uint64_t>(globals_mem_->getAddress());
+      gRuntimeInfo.globalsMemoryAddress = reinterpret_cast<uint64_t>(globals_mem_->getAddress());
     }
 
     if (linearMemory) {
       linearMemoryMaxPages = linearMemory->maxSize;
-      linearMemoryCurrentPages = linearMemory->currentSize;
-      linearMemorySizeBytes = linearMemoryCurrentPages * wasm::LINEAR_MEMORY_PAGE_SIZE;
-      linear_mem_ = std::make_unique<CustomMemory>(linearMemorySizeBytes, linearMemory->init.data, linearMemory->init.offset, PROT_READ | PROT_WRITE);
-      linearMemoryAddress = reinterpret_cast<uint64_t>(linear_mem_->getAddress());
+      linearMemoryCurrentPages = linearMemory->initialSize;
+
+      gLinearMemoryInfo.sizePages = linearMemoryCurrentPages;
+      gLinearMemoryInfo.sizeBytes = gLinearMemoryInfo.sizePages * wasm::LINEAR_MEMORY_PAGE_SIZE;
+
+      linear_mem_ =
+          std::make_unique<CustomMemory>(gLinearMemoryInfo.sizeBytes, linearMemory->init.data, linearMemory->init.offset, PROT_READ | PROT_WRITE);
+      gLinearMemoryInfo.address = reinterpret_cast<uint64_t>(linear_mem_->getAddress());
     }
 
     func_ptr_ = reinterpret_cast<FuncPtr>(static_cast<char *>(exec_mem_->getAddress()) + offset);
@@ -176,7 +183,7 @@ public:
     if (linearMemoryCurrentPages + pages <= linearMemoryMaxPages) {
       auto currentPages = linearMemoryCurrentPages;
       linearMemoryCurrentPages += pages;
-      linearMemorySizeBytes = linearMemoryCurrentPages * wasm::LINEAR_MEMORY_PAGE_SIZE;
+      gLinearMemoryInfo.sizeBytes = linearMemoryCurrentPages * wasm::LINEAR_MEMORY_PAGE_SIZE;
       return currentPages;
     } else {
       return -1;
@@ -213,11 +220,69 @@ WasmExecutable<ReturnType, Args...> make_wasm_function(tiny::WasmModule &wasmMod
   size_t exportFunctionOffset = wasmModule.getFunctionOffset(funcName);
   const auto globalMemory = wasmModule.getGlobals() ? std::make_unique<std::vector<uint64_t>>(wasmModule.getGlobals()->serialize()) : nullptr;
   auto wasmExecutable = WasmExecutable<ReturnType, Args...>(linkedCode, globalMemory, wasmModule.getMemory(), exportFunctionOffset);
-  wasmExecutableAddress = wasmExecutable.getThisPointerAsInt();
+  gRuntimeInfo.objectPointer = wasmExecutable.getThisPointerAsInt();
   if (wasmModule.getMemory()) {
-    linearMemoryGrowAddress = reinterpret_cast<uintptr_t>(WasmExecutable<ReturnType, Args...>::getLinearMemoryGrowAddress());
+    gLinearMemoryInfo.growFunctionAddress = reinterpret_cast<uintptr_t>(WasmExecutable<ReturnType, Args...>::getLinearMemoryGrowAddress());
   }
   return wasmExecutable;
 }
+
+template <typename ReturnType, typename... Args> class WasmCallable {
+private:
+  using FuncPtr = ReturnType (*)(Args...);
+  FuncPtr func_ptr_;
+
+public:
+  WasmCallable() = default;
+  WasmCallable(void *exec_mem_, size_t offset) : WasmCallable() {
+    func_ptr_ = reinterpret_cast<FuncPtr>(static_cast<char *>(exec_mem_) + offset);
+    if (func_ptr_ == nullptr) {
+      throw std::runtime_error("Invalid function pointer");
+    }
+  }
+
+  // Call operator - allows using the object like a function
+  ReturnType operator()(Args... args) const {
+    return call(args...);
+  }
+
+  // Explicit call method
+  ReturnType call(Args... args) const {
+    auto trap_code = wasm::trap_code_t(_setjmp(g_jmpbuf));
+    if (trap_code == wasm::trap_code_t::None) {
+      // First time - call the JIT function
+      return func_ptr_(args...);
+    } else {
+      // Returned via longjmp - handle the error
+      std::error_code ec = make_trap_error(trap_code);
+      throw std::system_error(ec);
+    }
+  }
+};
+
+class ModuleInstance {
+private:
+  std::unique_ptr<CustomMemory> machineCode_;
+  std::unique_ptr<CustomMemory> globals_;
+  std::unique_ptr<CustomMemory> linearMemory_;
+  WasmModule &module_;
+
+public:
+  ModuleInstance(WasmModule &module);
+  ~ModuleInstance() = default;
+
+  ModuleInstance(const ModuleInstance &) = delete;
+  ModuleInstance &operator=(const ModuleInstance &) = delete;
+
+  template <typename ReturnType, typename... Args> WasmCallable<ReturnType, Args...> getFunction(const std::string &funcName) {
+    auto callable = WasmCallable<ReturnType, Args...>(machineCode_->getAddress(), module_.getFunctionOffset(funcName));
+    return callable;
+  }
+
+  // linear memory management
+  int32_t linearMemoryGrow(int32_t pages);
+  static int32_t linearMemoryGrow_trampoline(ModuleInstance *self, int32_t pages);
+  static void *getLinearMemoryGrowAddress();
+};
 
 } // namespace tiny

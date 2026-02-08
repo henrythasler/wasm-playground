@@ -108,11 +108,11 @@ TEST(memory_extended_grow, load_i32) {
   auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t, wasm::wasm_i32_t>(wasmModule, "load_i32");
   EXPECT_EQ(wasmFunction(0), 0);
   EXPECT_EQ(wasmFunction(0x1000), 0);
-  EXPECT_EQ(wasmFunction(0xFFFF - 4), 0); // last valid i32
+  EXPECT_EQ(wasmFunction(wasm::LINEAR_MEMORY_PAGE_SIZE - 4), 0); // last valid i32
   EXPECT_THROW(
       {
         try {
-          wasmFunction(0xFFFF - 3);
+          wasmFunction(wasm::LINEAR_MEMORY_PAGE_SIZE - 3);
         } catch (const std::system_error &e) {
           EXPECT_EQ(static_cast<wasm::trap_code_t>(e.code().value()), wasm::trap_code_t::MemoryOutOfBounds);
           throw; // Re-throw for EXPECT_THROW to catch
@@ -136,11 +136,11 @@ TEST(memory_extended_grow, store_i32) {
   auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t, wasm::wasm_i32_t, wasm::wasm_i32_t>(wasmModule, "store_i32");
   EXPECT_EQ(wasmFunction(0, 42), 42);
   EXPECT_EQ(wasmFunction(0x1000, 42), 42);
-  EXPECT_EQ(wasmFunction(0xFFFF - 4, 42), 42); // last valid i32
+  EXPECT_EQ(wasmFunction(wasm::LINEAR_MEMORY_PAGE_SIZE - 4, 42), 42); // last valid i32
   EXPECT_THROW(
       {
         try {
-          wasmFunction(0xFFFF - 3, 42);
+          wasmFunction(wasm::LINEAR_MEMORY_PAGE_SIZE - 3, 42);
         } catch (const std::system_error &e) {
           EXPECT_EQ(static_cast<wasm::trap_code_t>(e.code().value()), wasm::trap_code_t::MemoryOutOfBounds);
           throw; // Re-throw for EXPECT_THROW to catch
@@ -160,7 +160,44 @@ TEST(memory_extended_grow, memory_grow) {
 
 TEST(memory_extended_grow, memory_size) {
   auto wasmModule = helper::loadModule("memory-grow.wasm");
-  auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t>(wasmModule, "memory_size");
-  EXPECT_EQ(wasmFunction(), 1);
+  auto instance = tiny::ModuleInstance(wasmModule);
+
+  auto memory_size = instance.getFunction<wasm::wasm_i32_t>("memory_size");
+  auto memory_grow = instance.getFunction<wasm::wasm_i32_t, wasm::wasm_i32_t>("memory_grow");
+  auto load_i32 = instance.getFunction<wasm::wasm_i32_t, wasm::wasm_i32_t>("load_i32");
+  auto store_i32 = instance.getFunction<wasm::wasm_i32_t, wasm::wasm_i32_t, wasm::wasm_i32_t>("store_i32");
+  EXPECT_EQ(memory_size(), 1);
+
+  EXPECT_EQ(load_i32(wasm::LINEAR_MEMORY_PAGE_SIZE - 4), 0); // last valid i32
+
+  // whole memory must be initialized with zeros
+  for (int i = 0; i < wasm::LINEAR_MEMORY_PAGE_SIZE / 4; i++) {
+    EXPECT_EQ(load_i32(i * 4), 0);
+  }
+
+  for (int i = 0; i < wasm::LINEAR_MEMORY_PAGE_SIZE / 4; i++) {
+    store_i32(i * 4, i);
+  }
+  for (int i = 0; i < wasm::LINEAR_MEMORY_PAGE_SIZE / 4; i++) {
+    EXPECT_EQ(load_i32(i * 4), i);
+  }
+
+  // grow linear memory by one page
+  EXPECT_EQ(memory_grow(1), 1);
+  EXPECT_EQ(memory_size(), 2);
+
+  // previously written data should still be available
+  for (int i = 0; i < wasm::LINEAR_MEMORY_PAGE_SIZE / 4; i++) {
+    EXPECT_EQ(load_i32(i * 4), i);
+  }
+
+  // new page can also store and load data
+  for (int i = 0; i < wasm::LINEAR_MEMORY_PAGE_SIZE / 4; i++) {
+    store_i32(i * 4 + wasm::LINEAR_MEMORY_PAGE_SIZE, i);
+  }
+  for (int i = 0; i < wasm::LINEAR_MEMORY_PAGE_SIZE / 4; i++) {
+    EXPECT_EQ(load_i32(i * 4 + wasm::LINEAR_MEMORY_PAGE_SIZE), i);
+  }
 }
+
 } // namespace
