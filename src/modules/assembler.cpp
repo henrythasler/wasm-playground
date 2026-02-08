@@ -2,15 +2,7 @@
 
 jmp_buf g_jmpbuf;
 
-uint64_t executableMemoryAddress = 0;
-uint64_t *executableMemoryAddressPtr = &executableMemoryAddress;
-
-uint64_t globalsMemoryAddress = 0;
-uint64_t *globalsMemoryAddressPtr = &globalsMemoryAddress;
-
-uintptr_t wasmExecutableAddress = 0;
-uintptr_t *wasmExecutableAddressPtr = &wasmExecutableAddress;
-
+RuntimeInfo gRuntimeInfo;
 LinearMemoryInfo gLinearMemoryInfo;
 
 extern "C" void wasmTrapHandler(int error_code) {
@@ -253,7 +245,7 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
           arm64::emit_mov_large_immediate(reg, uint64_t(global.value), registerSize, machinecode);
         } else {
           // encode address location to be loaded from global variable
-          auto absoluteAddress = reinterpret_cast<std::uintptr_t>(globalsMemoryAddressPtr);
+          auto absoluteAddress = reinterpret_cast<std::uintptr_t>(gRuntimeInfo.globalsMemoryAddressPtr);
           arm64::emit_mov_large_immediate(reg, uint64_t(absoluteAddress), arm64::reg_size_t::SIZE_64BIT, machinecode);
 
           // load address of globals memory from pointer
@@ -283,7 +275,7 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
         auto valueRegister = stack.back();
 
         // encode address location to be loaded from global variable
-        auto absoluteAddress = reinterpret_cast<std::uintptr_t>(globalsMemoryAddressPtr);
+        auto absoluteAddress = reinterpret_cast<std::uintptr_t>(gRuntimeInfo.globalsMemoryAddressPtr);
         arm64::emit_mov_large_immediate(addressRegister, uint64_t(absoluteAddress), arm64::reg_size_t::SIZE_64BIT, machinecode);
 
         // load address of globals memory from pointer
@@ -892,7 +884,7 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
         auto baseAddressReg = registerPool.allocateRegister();
 
         // encode base address location to be loaded from global variable using mov/movk instructions
-        auto absoluteAddress = reinterpret_cast<std::uintptr_t>(executableMemoryAddressPtr);
+        auto absoluteAddress = reinterpret_cast<std::uintptr_t>(gRuntimeInfo.machineCodeAddressPtr);
         arm64::emit_mov_large_immediate(baseAddressReg, uint64_t(absoluteAddress), arm64::reg_size_t::SIZE_64BIT, machinecode);
 
         // load base address of executable memory from pointer
@@ -906,7 +898,7 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
                                                          arm64::reg_size_t::SIZE_64BIT));
         registerPool.freeRegister(baseAddressReg);
 
-        // std::cout << std::hex << "executableMemoryAddress: content=0x" << executableMemoryAddress << " location=0x" << executableMemoryAddressPtr
+        // std::cout << std::hex << "machineCodeAddress: content=0x" << machineCodeAddress << " location=0x" << machineCodeAddressPtr
         //           << std::dec << std::endl;
 
         // move parameters into argument registers
@@ -1121,7 +1113,7 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
         machinecode.push_back(arm64::encode_ldr_register(result_reg, result_reg, arm64::reg_t::XZR, arm64::index_extend_type_t::INDEX_LSL, 0,
                                                          arm64::mem_size_t::MEM_64BIT, arm64::reg_size_t::SIZE_64BIT));
 
-        arm64::emit_mov_large_immediate(arm64::X0, uint64_t(wasmExecutableAddressPtr), arm64::reg_size_t::SIZE_64BIT, machinecode);
+        arm64::emit_mov_large_immediate(arm64::X0, uint64_t(gRuntimeInfo.objectPointerPtr), arm64::reg_size_t::SIZE_64BIT, machinecode);
         // load address of wasmExecutable object from pointer
         machinecode.push_back(arm64::encode_ldr_register(arm64::X0, arm64::X0, arm64::reg_t::XZR, arm64::index_extend_type_t::INDEX_LSL, 0,
                                                          arm64::mem_size_t::MEM_64BIT, arm64::reg_size_t::SIZE_64BIT));

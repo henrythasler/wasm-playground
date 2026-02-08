@@ -122,11 +122,11 @@ public:
                  const std::unique_ptr<assembler::LinearMemory> &linearMemory, size_t offset = 0)
       : WasmExecutable() {
     exec_mem_ = std::make_unique<CustomMemory>(machine_code, PROT_READ | PROT_EXEC);
-    executableMemoryAddress = reinterpret_cast<uint64_t>(exec_mem_->getAddress());
+    gRuntimeInfo.machineCodeAddress = reinterpret_cast<uint64_t>(exec_mem_->getAddress());
 
     if (globals) {
       globals_mem_ = std::make_unique<CustomMemory>(*globals.get(), PROT_READ | PROT_WRITE);
-      globalsMemoryAddress = reinterpret_cast<uint64_t>(globals_mem_->getAddress());
+      gRuntimeInfo.globalsMemoryAddress = reinterpret_cast<uint64_t>(globals_mem_->getAddress());
     }
 
     if (linearMemory) {
@@ -214,7 +214,7 @@ WasmExecutable<ReturnType, Args...> make_wasm_function(tiny::WasmModule &wasmMod
   size_t exportFunctionOffset = wasmModule.getFunctionOffset(funcName);
   const auto globalMemory = wasmModule.getGlobals() ? std::make_unique<std::vector<uint64_t>>(wasmModule.getGlobals()->serialize()) : nullptr;
   auto wasmExecutable = WasmExecutable<ReturnType, Args...>(linkedCode, globalMemory, wasmModule.getMemory(), exportFunctionOffset);
-  wasmExecutableAddress = wasmExecutable.getThisPointerAsInt();
+  gRuntimeInfo.objectPointer = wasmExecutable.getThisPointerAsInt();
   if (wasmModule.getMemory()) {
     gLinearMemoryInfo.growFunctionAddress = reinterpret_cast<uintptr_t>(WasmExecutable<ReturnType, Args...>::getLinearMemoryGrowAddress());
   }

@@ -43,10 +43,18 @@ void CustomMemory::allocate_and_copy(const uint8_t *init, size_t initSize, size_
 }
 
 ModuleInstance::ModuleInstance(WasmModule &module) : module_(module) {
+  // copy a reference of itself to global record for access from within the JIT code
+  gRuntimeInfo.objectPointer = reinterpret_cast<uintptr_t>(this);
+
+  // allocate JIT code memory
   machineCode_ = std::make_unique<CustomMemory>(module.getMachinecode(), PROT_READ | PROT_EXEC);
+
+  // allocate globals if needed
   if (module.getGlobals()) {
     const auto globalMemory = std::make_unique<std::vector<uint64_t>>(module.getGlobals()->serialize());
   }
+
+  // add linear memory if needed
   if (module.getMemory()) {
     linearMemoryState.pages = module.getMemory()->initialSize;
     linearMemoryState.maxPages = module.getMemory()->maxSize;

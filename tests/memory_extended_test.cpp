@@ -163,8 +163,22 @@ TEST(memory_extended_grow, memory_size) {
   auto instance = tiny::ModuleInstance(wasmModule);
   auto memory_size = instance.getFunction<wasm::wasm_i32_t>("memory_size");
   auto memory_grow = instance.getFunction<wasm::wasm_i32_t, wasm::wasm_i32_t>("memory_grow");
+  auto load_i32 = instance.getFunction<wasm::wasm_i32_t, wasm::wasm_i32_t>("load_i32");
+  auto store_i32 = instance.getFunction<wasm::wasm_i32_t, wasm::wasm_i32_t, wasm::wasm_i32_t>("store_i32");
   EXPECT_EQ(memory_size(), 1);
-  // EXPECT_EQ(memory_grow(1), 1);
-  // EXPECT_EQ(memory_size(), 2);
+
+  for (int i = 0; i < 1024; i++) {
+    store_i32(i * 4, i);
+  }
+  for (int i = 0; i < 1024; i++) {
+    EXPECT_EQ(load_i32(i * 4), i);
+  }
+  EXPECT_EQ(memory_grow(1), 1);
+
+  for (int i = 0; i < 1024; i++) {
+    EXPECT_EQ(load_i32(i * 4), i);
+  }
+
+  EXPECT_EQ(memory_size(), 2);
 }
 } // namespace

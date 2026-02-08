@@ -100,17 +100,17 @@ int main(int argc, char const *argv[]) {
       //     machinecode, wasmModule->getFunctionOffset(function->getName()));
       auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t, wasm::wasm_i32_t>(*wasmModule, function->getName());
       try {
-        std::cout << std::hex << "wasmExecutableAddress: content=0x" << wasmExecutableAddress << " location=0x" << &wasmExecutableAddress
+        std::cout << std::hex << "objectPointer: content=0x" << gRuntimeInfo.objectPointer << " location=0x" << &gRuntimeInfo.objectPointer
                   << " wasmFunction=0x" << &wasmFunction << std::dec << std::endl;
 
         std::cout << std::hex << "linearMemoryGrowAddress: content=0x" << gLinearMemoryInfo.growFunctionAddress << " location=0x"
                   << &gLinearMemoryInfo.growFunctionAddress << std::dec << std::endl;
 
-        std::cout << std::hex << "executableMemoryAddress: content=0x" << executableMemoryAddress << " location=0x" << &executableMemoryAddress
-                  << std::dec << std::endl;
+        std::cout << std::hex << "machineCodeAddress: content=0x" << gRuntimeInfo.machineCodeAddress << " location=0x"
+                  << &gRuntimeInfo.machineCodeAddress << std::dec << std::endl;
 
-        std::cout << std::hex << "globalsMemoryAddress: content=0x" << globalsMemoryAddress << " location=0x" << &globalsMemoryAddress << std::dec
-                  << std::endl;
+        std::cout << std::hex << "globalsMemoryAddress: content=0x" << gRuntimeInfo.globalsMemoryAddress << " location=0x"
+                  << &gRuntimeInfo.globalsMemoryAddress << std::dec << std::endl;
 
         std::cout << std::hex << "linearMemorySizeBytes: content=0x" << gLinearMemoryInfo.sizeBytes << " location=0x" << &gLinearMemoryInfo.sizeBytes
                   << std::dec << std::endl;

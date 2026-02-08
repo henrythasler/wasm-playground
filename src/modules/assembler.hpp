@@ -21,16 +21,26 @@
 // Global jmp_buf for trap handling
 extern jmp_buf g_jmpbuf;
 
-// Global variable to hold the base address for JIT-compiled code
-extern uint64_t executableMemoryAddress;
-extern uint64_t *executableMemoryAddressPtr;
+struct RuntimeInfo {
+  // Global variable to hold the base address for JIT-compiled code
+  uint64_t machineCodeAddress = 0;
+  uint64_t *machineCodeAddressPtr = nullptr;
 
-// Variable to hold the address of wasm-globals
-extern uint64_t globalsMemoryAddress;
-extern uint64_t *globalsMemoryAddressPtr;
+  // Variable to hold the address of wasm-globals
+  uint64_t globalsMemoryAddress = 0;
+  uint64_t *globalsMemoryAddressPtr = nullptr;
 
-extern uintptr_t wasmExecutableAddress;
-extern uintptr_t *wasmExecutableAddressPtr;
+  // holds a reference to the runtime-object itself
+  uintptr_t objectPointer = 0;
+  uintptr_t *objectPointerPtr = nullptr;
+
+  RuntimeInfo() {
+    machineCodeAddressPtr = &machineCodeAddress;
+    globalsMemoryAddressPtr = &globalsMemoryAddress;
+    objectPointerPtr = &objectPointer;
+  }
+};
+extern RuntimeInfo gRuntimeInfo;
 
 // Struct definition with self-initializing pointers
 struct LinearMemoryInfo {
@@ -50,7 +60,6 @@ struct LinearMemoryInfo {
     addressPtr = &address;
   }
 };
-
 // Declare a global instance of the struct
 extern LinearMemoryInfo gLinearMemoryInfo;
 
