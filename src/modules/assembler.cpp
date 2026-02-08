@@ -1087,12 +1087,10 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
         auto memory_index = uint32_t(decoder::LEB128Decoder::decodeUnsigned(stream, streamEnd));
 
         auto size_reg = registerPool.allocateRegister();
-        auto sizeAddress = reinterpret_cast<std::uintptr_t>(gLinearMemoryInfo.sizeBytesPtr);
+        auto sizeAddress = reinterpret_cast<std::uintptr_t>(gLinearMemoryInfo.sizePagesPtr);
         arm64::emit_mov_large_immediate(size_reg, uint64_t(sizeAddress), arm64::reg_size_t::SIZE_64BIT, machinecode);
         machinecode.push_back(arm64::encode_ldr_register(size_reg, size_reg, arm64::reg_t::XZR, arm64::index_extend_type_t::INDEX_LSL, 0,
                                                          arm64::mem_size_t::MEM_32BIT, arm64::reg_size_t::SIZE_32BIT));
-        // divide byte size by page size to get number of pages
-        machinecode.push_back(arm64::encode_lsr_immediate(size_reg, size_reg, 16, arm64::reg_size_t::SIZE_32BIT));
         stack.emplace_back(size_reg);
         break;
       }

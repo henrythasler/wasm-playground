@@ -47,6 +47,9 @@ struct LinearMemoryInfo {
   uint64_t address = 0;
   uint64_t *addressPtr = nullptr;
 
+  int32_t sizePages = 0;
+  int32_t *sizePagesPtr = nullptr;
+
   int32_t sizeBytes = 0;
   int32_t *sizeBytesPtr = nullptr;
 
@@ -56,6 +59,7 @@ struct LinearMemoryInfo {
   // Constructor sets the pointers to point to the members
   LinearMemoryInfo() {
     sizeBytesPtr = &sizeBytes;
+    sizePagesPtr = &sizePages;
     growFunctionAddressPtr = &growFunctionAddress;
     addressPtr = &address;
   }

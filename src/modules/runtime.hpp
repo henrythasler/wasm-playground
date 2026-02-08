@@ -23,6 +23,7 @@ class CustomMemory {
 private:
   uint8_t *mem_;
   size_t size_;
+  int protectionMode_;
 
   // Helper to get byte size from uint32_t vector
   static size_t get_byte_size(const std::vector<uint32_t> &data) {
@@ -49,28 +50,28 @@ private:
 
 public:
   // Constructor for uint8_t vector (byte array)
-  CustomMemory(const std::vector<uint8_t> &data, int protectionMode) : mem_(nullptr), size_(data.size()) {
+  CustomMemory(const std::vector<uint8_t> &data, int protectionMode) : mem_(nullptr), size_(data.size()), protectionMode_(protectionMode) {
     if (size_ > 0) {
-      allocate_and_copy(data.data(), size_, protectionMode);
+      allocate_and_copy(data.data(), size_, protectionMode_);
     }
   }
 
   // Constructor for uint32_t vector (word array)
-  CustomMemory(const std::vector<uint32_t> &data, int protectionMode) : mem_(nullptr), size_(get_byte_size(data)) {
+  CustomMemory(const std::vector<uint32_t> &data, int protectionMode) : mem_(nullptr), size_(get_byte_size(data)), protectionMode_(protectionMode) {
     if (size_ > 0) {
-      allocate_and_copy(get_byte_ptr(data), size_, protectionMode);
+      allocate_and_copy(get_byte_ptr(data), size_, protectionMode_);
     }
   }
 
-  CustomMemory(const std::vector<uint64_t> &data, int protectionMode) : mem_(nullptr), size_(get_byte_size(data)) {
+  CustomMemory(const std::vector<uint64_t> &data, int protectionMode) : mem_(nullptr), size_(get_byte_size(data)), protectionMode_(protectionMode) {
     if (size_ > 0) {
-      allocate_and_copy(get_byte_ptr(data), size_, protectionMode);
+      allocate_and_copy(get_byte_ptr(data), size_, protectionMode_);
     }
   }
 
-  CustomMemory(size_t size, const std::vector<uint8_t> &init, size_t initOffset, int protectionMode) : mem_(nullptr), size_(size) {
+  CustomMemory(size_t size, const std::vector<uint8_t> &init, size_t initOffset, int protectionMode) : mem_(nullptr), size_(size), protectionMode_(protectionMode) {
     if (size_ > 0) {
-      allocate_and_copy(init.data(), init.size(), initOffset, protectionMode);
+      allocate_and_copy(init.data(), init.size(), initOffset, protectionMode_);
     }
   }
 
@@ -97,6 +98,7 @@ public:
   size_t size() const {
     return size_;
   }
+  void grow(size_t size);
 };
 
 /**
@@ -132,7 +134,10 @@ public:
     if (linearMemory) {
       linearMemoryMaxPages = linearMemory->maxSize;
       linearMemoryCurrentPages = linearMemory->initialSize;
-      gLinearMemoryInfo.sizeBytes = linearMemoryCurrentPages * wasm::LINEAR_MEMORY_PAGE_SIZE;
+
+      gLinearMemoryInfo.sizePages = linearMemoryCurrentPages;
+      gLinearMemoryInfo.sizeBytes = gLinearMemoryInfo.sizePages * wasm::LINEAR_MEMORY_PAGE_SIZE;
+
       linear_mem_ =
           std::make_unique<CustomMemory>(gLinearMemoryInfo.sizeBytes, linearMemory->init.data, linearMemory->init.offset, PROT_READ | PROT_WRITE);
       gLinearMemoryInfo.address = reinterpret_cast<uint64_t>(linear_mem_->getAddress());
@@ -260,13 +265,7 @@ private:
   std::unique_ptr<CustomMemory> globals_;
   std::unique_ptr<CustomMemory> linearMemory_;
   WasmModule &module_;
-
-  struct MemoryState {
-    int32_t pages;
-    uintptr_t maxPages;
-  };
-  MemoryState linearMemoryState;
-
+ 
 public:
   ModuleInstance(WasmModule &module);
   ~ModuleInstance() = default;

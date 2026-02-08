@@ -173,12 +173,22 @@ TEST(memory_extended_grow, memory_size) {
   for (int i = 0; i < 1024; i++) {
     EXPECT_EQ(load_i32(i * 4), i);
   }
-  EXPECT_EQ(memory_grow(1), 1);
 
+  // grow linear memory by one page
+  EXPECT_EQ(memory_grow(1), 1);
+  EXPECT_EQ(memory_size(), 2);
+
+  // previously written data should still be available
   for (int i = 0; i < 1024; i++) {
     EXPECT_EQ(load_i32(i * 4), i);
   }
 
-  EXPECT_EQ(memory_size(), 2);
+  // new page can also store and load data
+  for (int i = 0; i < 1024; i++) {
+    store_i32(i * 4 + wasm::LINEAR_MEMORY_PAGE_SIZE, i);
+  }
+  for (int i = 0; i < 1024; i++) {
+    EXPECT_EQ(load_i32(i * 4 + wasm::LINEAR_MEMORY_PAGE_SIZE), i);
+  }
 }
 } // namespace
