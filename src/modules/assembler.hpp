@@ -29,18 +29,30 @@ extern uint64_t *executableMemoryAddressPtr;
 extern uint64_t globalsMemoryAddress;
 extern uint64_t *globalsMemoryAddressPtr;
 
-// Variable to hold the address of Linear Memory
-extern uint64_t linearMemoryAddress;
-extern uint64_t *linearMemoryAddressPtr;
-
 extern uintptr_t wasmExecutableAddress;
 extern uintptr_t *wasmExecutableAddressPtr;
 
-extern int32_t linearMemorySizeBytes;
-extern int32_t *linearMemorySizeBytesPtr;
+// Struct definition with self-initializing pointers
+struct LinearMemoryInfo {
+  uint64_t address = 0;
+  uint64_t *addressPtr = nullptr;
 
-extern uintptr_t linearMemoryGrowAddress;
-extern uintptr_t *linearMemoryGrowAddressPtr;
+  int32_t sizeBytes = 0;
+  int32_t *sizeBytesPtr = nullptr;
+
+  uintptr_t growFunctionAddress = 0;
+  uintptr_t *growFunctionAddressPtr = nullptr;
+
+  // Constructor sets the pointers to point to the members
+  LinearMemoryInfo() {
+    sizeBytesPtr = &sizeBytes;
+    growFunctionAddressPtr = &growFunctionAddress;
+    addressPtr = &address;
+  }
+};
+
+// Declare a global instance of the struct
+extern LinearMemoryInfo gLinearMemoryInfo;
 
 namespace assembler {
 class RegisterPool {

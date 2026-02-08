@@ -48,21 +48,30 @@ ModuleInstance::ModuleInstance(WasmModule &module) : module_(module) {
     const auto globalMemory = std::make_unique<std::vector<uint64_t>>(module.getGlobals()->serialize());
   }
   if (module.getMemory()) {
-    linearMemoryCurrentPages = module.getMemory()->initialSize;
-    linearMemorySizeBytes = linearMemoryCurrentPages * wasm::LINEAR_MEMORY_PAGE_SIZE;
-    linearMemory_ =
-        std::make_unique<CustomMemory>(linearMemorySizeBytes, module.getMemory()->init.data, module.getMemory()->init.offset, PROT_READ | PROT_WRITE);
-    linearMemoryAddress = reinterpret_cast<uint64_t>(linearMemory_->getAddress());
-    linearMemoryGrowAddress = reinterpret_cast<uintptr_t>(ModuleInstance::getLinearMemoryGrowAddress());
+    linearMemoryState.pages = module.getMemory()->initialSize;
+    linearMemoryState.maxPages = module.getMemory()->maxSize;
+    gLinearMemoryInfo.sizeBytes = linearMemoryState.pages * wasm::LINEAR_MEMORY_PAGE_SIZE;
+    linearMemory_ = std::make_unique<CustomMemory>(gLinearMemoryInfo.sizeBytes, module.getMemory()->init.data, module.getMemory()->init.offset,
+                                                   PROT_READ | PROT_WRITE);
+    gLinearMemoryInfo.address = reinterpret_cast<uint64_t>(linearMemory_->getAddress());
+    gLinearMemoryInfo.growFunctionAddress = reinterpret_cast<uintptr_t>(ModuleInstance::getLinearMemoryGrowAddress());
   } else {
-    linearMemoryGrowAddress = 0;
-    linearMemoryAddress = 0;
+    gLinearMemoryInfo.growFunctionAddress = 0;
+    gLinearMemoryInfo.address = 0;
   }
 }
 
 int32_t ModuleInstance::linearMemoryGrow(int32_t pages) {
   std::cout << "pages requested: " << pages << std::endl;
-  return -1;
+  if (linearMemoryState.pages + pages <= linearMemoryState.maxPages) {
+    auto currentPages = linearMemoryState.pages;
+    // FIXME: implement actual memory grow operation
+    linearMemoryState.pages += pages;
+    gLinearMemoryInfo.sizeBytes = linearMemoryState.pages * wasm::LINEAR_MEMORY_PAGE_SIZE;
+    return currentPages;
+  } else {
+    return -1;
+  }
 }
 
 // Static trampoline for JIT to call

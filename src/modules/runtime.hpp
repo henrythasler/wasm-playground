@@ -132,9 +132,10 @@ public:
     if (linearMemory) {
       linearMemoryMaxPages = linearMemory->maxSize;
       linearMemoryCurrentPages = linearMemory->initialSize;
-      linearMemorySizeBytes = linearMemoryCurrentPages * wasm::LINEAR_MEMORY_PAGE_SIZE;
-      linear_mem_ = std::make_unique<CustomMemory>(linearMemorySizeBytes, linearMemory->init.data, linearMemory->init.offset, PROT_READ | PROT_WRITE);
-      linearMemoryAddress = reinterpret_cast<uint64_t>(linear_mem_->getAddress());
+      gLinearMemoryInfo.sizeBytes = linearMemoryCurrentPages * wasm::LINEAR_MEMORY_PAGE_SIZE;
+      linear_mem_ =
+          std::make_unique<CustomMemory>(gLinearMemoryInfo.sizeBytes, linearMemory->init.data, linearMemory->init.offset, PROT_READ | PROT_WRITE);
+      gLinearMemoryInfo.address = reinterpret_cast<uint64_t>(linear_mem_->getAddress());
     }
 
     func_ptr_ = reinterpret_cast<FuncPtr>(static_cast<char *>(exec_mem_->getAddress()) + offset);
@@ -176,7 +177,7 @@ public:
     if (linearMemoryCurrentPages + pages <= linearMemoryMaxPages) {
       auto currentPages = linearMemoryCurrentPages;
       linearMemoryCurrentPages += pages;
-      linearMemorySizeBytes = linearMemoryCurrentPages * wasm::LINEAR_MEMORY_PAGE_SIZE;
+      gLinearMemoryInfo.sizeBytes = linearMemoryCurrentPages * wasm::LINEAR_MEMORY_PAGE_SIZE;
       return currentPages;
     } else {
       return -1;
@@ -215,7 +216,7 @@ WasmExecutable<ReturnType, Args...> make_wasm_function(tiny::WasmModule &wasmMod
   auto wasmExecutable = WasmExecutable<ReturnType, Args...>(linkedCode, globalMemory, wasmModule.getMemory(), exportFunctionOffset);
   wasmExecutableAddress = wasmExecutable.getThisPointerAsInt();
   if (wasmModule.getMemory()) {
-    linearMemoryGrowAddress = reinterpret_cast<uintptr_t>(WasmExecutable<ReturnType, Args...>::getLinearMemoryGrowAddress());
+    gLinearMemoryInfo.growFunctionAddress = reinterpret_cast<uintptr_t>(WasmExecutable<ReturnType, Args...>::getLinearMemoryGrowAddress());
   }
   return wasmExecutable;
 }
@@ -259,7 +260,12 @@ private:
   std::unique_ptr<CustomMemory> globals_;
   std::unique_ptr<CustomMemory> linearMemory_;
   WasmModule &module_;
-  int32_t linearMemoryCurrentPages;
+
+  struct MemoryState {
+    int32_t pages;
+    uintptr_t maxPages;
+  };
+  MemoryState linearMemoryState;
 
 public:
   ModuleInstance(WasmModule &module);

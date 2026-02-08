@@ -103,8 +103,8 @@ int main(int argc, char const *argv[]) {
         std::cout << std::hex << "wasmExecutableAddress: content=0x" << wasmExecutableAddress << " location=0x" << &wasmExecutableAddress
                   << " wasmFunction=0x" << &wasmFunction << std::dec << std::endl;
 
-        std::cout << std::hex << "linearMemoryGrowAddress: content=0x" << linearMemoryGrowAddress << " location=0x" << &linearMemoryGrowAddress
-                  << std::dec << std::endl;
+        std::cout << std::hex << "linearMemoryGrowAddress: content=0x" << gLinearMemoryInfo.growFunctionAddress << " location=0x"
+                  << &gLinearMemoryInfo.growFunctionAddress << std::dec << std::endl;
 
         std::cout << std::hex << "executableMemoryAddress: content=0x" << executableMemoryAddress << " location=0x" << &executableMemoryAddress
                   << std::dec << std::endl;
@@ -112,12 +112,12 @@ int main(int argc, char const *argv[]) {
         std::cout << std::hex << "globalsMemoryAddress: content=0x" << globalsMemoryAddress << " location=0x" << &globalsMemoryAddress << std::dec
                   << std::endl;
 
-        std::cout << std::hex << "linearMemorySizeBytes: content=0x" << linearMemorySizeBytes << " location=0x" << &linearMemorySizeBytes << std::dec
-                  << std::endl;
+        std::cout << std::hex << "linearMemorySizeBytes: content=0x" << gLinearMemoryInfo.sizeBytes << " location=0x" << &gLinearMemoryInfo.sizeBytes
+                  << std::dec << std::endl;
 
         if (wasmModule->getMemory()) {
-          std::cout << std::hex << "linearMemoryAddress: content=0x" << linearMemoryAddress << " location=0x" << &linearMemoryAddress << std::dec
-                    << " size=" << wasmModule->getMemory()->initialSize * wasm::LINEAR_MEMORY_PAGE_SIZE << std::endl;
+          std::cout << std::hex << "linearMemoryAddress: content=0x" << gLinearMemoryInfo.address << " location=0x" << &gLinearMemoryInfo.address
+                    << std::dec << " size=" << wasmModule->getMemory()->initialSize * wasm::LINEAR_MEMORY_PAGE_SIZE << std::endl;
         }
 
         auto res = wasmFunction.call(1);

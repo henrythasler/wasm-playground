@@ -8,17 +8,10 @@ uint64_t *executableMemoryAddressPtr = &executableMemoryAddress;
 uint64_t globalsMemoryAddress = 0;
 uint64_t *globalsMemoryAddressPtr = &globalsMemoryAddress;
 
-uint64_t linearMemoryAddress = 0;
-uint64_t *linearMemoryAddressPtr = &linearMemoryAddress;
-
 uintptr_t wasmExecutableAddress = 0;
 uintptr_t *wasmExecutableAddressPtr = &wasmExecutableAddress;
 
-int32_t linearMemorySizeBytes = 0;
-int32_t *linearMemorySizeBytesPtr = &linearMemorySizeBytes;
-
-uintptr_t linearMemoryGrowAddress = 0;
-uintptr_t *linearMemoryGrowAddressPtr = &linearMemoryGrowAddress;
+LinearMemoryInfo gLinearMemoryInfo;
 
 extern "C" void wasmTrapHandler(int error_code) {
   longjmp(g_jmpbuf, error_code);
@@ -985,7 +978,7 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
         auto result_reg = registerPool.allocateRegister();
 
         // encode address location to be loaded from global variable
-        auto absoluteAddress = reinterpret_cast<std::uintptr_t>(linearMemoryAddressPtr);
+        auto absoluteAddress = reinterpret_cast<std::uintptr_t>(gLinearMemoryInfo.addressPtr);
         arm64::emit_mov_large_immediate(result_reg, uint64_t(absoluteAddress), arm64::reg_size_t::SIZE_64BIT, machinecode);
 
         // load address of linear memory from pointer
@@ -999,7 +992,7 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
 
         // out-of-bounds memory access check
         auto size_reg = registerPool.allocateRegister();
-        auto sizeAddress = reinterpret_cast<std::uintptr_t>(linearMemorySizeBytesPtr);
+        auto sizeAddress = reinterpret_cast<std::uintptr_t>(gLinearMemoryInfo.sizeBytesPtr);
         arm64::emit_mov_large_immediate(size_reg, uint64_t(sizeAddress), arm64::reg_size_t::SIZE_64BIT, machinecode);
         machinecode.push_back(arm64::encode_ldr_register(size_reg, size_reg, arm64::reg_t::XZR, arm64::index_extend_type_t::INDEX_LSL, 0,
                                                          arm64::mem_size_t::MEM_32BIT, arm64::reg_size_t::SIZE_32BIT));
@@ -1057,7 +1050,7 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
         auto address_reg = registerPool.allocateRegister();
 
         // encode address location to be loaded from global variable
-        auto absoluteAddress = reinterpret_cast<std::uintptr_t>(linearMemoryAddressPtr);
+        auto absoluteAddress = reinterpret_cast<std::uintptr_t>(gLinearMemoryInfo.addressPtr);
         arm64::emit_mov_large_immediate(address_reg, uint64_t(absoluteAddress), arm64::reg_size_t::SIZE_64BIT, machinecode);
 
         // load address of linear memory from pointer
@@ -1071,7 +1064,7 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
 
         // out-of-bounds memory access check
         auto size_reg = registerPool.allocateRegister();
-        auto sizeAddress = reinterpret_cast<std::uintptr_t>(linearMemorySizeBytesPtr);
+        auto sizeAddress = reinterpret_cast<std::uintptr_t>(gLinearMemoryInfo.sizeBytesPtr);
         arm64::emit_mov_large_immediate(size_reg, uint64_t(sizeAddress), arm64::reg_size_t::SIZE_64BIT, machinecode);
         machinecode.push_back(arm64::encode_ldr_register(size_reg, size_reg, arm64::reg_t::XZR, arm64::index_extend_type_t::INDEX_LSL, 0,
                                                          arm64::mem_size_t::MEM_32BIT, arm64::reg_size_t::SIZE_32BIT));
@@ -1102,7 +1095,7 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
         auto memory_index = uint32_t(decoder::LEB128Decoder::decodeUnsigned(stream, streamEnd));
 
         auto size_reg = registerPool.allocateRegister();
-        auto sizeAddress = reinterpret_cast<std::uintptr_t>(linearMemorySizeBytesPtr);
+        auto sizeAddress = reinterpret_cast<std::uintptr_t>(gLinearMemoryInfo.sizeBytesPtr);
         arm64::emit_mov_large_immediate(size_reg, uint64_t(sizeAddress), arm64::reg_size_t::SIZE_64BIT, machinecode);
         machinecode.push_back(arm64::encode_ldr_register(size_reg, size_reg, arm64::reg_t::XZR, arm64::index_extend_type_t::INDEX_LSL, 0,
                                                          arm64::mem_size_t::MEM_32BIT, arm64::reg_size_t::SIZE_32BIT));
@@ -1121,7 +1114,7 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
         auto result_reg = registerPool.allocateRegister();
 
         // load trampoline address; re-use result_reg
-        auto growFnAddress = reinterpret_cast<std::uintptr_t>(linearMemoryGrowAddressPtr);
+        auto growFnAddress = reinterpret_cast<std::uintptr_t>(gLinearMemoryInfo.growFunctionAddressPtr);
         arm64::emit_mov_large_immediate(result_reg, uint64_t(growFnAddress), arm64::reg_size_t::SIZE_64BIT, machinecode);
 
         // load address of memory.grow host function from pointer
