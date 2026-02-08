@@ -988,11 +988,11 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
         arm64::emit_mov_large_immediate(size_reg, uint64_t(sizeAddress), arm64::reg_size_t::SIZE_64BIT, machinecode);
         machinecode.push_back(arm64::encode_ldr_register(size_reg, size_reg, arm64::reg_t::XZR, arm64::index_extend_type_t::INDEX_LSL, 0,
                                                          arm64::mem_size_t::MEM_32BIT, arm64::reg_size_t::SIZE_32BIT));
-        // consider the last by that will be accessed based on the size of the load instruction
+        // consider the last byte that will be accessed based on the size of the load instruction
         machinecode.push_back(arm64::encode_sub_immediate(size_reg, size_reg, memorySizeToBytes(memorySize), false, arm64::reg_size_t::SIZE_32BIT));
         machinecode.push_back(
             arm64::encode_cmp_shifted_register(index_reg, size_reg, arm64::reg_shift_t::SHIFT_LSL, 0, arm64::reg_size_t::SIZE_32BIT));
-        machinecode.push_back(arm64::encode_branch_cond(arm64::branch_condition_t::HS,
+        machinecode.push_back(arm64::encode_branch_cond(arm64::branch_condition_t::HI,
                                                         getTraphandlerOffset(wasm::trap_code_t::MemoryOutOfBounds, trapHandler, machinecode)));
         registerPool.freeRegister(size_reg);
 
@@ -1060,11 +1060,11 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
         arm64::emit_mov_large_immediate(size_reg, uint64_t(sizeAddress), arm64::reg_size_t::SIZE_64BIT, machinecode);
         machinecode.push_back(arm64::encode_ldr_register(size_reg, size_reg, arm64::reg_t::XZR, arm64::index_extend_type_t::INDEX_LSL, 0,
                                                          arm64::mem_size_t::MEM_32BIT, arm64::reg_size_t::SIZE_32BIT));
-        // consider the last by that will be accessed based on the size of the load instruction
+        // consider the last byte that will be accessed based on the size of the load instruction
         machinecode.push_back(arm64::encode_sub_immediate(size_reg, size_reg, memorySizeToBytes(memorySize), false, arm64::reg_size_t::SIZE_32BIT));
         machinecode.push_back(
             arm64::encode_cmp_shifted_register(index_reg, size_reg, arm64::reg_shift_t::SHIFT_LSL, 0, arm64::reg_size_t::SIZE_32BIT));
-        machinecode.push_back(arm64::encode_branch_cond(arm64::branch_condition_t::HS,
+        machinecode.push_back(arm64::encode_branch_cond(arm64::branch_condition_t::HI,
                                                         getTraphandlerOffset(wasm::trap_code_t::MemoryOutOfBounds, trapHandler, machinecode)));
         registerPool.freeRegister(size_reg);
 

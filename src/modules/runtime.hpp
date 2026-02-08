@@ -69,7 +69,8 @@ public:
     }
   }
 
-  CustomMemory(size_t size, const std::vector<uint8_t> &init, size_t initOffset, int protectionMode) : mem_(nullptr), size_(size), protectionMode_(protectionMode) {
+  CustomMemory(size_t size, const std::vector<uint8_t> &init, size_t initOffset, int protectionMode)
+      : mem_(nullptr), size_(size), protectionMode_(protectionMode) {
     if (size_ > 0) {
       allocate_and_copy(init.data(), init.size(), initOffset, protectionMode_);
     }
@@ -265,7 +266,7 @@ private:
   std::unique_ptr<CustomMemory> globals_;
   std::unique_ptr<CustomMemory> linearMemory_;
   WasmModule &module_;
- 
+
 public:
   ModuleInstance(WasmModule &module);
   ~ModuleInstance() = default;
