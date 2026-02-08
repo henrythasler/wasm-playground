@@ -20,7 +20,7 @@ public:
   int32_t maxSize;
   InitData init;
 
-  int32_t currentSize;
+  int32_t initialSize;
 
   LinearMemory() = default;
   ~LinearMemory() = default;

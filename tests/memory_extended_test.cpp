@@ -160,7 +160,8 @@ TEST(memory_extended_grow, memory_grow) {
 
 TEST(memory_extended_grow, memory_size) {
   auto wasmModule = helper::loadModule("memory-grow.wasm");
-  auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t>(wasmModule, "memory_size");
-  EXPECT_EQ(wasmFunction(), 1);
+  auto instance = tiny::ModuleInstance(wasmModule);
+  auto memory_size = instance.getFunction<wasm::wasm_i32_t>("memory_size");
+  EXPECT_EQ(memory_size(), 1);
 }
 } // namespace

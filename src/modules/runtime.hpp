@@ -131,7 +131,7 @@ public:
 
     if (linearMemory) {
       linearMemoryMaxPages = linearMemory->maxSize;
-      linearMemoryCurrentPages = linearMemory->currentSize;
+      linearMemoryCurrentPages = linearMemory->initialSize;
       linearMemorySizeBytes = linearMemoryCurrentPages * wasm::LINEAR_MEMORY_PAGE_SIZE;
       linear_mem_ = std::make_unique<CustomMemory>(linearMemorySizeBytes, linearMemory->init.data, linearMemory->init.offset, PROT_READ | PROT_WRITE);
       linearMemoryAddress = reinterpret_cast<uint64_t>(linear_mem_->getAddress());
@@ -219,5 +219,64 @@ WasmExecutable<ReturnType, Args...> make_wasm_function(tiny::WasmModule &wasmMod
   }
   return wasmExecutable;
 }
+
+template <typename ReturnType, typename... Args> class WasmCallable {
+private:
+  using FuncPtr = ReturnType (*)(Args...);
+  FuncPtr func_ptr_;
+
+public:
+  WasmCallable() = default;
+  WasmCallable(void *exec_mem_, size_t offset) : WasmCallable() {
+    func_ptr_ = reinterpret_cast<FuncPtr>(static_cast<char *>(exec_mem_) + offset);
+    if (func_ptr_ == nullptr) {
+      throw std::runtime_error("Invalid function pointer");
+    }
+  }
+
+  // Call operator - allows using the object like a function
+  ReturnType operator()(Args... args) const {
+    return call(args...);
+  }
+
+  // Explicit call method
+  ReturnType call(Args... args) const {
+    auto trap_code = wasm::trap_code_t(_setjmp(g_jmpbuf));
+    if (trap_code == wasm::trap_code_t::None) {
+      // First time - call the JIT function
+      return func_ptr_(args...);
+    } else {
+      // Returned via longjmp - handle the error
+      std::error_code ec = make_trap_error(trap_code);
+      throw std::system_error(ec);
+    }
+  }
+};
+
+class ModuleInstance {
+private:
+  std::unique_ptr<CustomMemory> machineCode_;
+  std::unique_ptr<CustomMemory> globals_;
+  std::unique_ptr<CustomMemory> linearMemory_;
+  WasmModule &module_;
+  int32_t linearMemoryCurrentPages;
+
+public:
+  ModuleInstance(WasmModule &module);
+  ~ModuleInstance() = default;
+
+  ModuleInstance(const ModuleInstance &) = delete;
+  ModuleInstance &operator=(const ModuleInstance &) = delete;
+
+  template <typename ReturnType, typename... Args> WasmCallable<ReturnType, Args...> getFunction(const std::string &funcName) {
+    auto callable = WasmCallable<ReturnType, Args...>(machineCode_->getAddress(), module_.getFunctionOffset(funcName));
+    return callable;
+  }
+
+  // linear memory management
+  int32_t linearMemoryGrow(int32_t pages);
+  static int32_t linearMemoryGrow_trampoline(ModuleInstance *self, int32_t pages);
+  static void *getLinearMemoryGrowAddress();
+};
 
 } // namespace tiny

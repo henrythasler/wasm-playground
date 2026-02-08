@@ -117,10 +117,10 @@ int main(int argc, char const *argv[]) {
 
         if (wasmModule->getMemory()) {
           std::cout << std::hex << "linearMemoryAddress: content=0x" << linearMemoryAddress << " location=0x" << &linearMemoryAddress << std::dec
-                    << " size=" << wasmModule->getMemory()->currentSize * wasm::LINEAR_MEMORY_PAGE_SIZE << std::endl;
+                    << " size=" << wasmModule->getMemory()->initialSize * wasm::LINEAR_MEMORY_PAGE_SIZE << std::endl;
         }
 
-        auto res = wasmFunction.call(0xffff);
+        auto res = wasmFunction.call(1);
         std::cout << std::hex << res << " ";
       } catch (const std::exception &e) {
         std::cerr << RED << "Execution failed: " << e.what() << RESET << std::endl;

@@ -42,4 +42,37 @@ void CustomMemory::allocate_and_copy(const uint8_t *init, size_t initSize, size_
   }
 }
 
+ModuleInstance::ModuleInstance(WasmModule &module) : module_(module) {
+  machineCode_ = std::make_unique<CustomMemory>(module.getMachinecode(), PROT_READ | PROT_EXEC);
+  if (module.getGlobals()) {
+    const auto globalMemory = std::make_unique<std::vector<uint64_t>>(module.getGlobals()->serialize());
+  }
+  if (module.getMemory()) {
+    linearMemoryCurrentPages = module.getMemory()->initialSize;
+    linearMemorySizeBytes = linearMemoryCurrentPages * wasm::LINEAR_MEMORY_PAGE_SIZE;
+    linearMemory_ =
+        std::make_unique<CustomMemory>(linearMemorySizeBytes, module.getMemory()->init.data, module.getMemory()->init.offset, PROT_READ | PROT_WRITE);
+    linearMemoryAddress = reinterpret_cast<uint64_t>(linearMemory_->getAddress());
+    linearMemoryGrowAddress = reinterpret_cast<uintptr_t>(ModuleInstance::getLinearMemoryGrowAddress());
+  } else {
+    linearMemoryGrowAddress = 0;
+    linearMemoryAddress = 0;
+  }
+}
+
+int32_t ModuleInstance::linearMemoryGrow(int32_t pages) {
+  std::cout << "pages requested: " << pages << std::endl;
+  return -1;
+}
+
+// Static trampoline for JIT to call
+int32_t ModuleInstance::linearMemoryGrow_trampoline(ModuleInstance *self, int32_t pages) {
+  return self->linearMemoryGrow(pages);
+}
+
+// Get the trampoline address
+void *ModuleInstance::getLinearMemoryGrowAddress() {
+  return reinterpret_cast<void *>(&ModuleInstance::linearMemoryGrow_trampoline);
+}
+
 } // namespace tiny
