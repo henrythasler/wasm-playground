@@ -457,6 +457,37 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
         registerPool.freeRegister(reg2);
         break;
       }
+    case 0x4E: // i32.ge_s​
+    case 0x4F: // i32.ge_u​
+    case 0x59: // i64.ge_s​
+    case 0x5A: // i64.ge_u​
+      /** Return 1 if i1​ is greater than or equal to i2​, 0 otherwise. */
+      {
+        asserte(stack.size() >= 2, "insufficient operands on stack for ge_s");
+        auto registerSize = ((*(stream - 1) == 0x4E) || (*(stream - 1) == 0x4F)) ? arm64::reg_size_t::SIZE_32BIT : arm64::reg_size_t::SIZE_64BIT;
+        auto signedVariant =
+            ((*(stream - 1) == 0x4E) || (*(stream - 1) == 0x59)) ? arm64::signed_variant_t::SIGNED : arm64::signed_variant_t::UNSIGNED;
+
+        auto reg2 = stack.at(stack.size() - 1);
+        auto reg1 = stack.at(stack.size() - 2);
+
+        machinecode.push_back(arm64::encode_cmp_shifted_register(reg1, reg2, arm64::reg_shift_t::SHIFT_LSL, 0, registerSize));
+
+        if (signedVariant == arm64::signed_variant_t::SIGNED) {
+          machinecode.push_back(arm64::encode_branch_cond(arm64::branch_condition_t::GE, 3 * 4));
+        } else {
+          machinecode.push_back(arm64::encode_branch_cond(arm64::branch_condition_t::HS, 3 * 4));
+        }
+        // load 0
+        machinecode.push_back(arm64::encode_mov_immediate(reg1, 0, 0, arm64::reg_size_t::SIZE_32BIT));
+        machinecode.push_back(arm64::encode_branch(2 * 4));
+        // load 1
+        machinecode.push_back(arm64::encode_mov_immediate(reg1, 1, 0, arm64::reg_size_t::SIZE_32BIT));
+
+        stack.pop_back();
+        registerPool.freeRegister(reg2);
+        break;
+      }
     case 0x4A: // i32.gt_s
     case 0x4B: // i32.gt_u
     case 0x55: // i64.gt_s
@@ -479,10 +510,10 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
           machinecode.push_back(arm64::encode_branch_cond(arm64::branch_condition_t::HI, 3 * 4));
         }
 
-        // // load 0
+        // load 0
         machinecode.push_back(arm64::encode_mov_immediate(reg1, 0, 0, arm64::reg_size_t::SIZE_32BIT));
         machinecode.push_back(arm64::encode_branch(2 * 4));
-        // // load 1
+        // load 1
         machinecode.push_back(arm64::encode_mov_immediate(reg1, 1, 0, arm64::reg_size_t::SIZE_32BIT));
 
         stack.pop_back();

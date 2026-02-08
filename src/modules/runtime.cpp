@@ -78,7 +78,9 @@ ModuleInstance::ModuleInstance(WasmModule &module) : module_(module) {
 
   // allocate globals if needed
   if (module.getGlobals()) {
-    const auto globalMemory = std::make_unique<std::vector<uint64_t>>(module.getGlobals()->serialize());
+    auto globalMemory = module_.getGlobals()->serialize();
+    globals_ = std::make_unique<CustomMemory>(globalMemory, PROT_READ | PROT_WRITE);
+    gRuntimeInfo.globalsMemoryAddress = reinterpret_cast<uint64_t>(globals_->getAddress());
   }
 
   // add linear memory if needed

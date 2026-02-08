@@ -44,7 +44,7 @@ def load_spectest(input_file: Path) -> dict[str, defaultdict[str, list]] | None:
                         item["cpp_value"] = "static_cast<{}>({}ULL)".format(types_map[item["type"]], item["value"])
                 spec_test[active_module][command["action"]["field"]].append({"args": command["action"]["args"], "expected": command["expected"], "type": command["type"].split('_')[1]})
 
-        # pprint(spec_test)
+        pprint(spec_test)
         return spec_test
     
     return None

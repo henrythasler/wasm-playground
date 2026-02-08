@@ -117,6 +117,11 @@ Set breakpoint in source code. Start Debugging (F5).
 - Constant globals are inlined using mov/movk instructions
 - Mutable globals are accessed using a pointer to the memory location of the globals calculated from a base address and the index of the global
 
+## Tutorial Remarks
+
+- The chapter description should state which new wasm-instructions need to be implemented. Alternatively, all instructions that are required in a later chapter should be implemented during the initial chapter (e.g. `i32.ge_u​` is first required in chapter 11 but could be implemented as part of chapter 4)
+- Function calls do not depend on each other until chapter 11 and people can get away to create a new runtime instance for each function-call in the spec-tests. It should be required sooner (maybe as a new chapter) to create a runtime that can manage multiple function calls.
+
 ## References
 
 ### ARM64 Introduction
