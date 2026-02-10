@@ -11,22 +11,20 @@ TEST(Spectest, {{ filename|replace("-", "_")|replace(".", "_") }}) {
   auto wasmModule = helper::loadModule("{{ filename }}");
   auto instance = tiny::ModuleInstance(wasmModule);
   
-  {% for function, asserts in module.items() %}
-  auto wasm_{{ function|replace("-", "_")|replace(".", "_") }} = instance.getFunction<{{ get_signature(asserts[0].expected, asserts[0].args) }}>("{{ function }}");
+  {% for name, function in module.functions.items() %}
+  auto wasm_{{ name|replace("-", "_")|replace(".", "_") }} = instance.getFunction<{{ get_signature(function.expected, function.args) }}>("{{ name }}");
   {% endfor %}
 
-  {% for function, asserts in module.items() %}
-    {% for assert in asserts %}
-      {% if assert.type == "return" %}
-        {% if assert.expected|length %}
-  EXPECT_EQ(wasm_{{ function|replace("-", "_")|replace(".", "_") }}({{ assert.args|join(', ', attribute='cpp_value') }}), ({{ assert.expected|join(', ', attribute='cpp_value') }}));
-        {% else %}
-  wasm_{{ function|replace("-", "_")|replace(".", "_") }}({{ assert.args|join(', ', attribute='cpp_value') }});
-        {% endif %}
-      {% elif assert.type == "trap" %}
-  EXPECT_THROW(wasm_{{ function|replace("-", "_")|replace(".", "_") }}({{ assert.args|join(', ', attribute='cpp_value') }}), std::runtime_error);
+  {% for assert in module.asserts %}
+    {% if assert.type == "return" %}
+      {% if assert.expected|length %}
+  EXPECT_EQ(wasm_{{ assert.function|replace("-", "_")|replace(".", "_") }}({{ assert.args|join(', ') }}), ({{ assert.expected }}));
+      {% else %}
+  wasm_{{ assert.function|replace("-", "_")|replace(".", "_") }}({{ assert.args|join(', ') }});
       {% endif %}
-    {% endfor %}
+    {% elif assert.type == "trap" %}
+  EXPECT_THROW(wasm_{{ assert.function|replace("-", "_")|replace(".", "_") }}({{ assert.args|join(', ') }}), std::runtime_error);
+    {% endif %}
   {% endfor %}
 }
 {% endfor %}
