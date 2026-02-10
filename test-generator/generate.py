@@ -89,7 +89,7 @@ def load_spectest(input_file: Path) -> dict[str, Module] | None:
                         expected = "static_cast<{}>({}ULL)".format(types_map[item["type"]], item["value"])
                 spec_test[active_module].asserts.append(Assert(function=function_name, type=command["type"].split('_')[1], args=parameter, expected=expected))
 
-        pprint(spec_test)
+        # pprint(spec_test)
         return spec_test
 
     return None

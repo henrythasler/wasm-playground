@@ -99,14 +99,16 @@ ModuleInstance::ModuleInstance(WasmModule &module) : module_(module) {
   }
 }
 
-int32_t ModuleInstance::linearMemoryGrow(int32_t pages) {
-  std::cout << "pages requested: " << pages << std::endl;
-  if (gLinearMemoryInfo.sizePages + pages <= module_.getMemory()->maxSize) {
+int32_t ModuleInstance::linearMemoryGrow(int32_t pagesRequested) {
+  // std::cout << "pages requested: " << pagesRequested << std::endl;
+  if (gLinearMemoryInfo.sizePages + pagesRequested <= module_.getMemory()->maxSize) {
     auto currentPages = gLinearMemoryInfo.sizePages;
-    gLinearMemoryInfo.sizePages += pages;
-    gLinearMemoryInfo.sizeBytes = gLinearMemoryInfo.sizePages * wasm::LINEAR_MEMORY_PAGE_SIZE;
-    linearMemory_->grow(gLinearMemoryInfo.sizeBytes);
-    gLinearMemoryInfo.address = reinterpret_cast<uint64_t>(linearMemory_->getAddress());
+    gLinearMemoryInfo.sizePages += pagesRequested;
+    if (currentPages != gLinearMemoryInfo.sizePages) {
+      gLinearMemoryInfo.sizeBytes = gLinearMemoryInfo.sizePages * wasm::LINEAR_MEMORY_PAGE_SIZE;
+      linearMemory_->grow(gLinearMemoryInfo.sizeBytes);
+      gLinearMemoryInfo.address = reinterpret_cast<uint64_t>(linearMemory_->getAddress());
+    }
     return currentPages;
   } else {
     return -1;

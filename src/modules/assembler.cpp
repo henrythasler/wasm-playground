@@ -1008,6 +1008,10 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
         machinecode.push_back(arm64::encode_ldr_register(result_reg, result_reg, arm64::reg_t::XZR, arm64::index_extend_type_t::INDEX_LSL, 0,
                                                          arm64::mem_size_t::MEM_64BIT, arm64::reg_size_t::SIZE_64BIT));
 
+        // check for invalid address (no linearMemory allocated) and trap if so
+        machinecode.push_back(
+            arm64::encode_cbz(result_reg, getTraphandlerOffset(wasm::trap_code_t::MemoryOutOfBounds, trapHandler, machinecode), registerSize));
+
         // optional: add offset immediate to base address
         if (offset > 0) {
           machinecode.push_back(arm64::encode_add_immediate(index_reg, index_reg, offset, false, arm64::reg_size_t::SIZE_64BIT));
@@ -1079,6 +1083,10 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
         // load address of linear memory from pointer
         machinecode.push_back(arm64::encode_ldr_register(address_reg, address_reg, arm64::reg_t::XZR, arm64::index_extend_type_t::INDEX_LSL, 0,
                                                          arm64::mem_size_t::MEM_64BIT, arm64::reg_size_t::SIZE_64BIT));
+
+        // check for invalid address (no linearMemory allocated) and trap if so
+        machinecode.push_back(
+            arm64::encode_cbz(address_reg, getTraphandlerOffset(wasm::trap_code_t::MemoryOutOfBounds, trapHandler, machinecode), registerSize));
 
         // optional: add offset immediate to index
         if (offset > 0) {

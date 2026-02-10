@@ -16,26 +16,26 @@ TEST(Spectest, linear_memory_grow_0_wasm) {
   auto wasm_load_at_page_size = instance.getFunction<wasm::wasm_i32_t>("load_at_page_size");
   auto wasm_grow = instance.getFunction<wasm::wasm_i32_t, wasm::wasm_i32_t>("grow");
 
-  // EXPECT_EQ(wasm_size(), (static_cast<int32_t>(0ULL)));
-  // EXPECT_THROW(wasm_store_at_zero(), std::runtime_error);
-  // EXPECT_THROW(wasm_load_at_zero(), std::runtime_error);
-  // EXPECT_THROW(wasm_store_at_page_size(), std::runtime_error);
-  // EXPECT_THROW(wasm_load_at_page_size(), std::runtime_error);
-  // EXPECT_EQ(wasm_grow(static_cast<int32_t>(1ULL)), (static_cast<int32_t>(0ULL)));
-  // EXPECT_EQ(wasm_size(), (static_cast<int32_t>(1ULL)));
-  // EXPECT_EQ(wasm_load_at_zero(), (static_cast<int32_t>(0ULL)));
-  // wasm_store_at_zero();
-  // EXPECT_EQ(wasm_load_at_zero(), (static_cast<int32_t>(2ULL)));
-  // EXPECT_THROW(wasm_store_at_page_size(), std::runtime_error);
-  // EXPECT_THROW(wasm_load_at_page_size(), std::runtime_error);
-  // EXPECT_EQ(wasm_grow(static_cast<int32_t>(4ULL)), (static_cast<int32_t>(1ULL)));
-  // EXPECT_EQ(wasm_size(), (static_cast<int32_t>(5ULL)));
-  // EXPECT_EQ(wasm_load_at_zero(), (static_cast<int32_t>(2ULL)));
-  // wasm_store_at_zero();
-  // EXPECT_EQ(wasm_load_at_zero(), (static_cast<int32_t>(2ULL)));
-  // EXPECT_EQ(wasm_load_at_page_size(), (static_cast<int32_t>(0ULL)));
-  // wasm_store_at_page_size();
-  // EXPECT_EQ(wasm_load_at_page_size(), (static_cast<int32_t>(3ULL)));
+  EXPECT_EQ(wasm_size(), (static_cast<int32_t>(0ULL)));
+  EXPECT_THROW(wasm_store_at_zero(), std::runtime_error);
+  EXPECT_THROW(wasm_load_at_zero(), std::runtime_error);
+  EXPECT_THROW(wasm_store_at_page_size(), std::runtime_error);
+  EXPECT_THROW(wasm_load_at_page_size(), std::runtime_error);
+  EXPECT_EQ(wasm_grow(static_cast<int32_t>(1ULL)), (static_cast<int32_t>(0ULL)));
+  EXPECT_EQ(wasm_size(), (static_cast<int32_t>(1ULL)));
+  EXPECT_EQ(wasm_load_at_zero(), (static_cast<int32_t>(0ULL)));
+  wasm_store_at_zero();
+  EXPECT_EQ(wasm_load_at_zero(), (static_cast<int32_t>(2ULL)));
+  EXPECT_THROW(wasm_store_at_page_size(), std::runtime_error);
+  EXPECT_THROW(wasm_load_at_page_size(), std::runtime_error);
+  EXPECT_EQ(wasm_grow(static_cast<int32_t>(4ULL)), (static_cast<int32_t>(1ULL)));
+  EXPECT_EQ(wasm_size(), (static_cast<int32_t>(5ULL)));
+  EXPECT_EQ(wasm_load_at_zero(), (static_cast<int32_t>(2ULL)));
+  wasm_store_at_zero();
+  EXPECT_EQ(wasm_load_at_zero(), (static_cast<int32_t>(2ULL)));
+  EXPECT_EQ(wasm_load_at_page_size(), (static_cast<int32_t>(0ULL)));
+  wasm_store_at_page_size();
+  EXPECT_EQ(wasm_load_at_page_size(), (static_cast<int32_t>(3ULL)));
 }
 TEST(Spectest, linear_memory_grow_1_wasm) {
   auto wasmModule = helper::loadModule("linear-memory-grow.1.wasm");
@@ -43,14 +43,14 @@ TEST(Spectest, linear_memory_grow_1_wasm) {
   
   auto wasm_grow = instance.getFunction<wasm::wasm_i32_t, wasm::wasm_i32_t>("grow");
 
-  // EXPECT_EQ(wasm_grow(static_cast<int32_t>(0ULL)), (static_cast<int32_t>(0ULL)));
-  // EXPECT_EQ(wasm_grow(static_cast<int32_t>(1ULL)), (static_cast<int32_t>(0ULL)));
-  // EXPECT_EQ(wasm_grow(static_cast<int32_t>(0ULL)), (static_cast<int32_t>(1ULL)));
-  // EXPECT_EQ(wasm_grow(static_cast<int32_t>(2ULL)), (static_cast<int32_t>(1ULL)));
-  // EXPECT_EQ(wasm_grow(static_cast<int32_t>(800ULL)), (static_cast<int32_t>(3ULL)));
-  // EXPECT_EQ(wasm_grow(static_cast<int32_t>(65536ULL)), (static_cast<int32_t>(4294967295ULL)));
-  // EXPECT_EQ(wasm_grow(static_cast<int32_t>(64736ULL)), (static_cast<int32_t>(4294967295ULL)));
-  // EXPECT_EQ(wasm_grow(static_cast<int32_t>(1ULL)), (static_cast<int32_t>(803ULL)));
+  EXPECT_EQ(wasm_grow(static_cast<int32_t>(0ULL)), (static_cast<int32_t>(0ULL)));
+  EXPECT_EQ(wasm_grow(static_cast<int32_t>(1ULL)), (static_cast<int32_t>(0ULL)));
+  EXPECT_EQ(wasm_grow(static_cast<int32_t>(0ULL)), (static_cast<int32_t>(1ULL)));
+  EXPECT_EQ(wasm_grow(static_cast<int32_t>(2ULL)), (static_cast<int32_t>(1ULL)));
+  EXPECT_EQ(wasm_grow(static_cast<int32_t>(800ULL)), (static_cast<int32_t>(3ULL)));
+  EXPECT_EQ(wasm_grow(static_cast<int32_t>(65536ULL)), (static_cast<int32_t>(4294967295ULL)));
+  EXPECT_EQ(wasm_grow(static_cast<int32_t>(64736ULL)), (static_cast<int32_t>(4294967295ULL)));
+  EXPECT_EQ(wasm_grow(static_cast<int32_t>(1ULL)), (static_cast<int32_t>(803ULL)));
 }
 TEST(Spectest, linear_memory_grow_2_wasm) {
   auto wasmModule = helper::loadModule("linear-memory-grow.2.wasm");
@@ -58,14 +58,14 @@ TEST(Spectest, linear_memory_grow_2_wasm) {
   
   auto wasm_grow = instance.getFunction<wasm::wasm_i32_t, wasm::wasm_i32_t>("grow");
 
-  // EXPECT_EQ(wasm_grow(static_cast<int32_t>(0ULL)), (static_cast<int32_t>(0ULL)));
-  // EXPECT_EQ(wasm_grow(static_cast<int32_t>(1ULL)), (static_cast<int32_t>(0ULL)));
-  // EXPECT_EQ(wasm_grow(static_cast<int32_t>(1ULL)), (static_cast<int32_t>(1ULL)));
-  // EXPECT_EQ(wasm_grow(static_cast<int32_t>(2ULL)), (static_cast<int32_t>(2ULL)));
-  // EXPECT_EQ(wasm_grow(static_cast<int32_t>(6ULL)), (static_cast<int32_t>(4ULL)));
-  // EXPECT_EQ(wasm_grow(static_cast<int32_t>(0ULL)), (static_cast<int32_t>(10ULL)));
-  // EXPECT_EQ(wasm_grow(static_cast<int32_t>(1ULL)), (static_cast<int32_t>(4294967295ULL)));
-  // EXPECT_EQ(wasm_grow(static_cast<int32_t>(65536ULL)), (static_cast<int32_t>(4294967295ULL)));
+  EXPECT_EQ(wasm_grow(static_cast<int32_t>(0ULL)), (static_cast<int32_t>(0ULL)));
+  EXPECT_EQ(wasm_grow(static_cast<int32_t>(1ULL)), (static_cast<int32_t>(0ULL)));
+  EXPECT_EQ(wasm_grow(static_cast<int32_t>(1ULL)), (static_cast<int32_t>(1ULL)));
+  EXPECT_EQ(wasm_grow(static_cast<int32_t>(2ULL)), (static_cast<int32_t>(2ULL)));
+  EXPECT_EQ(wasm_grow(static_cast<int32_t>(6ULL)), (static_cast<int32_t>(4ULL)));
+  EXPECT_EQ(wasm_grow(static_cast<int32_t>(0ULL)), (static_cast<int32_t>(10ULL)));
+  EXPECT_EQ(wasm_grow(static_cast<int32_t>(1ULL)), (static_cast<int32_t>(4294967295ULL)));
+  EXPECT_EQ(wasm_grow(static_cast<int32_t>(65536ULL)), (static_cast<int32_t>(4294967295ULL)));
 }
 TEST(Spectest, linear_memory_grow_3_wasm) {
   auto wasmModule = helper::loadModule("linear-memory-grow.3.wasm");
