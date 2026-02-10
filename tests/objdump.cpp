@@ -79,6 +79,10 @@ TEST(objdump, wasm) {
       "linear-memory-load.0",
       "linear-memory-store.0",
       "linear-memory-grow.0",
+      "linear-memory-grow.1",
+      "linear-memory-grow.2",
+      "linear-memory-grow.3",
+      "linear-memory-grow.4",
   };
 
   for (const auto &wasmFile : wasmFiles) {

@@ -85,10 +85,10 @@ void WasmModule::compileModule() {
   trapHandlerBuiltin->machinecodeOffset = machinecode.size();
   auto trapHandler = assembler::createTrapHandler(
       {
+          wasm::trap_code_t::AssemblerAddressPatchError,
           wasm::trap_code_t::UnreachableCodeReached,
           wasm::trap_code_t::IntegerDivisionByZero,
           wasm::trap_code_t::IntegerOverflow,
-          wasm::trap_code_t::AssemblerAddressPatchError,
           wasm::trap_code_t::TableOutOfBounds,
           wasm::trap_code_t::IndirectCallToNull,
           wasm::trap_code_t::BadSignature,

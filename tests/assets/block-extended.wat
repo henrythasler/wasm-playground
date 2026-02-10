@@ -1,21 +1,30 @@
 (module
-  (func (export "simple")
-    block 
-      i32.const 0x3f
+  (type $type0 (func))
+  (type $type1 (func (result i32)))
+  (type $type2 (func (param i32) (result i32)))
+  (export "simple" (func $func0))
+  (export "simple-br-i32" (func $func1))
+  (export "simple-return" (func $func2))
+  (export "simple-br_if" (func $func3))
+  (export "parameter-br_if" (func $func4))
+  (export "parameter-nested-return" (func $func5))
+  (export "nested-br_if" (func $func6))
+  (export "loop_n" (func $func7))
+  (func $func0
+    block
+      i32.const 63
       drop
     end
   )
-
-  (func (export "simple-br-i32") (result i32)
-    block (result i32)
+  (func $func1 (result i32)
+    block $label0 (result i32)
       i32.const 42
-      br 0
+      br $label0
       drop
       i32.const 11
-    end
+    end $label0
   )
-
-  (func (export "simple-return") (result i32)
+  (func $func2 (result i32)
     block (result i32)
       i32.const 42
       return
@@ -23,26 +32,24 @@
       i32.const 11
     end
   )
-
-  (func (export "simple-br_if") (result i32)
-    block (result i32)
+  (func $func3 (result i32)
+    block $label0 (result i32)
       i32.const 32
       i32.const 0
-      br_if 0
+      br_if $label0
       drop
       i32.const 42
       i32.const 1
-      br_if 0
+      br_if $label0
       drop
       i32.const 11
-    end
+    end $label0
   )
-
-  (func (export "parameter-br_if") (param i32) (result i32)
-    block (result i32)
+  (func $func4 (param $var0 i32) (result i32)
+    block $label0 (result i32)
       i32.const 42
-      local.get 0
-      br_if 0
+      local.get $var0
+      br_if $label0
       drop
       i32.const -4
       i32.const -3
@@ -51,45 +58,61 @@
       drop
       drop
       drop
-    end
+    end $label0
   )
-
-  (func (export "parameter-nested-return") (param i32) (result i32)
-    block (result i32)
+  (func $func5 (param $var0 i32) (result i32)
+    block $label0 (result i32)
       i32.const 40
-      local.get 0
-      br_if 0
+      local.get $var0
+      br_if $label0
       drop
       i32.const -4
       return
-    end
+    end $label0
     i32.const 2
     i32.add
-  )  
-
-  (func (export "nested-br_if") (result i32)
-    block (result i32)
-      block (result i32)
+  )
+  (func $func6 (result i32)
+    block $label1 (result i32)
+      block $label0 (result i32)
         i32.const 32
         i32.const 0
-        br_if 0
+        br_if $label0
         drop
         i32.const 42
         i32.const 1
-        br_if 1
+        br_if $label1
         drop
         i32.const 11
-      end
+      end $label0
       drop
       i32.const 10
       i32.const 0
-      br_if 0
+      br_if $label1
       drop
       i32.const 20
       i32.const 1
-      br_if 0
+      br_if $label1
       drop
       i32.const 30
-    end
+    end $label1
   )
+  (func $func7 (param $var0 i32) (param $var1 i32) (result i32)
+    (local $var2 i32)
+    i32.const 1
+    local.set $var2
+    block $label0
+      loop $label1
+        local.get $var0
+        i32.const 1
+        i32.add
+        local.set $var0
+        local.get $var0
+        local.get $var1
+        i32.le_u
+        br_if $label1
+      end $label1
+    end $label0
+    local.get $var2
+  )  
 )
