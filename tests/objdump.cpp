@@ -51,6 +51,7 @@ TEST(objdump, wasm) {
       "abs",
       "bit",
       "block-extended",
+      "loop-extended",
       "branch",
       "compare",
       "echo",

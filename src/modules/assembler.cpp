@@ -669,9 +669,16 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
           }
         }
 
-        controlBlock.patchLocations.push_back({machinecode.size(), stack.size()});
-        machinecode.push_back(arm64::encode_cbnz(reg, getTraphandlerOffset(wasm::trap_code_t::AssemblerAddressPatchError, trapHandler, machinecode),
-                                                 arm64::reg_size_t::SIZE_32BIT));
+        if (controlBlock.type == ControlBlock::LOOP) {
+          int32_t offset = (int32_t(controlBlock.patchLocations.back().offset) - int32_t(machinecode.size())) << 2;
+          machinecode.push_back(arm64::encode_cbnz(reg, offset, arm64::reg_size_t::SIZE_32BIT));
+
+        } else if (controlBlock.type == ControlBlock::BLOCK) {
+          // FIXME: this might never be patched
+          controlBlock.patchLocations.push_back({machinecode.size(), stack.size()});
+          machinecode.push_back(arm64::encode_cbnz(reg, getTraphandlerOffset(wasm::trap_code_t::AssemblerAddressPatchError, trapHandler, machinecode),
+                                                   arm64::reg_size_t::SIZE_32BIT));
+        }
         break;
       }
     case 0x04:

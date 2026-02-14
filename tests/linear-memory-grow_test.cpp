@@ -74,17 +74,17 @@ TEST(Spectest, linear_memory_grow_3_wasm) {
   auto wasm_check_memory_zero = instance.getFunction<wasm::wasm_i32_t, wasm::wasm_i32_t, wasm::wasm_i32_t>("check-memory-zero");
   auto wasm_grow = instance.getFunction<wasm::wasm_i32_t, wasm::wasm_i32_t>("grow");
 
-  // EXPECT_EQ(wasm_check_memory_zero(static_cast<int32_t>(0ULL), static_cast<int32_t>(65535ULL)), (static_cast<int32_t>(0ULL)));
-  // EXPECT_EQ(wasm_grow(static_cast<int32_t>(1ULL)), (static_cast<int32_t>(1ULL)));
-  // EXPECT_EQ(wasm_check_memory_zero(static_cast<int32_t>(65536ULL), static_cast<int32_t>(131071ULL)), (static_cast<int32_t>(0ULL)));
-  // EXPECT_EQ(wasm_grow(static_cast<int32_t>(1ULL)), (static_cast<int32_t>(2ULL)));
-  // EXPECT_EQ(wasm_check_memory_zero(static_cast<int32_t>(131072ULL), static_cast<int32_t>(196607ULL)), (static_cast<int32_t>(0ULL)));
-  // EXPECT_EQ(wasm_grow(static_cast<int32_t>(1ULL)), (static_cast<int32_t>(3ULL)));
-  // EXPECT_EQ(wasm_check_memory_zero(static_cast<int32_t>(196608ULL), static_cast<int32_t>(262143ULL)), (static_cast<int32_t>(0ULL)));
-  // EXPECT_EQ(wasm_grow(static_cast<int32_t>(1ULL)), (static_cast<int32_t>(4ULL)));
-  // EXPECT_EQ(wasm_check_memory_zero(static_cast<int32_t>(262144ULL), static_cast<int32_t>(327679ULL)), (static_cast<int32_t>(0ULL)));
-  // EXPECT_EQ(wasm_grow(static_cast<int32_t>(1ULL)), (static_cast<int32_t>(5ULL)));
-  // EXPECT_EQ(wasm_check_memory_zero(static_cast<int32_t>(327680ULL), static_cast<int32_t>(393215ULL)), (static_cast<int32_t>(0ULL)));
+  EXPECT_EQ(wasm_check_memory_zero(static_cast<int32_t>(0ULL), static_cast<int32_t>(65535ULL)), (static_cast<int32_t>(0ULL)));
+  EXPECT_EQ(wasm_grow(static_cast<int32_t>(1ULL)), (static_cast<int32_t>(1ULL)));
+  EXPECT_EQ(wasm_check_memory_zero(static_cast<int32_t>(65536ULL), static_cast<int32_t>(131071ULL)), (static_cast<int32_t>(0ULL)));
+  EXPECT_EQ(wasm_grow(static_cast<int32_t>(1ULL)), (static_cast<int32_t>(2ULL)));
+  EXPECT_EQ(wasm_check_memory_zero(static_cast<int32_t>(131072ULL), static_cast<int32_t>(196607ULL)), (static_cast<int32_t>(0ULL)));
+  EXPECT_EQ(wasm_grow(static_cast<int32_t>(1ULL)), (static_cast<int32_t>(3ULL)));
+  EXPECT_EQ(wasm_check_memory_zero(static_cast<int32_t>(196608ULL), static_cast<int32_t>(262143ULL)), (static_cast<int32_t>(0ULL)));
+  EXPECT_EQ(wasm_grow(static_cast<int32_t>(1ULL)), (static_cast<int32_t>(4ULL)));
+  EXPECT_EQ(wasm_check_memory_zero(static_cast<int32_t>(262144ULL), static_cast<int32_t>(327679ULL)), (static_cast<int32_t>(0ULL)));
+  EXPECT_EQ(wasm_grow(static_cast<int32_t>(1ULL)), (static_cast<int32_t>(5ULL)));
+  EXPECT_EQ(wasm_check_memory_zero(static_cast<int32_t>(327680ULL), static_cast<int32_t>(393215ULL)), (static_cast<int32_t>(0ULL)));
 }
 TEST(Spectest, linear_memory_grow_4_wasm) {
   auto wasmModule = helper::loadModule("linear-memory-grow.4.wasm");
@@ -122,12 +122,12 @@ TEST(Spectest, linear_memory_grow_4_wasm) {
   auto wasm_as_compare_right = instance.getFunction<wasm::wasm_i32_t>("as-compare-right");
   auto wasm_as_memory_grow_size = instance.getFunction<wasm::wasm_i32_t>("as-memory.grow-size");
 
-  // EXPECT_EQ(wasm_as_br_value(), (static_cast<int32_t>(1ULL)));
-  // wasm_as_br_if_cond();
-  // EXPECT_EQ(wasm_as_br_if_value(), (static_cast<int32_t>(1ULL)));
-  // EXPECT_EQ(wasm_as_br_if_value_cond(), (static_cast<int32_t>(6ULL)));
-  // EXPECT_EQ(wasm_as_return_value(), (static_cast<int32_t>(1ULL)));
-  // EXPECT_EQ(wasm_as_if_cond(), (static_cast<int32_t>(0ULL)));
+  EXPECT_EQ(wasm_as_br_value(), (static_cast<int32_t>(1ULL)));
+  wasm_as_br_if_cond();
+  EXPECT_EQ(wasm_as_br_if_value(), (static_cast<int32_t>(1ULL)));
+  EXPECT_EQ(wasm_as_br_if_value_cond(), (static_cast<int32_t>(6ULL)));
+  EXPECT_EQ(wasm_as_return_value(), (static_cast<int32_t>(1ULL)));
+  EXPECT_EQ(wasm_as_if_cond(), (static_cast<int32_t>(0ULL)));
   // EXPECT_EQ(wasm_as_if_then(), (static_cast<int32_t>(1ULL)));
   // EXPECT_EQ(wasm_as_if_else(), (static_cast<int32_t>(1ULL)));
   // EXPECT_EQ(wasm_as_call_first(), (static_cast<int32_t>(4294967295ULL)));
@@ -136,22 +136,22 @@ TEST(Spectest, linear_memory_grow_4_wasm) {
   // EXPECT_EQ(wasm_as_call_indirect_first(), (static_cast<int32_t>(4294967295ULL)));
   // EXPECT_EQ(wasm_as_call_indirect_mid(), (static_cast<int32_t>(4294967295ULL)));
   // EXPECT_EQ(wasm_as_call_indirect_last(), (static_cast<int32_t>(4294967295ULL)));
-  // EXPECT_THROW(wasm_as_call_indirect_index(), std::runtime_error);
-  // wasm_as_local_set_value();
-  // EXPECT_EQ(wasm_as_local_tee_value(), (static_cast<int32_t>(1ULL)));
-  // wasm_as_global_set_value();
-  // EXPECT_EQ(wasm_as_load_address(), (static_cast<int32_t>(0ULL)));
-  // EXPECT_EQ(wasm_as_loadN_address(), (static_cast<int32_t>(0ULL)));
-  // wasm_as_store_address();
-  // wasm_as_store_value();
-  // wasm_as_storeN_address();
-  // wasm_as_storeN_value();
-  // EXPECT_EQ(wasm_as_unary_operand(), (static_cast<int32_t>(31ULL)));
-  // EXPECT_EQ(wasm_as_binary_left(), (static_cast<int32_t>(11ULL)));
-  // EXPECT_EQ(wasm_as_binary_right(), (static_cast<int32_t>(9ULL)));
-  // EXPECT_EQ(wasm_as_test_operand(), (static_cast<int32_t>(0ULL)));
-  // EXPECT_EQ(wasm_as_compare_left(), (static_cast<int32_t>(1ULL)));
-  // EXPECT_EQ(wasm_as_compare_right(), (static_cast<int32_t>(1ULL)));
-  // EXPECT_EQ(wasm_as_memory_grow_size(), (static_cast<int32_t>(1ULL)));
+  EXPECT_THROW(wasm_as_call_indirect_index(), std::runtime_error);
+  wasm_as_local_set_value();
+  EXPECT_EQ(wasm_as_local_tee_value(), (static_cast<int32_t>(1ULL)));
+  wasm_as_global_set_value();
+  EXPECT_EQ(wasm_as_load_address(), (static_cast<int32_t>(0ULL)));
+  EXPECT_EQ(wasm_as_loadN_address(), (static_cast<int32_t>(0ULL)));
+  wasm_as_store_address();
+  wasm_as_store_value();
+  wasm_as_storeN_address();
+  wasm_as_storeN_value();
+  EXPECT_EQ(wasm_as_unary_operand(), (static_cast<int32_t>(31ULL)));
+  EXPECT_EQ(wasm_as_binary_left(), (static_cast<int32_t>(11ULL)));
+  EXPECT_EQ(wasm_as_binary_right(), (static_cast<int32_t>(9ULL)));
+  EXPECT_EQ(wasm_as_test_operand(), (static_cast<int32_t>(0ULL)));
+  EXPECT_EQ(wasm_as_compare_left(), (static_cast<int32_t>(1ULL)));
+  EXPECT_EQ(wasm_as_compare_right(), (static_cast<int32_t>(1ULL)));
+  EXPECT_EQ(wasm_as_memory_grow_size(), (static_cast<int32_t>(1ULL)));
 }
 } // namespace

@@ -30,8 +30,8 @@ enum class trap_code_t {
   BadSignature,
   OutOfFuel,
   GrowthOperationLimited,
-  AssemblerAddressPatchError = 255, // used as the default jump target when emitting forward jumps to unknown labels; traps when address patching does not
-                              // update the jump target
+  AssemblerAddressPatchError = 255, // used as the default jump target when emitting forward jumps to unknown labels; traps when address patching does
+                                    // not update the jump target
 };
 
 class TrapCategory : public std::error_category {

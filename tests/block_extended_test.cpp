@@ -62,11 +62,4 @@ TEST(block, parameter_nested_return) {
   EXPECT_EQ(wasmFunction(0), -4);
 }
 
-TEST(block_extended, loop_n) {
-  auto wasmModule = helper::loadModule("block-extended.wasm");
-  auto instance = tiny::ModuleInstance(wasmModule);
-  auto loop_n = instance.getFunction<wasm::wasm_i32_t, wasm::wasm_i32_t, wasm::wasm_i32_t>("loop_n");
-  // EXPECT_EQ(loop_n(0, 10), 1);
-}
-
 } // namespace testing

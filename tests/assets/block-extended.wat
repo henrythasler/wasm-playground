@@ -9,7 +9,6 @@
   (export "parameter-br_if" (func $func4))
   (export "parameter-nested-return" (func $func5))
   (export "nested-br_if" (func $func6))
-  (export "loop_n" (func $func7))
   (func $func0
     block
       i32.const 63
@@ -97,22 +96,4 @@
       i32.const 30
     end $label1
   )
-  (func $func7 (param $var0 i32) (param $var1 i32) (result i32)
-    (local $var2 i32)
-    i32.const 1
-    local.set $var2
-    block $label0
-      loop $label1
-        local.get $var0
-        i32.const 1
-        i32.add
-        local.set $var0
-        local.get $var0
-        local.get $var1
-        i32.le_u
-        br_if $label1
-      end $label1
-    end $label0
-    local.get $var2
-  )  
 )

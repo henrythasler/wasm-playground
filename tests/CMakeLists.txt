@@ -111,6 +111,7 @@ add_executable(all_tests
   division_test.cpp
   branch_test.cpp
   block_extended_test.cpp
+  loop_extended_test.cpp
   bit_test.cpp
   functions_test.cpp
   globals_extended_test.cpp
