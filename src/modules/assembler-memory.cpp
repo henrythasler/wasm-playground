@@ -10,11 +10,11 @@ void LinearMemory::parseMemorySection(webassembly_t::memory_section_t *memory_se
   auto limits = wasm_memory->limits();
   this->minSize = limits->min()->value();
   this->initialSize = this->minSize;
-  this->maxSize = limits->flags() == 0x01 ? limits->max()->value() : wasm::MAX_LINEAR_MEMORY_PAGES;
+  this->maxSize = limits->flags() == 0x01 ? limits->max()->value() : wasm::LINEAR_MEMORY_MAX_PAGES;
 
   asserte(this->minSize <= this->minSize, "parseMemorySection(): minSize is larger than maxSize");
-  asserte(this->minSize <= wasm::MAX_LINEAR_MEMORY_PAGES, "parseMemorySection(): minSize of linear memory too large");
-  asserte(this->maxSize <= wasm::MAX_LINEAR_MEMORY_PAGES, "parseMemorySection(): maxSize of linear memory too large");
+  asserte(this->minSize <= wasm::LINEAR_MEMORY_MAX_PAGES, "parseMemorySection(): minSize of linear memory too large");
+  asserte(this->maxSize <= wasm::LINEAR_MEMORY_MAX_PAGES, "parseMemorySection(): maxSize of linear memory too large");
 
   if (data_section != nullptr) {
     asserte(data_section->num_data()->value() == 1, "parseMemorySection(): Found unsupported number of data sections");

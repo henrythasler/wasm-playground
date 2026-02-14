@@ -44,7 +44,7 @@ void CustomMemory::allocate_and_copy(const uint8_t *init, size_t initSize, size_
 
 void CustomMemory::grow(size_t newSize) {
   asserte(newSize >= size_, "grow(): new size is smaller that current size");
-  asserte(newSize < wasm::MAX_LINEAR_MEMORY_PAGES * wasm::LINEAR_MEMORY_PAGE_SIZE, "grow(): new size exceeds limit");
+  asserte(newSize < wasm::LINEAR_MEMORY_MAX_PAGES * wasm::LINEAR_MEMORY_PAGE_SIZE, "grow(): new size exceeds limit");
 
   // allocate new memory region
   void *newMemory = mmap(nullptr, newSize, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);

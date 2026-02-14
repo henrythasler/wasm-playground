@@ -216,7 +216,7 @@ WasmExecutable<ReturnType, Args...> make_wasm_function(const std::vector<uint32_
 
 template <typename ReturnType, typename... Args>
 WasmExecutable<ReturnType, Args...> make_wasm_function(tiny::WasmModule &wasmModule, const std::string &funcName) {
-  const auto &linkedCode = wasmModule.linkMachinecode();
+  const auto &linkedCode = wasmModule.getMachinecode();
   size_t exportFunctionOffset = wasmModule.getFunctionOffset(funcName);
   const auto globalMemory = wasmModule.getGlobals() ? std::make_unique<std::vector<uint64_t>>(wasmModule.getGlobals()->serialize()) : nullptr;
   auto wasmExecutable = WasmExecutable<ReturnType, Args...>(linkedCode, globalMemory, wasmModule.getMemory(), exportFunctionOffset);

@@ -30,6 +30,10 @@ struct RuntimeInfo {
   uint64_t globalsMemoryAddress = 0;
   uint64_t *globalsMemoryAddressPtr = nullptr;
 
+  // Variable to hold the size of the stack
+  uint64_t stackSize = 0;
+  uint64_t *stackSizePtr = nullptr;
+
   // holds a reference to the runtime-object itself
   uintptr_t objectPointer = 0;
   uintptr_t *objectPointerPtr = nullptr;

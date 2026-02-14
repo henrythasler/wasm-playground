@@ -89,7 +89,7 @@ TEST(objdump, wasm) {
 
   for (const auto &wasmFile : wasmFiles) {
     auto wasmModule = helper::loadModule(wasmFile + ".wasm");
-    const auto &machinecode = wasmModule.linkMachinecode();
+    const auto &machinecode = wasmModule.getMachinecode();
 
     ELFWriter::ELFWriter writer;
     writer.add_code(reinterpret_cast<const uint8_t *>(machinecode.data()), machinecode.size() * sizeof(uint32_t));

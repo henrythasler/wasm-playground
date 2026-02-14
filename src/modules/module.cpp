@@ -93,6 +93,7 @@ void WasmModule::compileModule() {
           wasm::trap_code_t::IndirectCallToNull,
           wasm::trap_code_t::BadSignature,
           wasm::trap_code_t::MemoryOutOfBounds,
+          wasm::trap_code_t::StackOverflow,
       },
       machinecode);
   trapHandlerBuiltin->machinecodeSize = machinecode.size() - trapHandlerBuiltin->machinecodeOffset;
@@ -176,20 +177,6 @@ void WasmModule::linkModule() {
       arm64::patch_add_immediate(machinecode[patchLocation + 1], static_cast<uint16_t>(low12));
     }
   }
-}
-
-const std::vector<uint32_t> &WasmModule::linkMachinecode() const {
-  auto &linkedCode = const_cast<std::vector<uint32_t> &>(linkedMachinecode);
-  linkedCode.insert(linkedCode.end(), machinecode.begin(), machinecode.end());
-
-  // if (functionTable != nullptr) {
-  //   std::vector<uint32_t> jumpTable;
-  //   for (const auto &entry : functionTable->entries) {
-  //     jumpTable.push_back(entry.offset);
-  //   }
-  //   linkedCode.insert(linkedCode.end(), jumpTable.begin(), jumpTable.end());
-  // }
-  return linkedMachinecode;
 }
 
 } // namespace tiny
