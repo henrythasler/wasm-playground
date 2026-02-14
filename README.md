@@ -51,9 +51,11 @@ Install the [Native Debug](https://marketplace.visualstudio.com/items?itemName=w
 $ cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=cmake/aarch64-toolchain.cmake
 $ cmake --build build --parallel
 ```
-
 This will build the project in the `build` folder.
 
+### Using npm
+
+Build the project with `npm run build`
 Run unit-tests with: `npm test`
 
 ## Execution
@@ -72,7 +74,7 @@ LeakSanitizer is incompatible with emulator/debugging/tracing tools. Setting `de
 
 To create unit-tests from spec-test files (`.wast`), the following workflow can be used:
 
-1. Install python and create a new virtual environment. Use uv (`uv venv && source .venv/bin/activate`) or any other venv manager.
+1. Install python and create a new virtual environment. Use [uv](https://docs.astral.sh/uv/getting-started/installation/) (`uv venv && source .venv/bin/activate`) or any other venv manager.
 2. Install python dependencies using uv: `uv sync`.
 3. Copy new spectest wast-file to `tests/assets/`
 4. add new files to allow_list in `test-generator/generate.py`

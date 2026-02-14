@@ -22,7 +22,7 @@ TEST(Spectest, {{ filename|replace("-", "_")|replace(".", "_") }}) {
       {% else %}
   wasm_{{ assert.function|replace("-", "_")|replace(".", "_") }}({{ assert.args|join(', ') }});
       {% endif %}
-    {% elif assert.type == "trap" %}
+    {% elif assert.type == "trap" or assert.type == "exhaustion" %}
   EXPECT_THROW(wasm_{{ assert.function|replace("-", "_")|replace(".", "_") }}({{ assert.args|join(', ') }}), std::runtime_error);
     {% endif %}
   {% endfor %}
