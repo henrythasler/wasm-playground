@@ -55,4 +55,4 @@ jobs:
           name: coverage-report
           path: coverage/report
       - name: Run executable
-        run: ./build/src/tiny-wasm ./wasm/nop-fn.wasm
+        run: ./build/src/tiny-wasm ./tests/assets/empty-fn.wasm foo
