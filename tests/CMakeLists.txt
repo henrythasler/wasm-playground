@@ -105,6 +105,7 @@ add_executable(all_tests
   linear-memory-load_test.cpp
   linear-memory-store_test.cpp
   linear-memory-grow_test.cpp
+  stack_overflow_test.cpp
   # additional test cases
   echo_test.cpp
   compare_test.cpp
