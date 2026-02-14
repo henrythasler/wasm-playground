@@ -128,11 +128,11 @@ TEST(Spectest, linear_memory_grow_4_wasm) {
   EXPECT_EQ(wasm_as_br_if_value_cond(), (static_cast<int32_t>(6ULL)));
   EXPECT_EQ(wasm_as_return_value(), (static_cast<int32_t>(1ULL)));
   EXPECT_EQ(wasm_as_if_cond(), (static_cast<int32_t>(0ULL)));
-  // EXPECT_EQ(wasm_as_if_then(), (static_cast<int32_t>(1ULL)));
-  // EXPECT_EQ(wasm_as_if_else(), (static_cast<int32_t>(1ULL)));
-  // EXPECT_EQ(wasm_as_call_first(), (static_cast<int32_t>(4294967295ULL)));
-  // EXPECT_EQ(wasm_as_call_mid(), (static_cast<int32_t>(4294967295ULL)));
-  // EXPECT_EQ(wasm_as_call_last(), (static_cast<int32_t>(4294967295ULL)));
+  EXPECT_EQ(wasm_as_if_then(), (static_cast<int32_t>(1ULL)));
+  EXPECT_EQ(wasm_as_if_else(), (static_cast<int32_t>(1ULL)));
+  EXPECT_EQ(wasm_as_call_first(), (static_cast<int32_t>(4294967295ULL)));
+  EXPECT_EQ(wasm_as_call_mid(), (static_cast<int32_t>(4294967295ULL)));
+  EXPECT_EQ(wasm_as_call_last(), (static_cast<int32_t>(4294967295ULL)));
   // EXPECT_EQ(wasm_as_call_indirect_first(), (static_cast<int32_t>(4294967295ULL)));
   // EXPECT_EQ(wasm_as_call_indirect_mid(), (static_cast<int32_t>(4294967295ULL)));
   // EXPECT_EQ(wasm_as_call_indirect_last(), (static_cast<int32_t>(4294967295ULL)));

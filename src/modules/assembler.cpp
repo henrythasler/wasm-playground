@@ -1146,15 +1146,14 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
         // decode memory_index immediate (currently unused)
         auto memory_index = uint32_t(decoder::LEB128Decoder::decodeUnsigned(stream, streamEnd));
 
-        auto pages_reg = stack.at(stack.size() - 1);
-        auto result_reg = registerPool.allocateRegister();
+        auto address_reg = registerPool.allocateRegister();
 
         // load trampoline address; re-use result_reg
         auto growFnAddress = reinterpret_cast<std::uintptr_t>(gLinearMemoryInfo.growFunctionAddressPtr);
-        arm64::emit_mov_large_immediate(result_reg, uint64_t(growFnAddress), arm64::reg_size_t::SIZE_64BIT, machinecode);
+        arm64::emit_mov_large_immediate(address_reg, uint64_t(growFnAddress), arm64::reg_size_t::SIZE_64BIT, machinecode);
 
         // load address of memory.grow host function from pointer
-        machinecode.push_back(arm64::encode_ldr_register(result_reg, result_reg, arm64::reg_t::XZR, arm64::index_extend_type_t::INDEX_LSL, 0,
+        machinecode.push_back(arm64::encode_ldr_register(address_reg, address_reg, arm64::reg_t::XZR, arm64::index_extend_type_t::INDEX_LSL, 0,
                                                          arm64::mem_size_t::MEM_64BIT, arm64::reg_size_t::SIZE_64BIT));
 
         arm64::emit_mov_large_immediate(arm64::X0, uint64_t(gRuntimeInfo.objectPointerPtr), arm64::reg_size_t::SIZE_64BIT, machinecode);
@@ -1162,16 +1161,19 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
         machinecode.push_back(arm64::encode_ldr_register(arm64::X0, arm64::X0, arm64::reg_t::XZR, arm64::index_extend_type_t::INDEX_LSL, 0,
                                                          arm64::mem_size_t::MEM_64BIT, arm64::reg_size_t::SIZE_64BIT));
 
+        auto pages_reg = stack.at(stack.size() - 1);
+        stack.pop_back();
         machinecode.push_back(arm64::encode_mov_register(arm64::X1, pages_reg, arm64::reg_size_t::SIZE_64BIT));
 
         // FIXME: save wasm-stack registers
-        machinecode.push_back(arm64::encode_branch_link_register(result_reg));
+        machinecode.push_back(arm64::encode_branch_link_register(address_reg));
         // FIXME: restore wasm-stack registers
 
-        machinecode.push_back(arm64::encode_mov_register(result_reg, arm64::X0, arm64::reg_size_t::SIZE_64BIT));
-
-        stack.pop_back();
         registerPool.freeRegister(pages_reg);
+        registerPool.freeRegister(address_reg);
+
+        auto result_reg = registerPool.allocateRegister();
+        machinecode.push_back(arm64::encode_mov_register(result_reg, arm64::X0, arm64::reg_size_t::SIZE_64BIT));
         stack.emplace_back(result_reg);
 
         break;
