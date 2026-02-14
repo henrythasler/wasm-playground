@@ -133,9 +133,9 @@ TEST(Spectest, linear_memory_grow_4_wasm) {
   EXPECT_EQ(wasm_as_call_first(), (static_cast<int32_t>(4294967295ULL)));
   EXPECT_EQ(wasm_as_call_mid(), (static_cast<int32_t>(4294967295ULL)));
   EXPECT_EQ(wasm_as_call_last(), (static_cast<int32_t>(4294967295ULL)));
-  // EXPECT_EQ(wasm_as_call_indirect_first(), (static_cast<int32_t>(4294967295ULL)));
-  // EXPECT_EQ(wasm_as_call_indirect_mid(), (static_cast<int32_t>(4294967295ULL)));
-  // EXPECT_EQ(wasm_as_call_indirect_last(), (static_cast<int32_t>(4294967295ULL)));
+  EXPECT_EQ(wasm_as_call_indirect_first(), (static_cast<int32_t>(4294967295ULL)));
+  EXPECT_EQ(wasm_as_call_indirect_mid(), (static_cast<int32_t>(4294967295ULL)));
+  EXPECT_EQ(wasm_as_call_indirect_last(), (static_cast<int32_t>(4294967295ULL)));
   EXPECT_THROW(wasm_as_call_indirect_index(), std::runtime_error);
   wasm_as_local_set_value();
   EXPECT_EQ(wasm_as_local_tee_value(), (static_cast<int32_t>(1ULL)));

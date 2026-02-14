@@ -1,6 +1,7 @@
 #include <csignal>
 #include <cstdint>
 #include <cstring>
+#include <filesystem>
 #include <iomanip>
 #include <iostream>
 #include <vector>
@@ -15,34 +16,21 @@
 int main(int argc, char const *argv[]) {
   std::cerr << "Tiny WebAssembly Runtime for ARM64 (v" << PROJECT_VERSION << ")" << std::endl << std::endl;
 
-  if (argc < 2) {
-    std::cerr << "Usage: " << argv[0] << " <options> <wasm_file>" << std::endl;
-    std::cerr << "Options:" << std::endl;
-    std::cerr << "  --dry-run        Assemble but do not execute the code" << std::endl;
+  if (argc < 3) {
+    std::cerr << "Usage: " << argv[0] << " <wasm_file> <function>" << std::endl;
     return EXIT_FAILURE;
   }
 
-  tiny::Loader loader = tiny::Loader();
-  // tiny::WasmModule assembler = tiny::WasmModule();
+  auto fileName = std::string(argv[argc - 2]);
+  auto functionName = std::string(argv[argc - 1]);
 
-  // Parse command line arguments
-  // The last argument is always the filename
-  // All preceding arguments are options
-  auto filename = std::string(argv[argc - 1]);
-  bool dry_run = false;
-  for (int i = 1; i < argc - 1; ++i) {
-    if (std::strcmp(argv[i], "--dry-run") == 0) {
-      dry_run = true;
-    } else {
-      std::cerr << RED << "Error: Unknown option '" << argv[i] << "'" << RESET << std::endl;
-      return EXIT_FAILURE;
-    }
-  }
+  std::cout << "Loading WebAssembly file: '" << CYAN << fileName << RESET << "'... ";
+
+  tiny::Loader loader = tiny::Loader();
 
   // Load WebAssembly file from command line argument
-  std::cout << "Loading WebAssembly file: '" << CYAN << filename << RESET << "'... ";
-  if (!loader.loadFromFile(filename)) {
-    std::cerr << RED << "Error: Failed to load file " << filename << RESET << std::endl;
+  if (!loader.loadFromFile(fileName)) {
+    std::cerr << RED << "Error: Failed to load file " << fileName << RESET << std::endl;
     return EXIT_FAILURE;
   }
   std::cout << GREEN "OK" << RESET << std::endl;
@@ -63,13 +51,13 @@ int main(int argc, char const *argv[]) {
     return EXIT_FAILURE;
   }
 
-  tiny::WasmModule *wasmModule = nullptr;
+  std::unique_ptr<tiny::WasmModule> wasmModule;
 
   /**
    * Compile the module
    */
   try {
-    wasmModule = new tiny::WasmModule(bytecode);
+    wasmModule = std::make_unique<tiny::WasmModule>(bytecode);
   } catch (const std::exception &e) {
     std::cerr << RED << "Error: Assembly failed: " << e.what() << RESET << std::endl;
     return EXIT_FAILURE;
@@ -79,59 +67,43 @@ int main(int argc, char const *argv[]) {
   /**
    * print some infos about each function before executing it
    */
-  auto machinecode = wasmModule->getMachinecode();
+  // auto machinecode = wasmModule->getMachinecode();
   for (auto function : wasmModule->getWasmFunctions()) {
     std::cout << "  " << function->getResultString() << " " << function->getName() << "(" << function->getParameterString() << ")" << std::endl;
-    // auto machinecode = function->getMachinecode();
-    // if (machinecode.size() == 0) {
-    //   std::cout << YELLOW << "WARNING: Machinecode is empty!" << RESET << std::endl;
-    // } else {
-    //   std::cout << "  Machinecode (hex): " << std::hex;
-    //   for (const auto instruction : machinecode) {
-    //     std::cout << std::setw(8) << std::setfill('0') << instruction << " ";
-    //   }
-    //   std::cout << std::dec << std::endl;
-    // }
-
-    /* execute machine code */
-    if (!dry_run) {
-      // std::cout << "  Executing machine code (break *0x" << machinecode.data() << ")... ";
-      // auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t, wasm::wasm_i32_t, wasm::wasm_i32_t>(
-      //     machinecode, wasmModule->getFunctionOffset(function->getName()));
-      auto wasmFunction = tiny::make_wasm_function<wasm::wasm_i32_t, wasm::wasm_i32_t>(*wasmModule, function->getName());
-      try {
-        std::cout << std::hex << "objectPointer: content=0x" << gRuntimeInfo.objectPointer << " location=0x" << &gRuntimeInfo.objectPointer
-                  << " wasmFunction=0x" << &wasmFunction << std::dec << std::endl;
-
-        std::cout << std::hex << "linearMemoryGrowAddress: content=0x" << gLinearMemoryInfo.growFunctionAddress << " location=0x"
-                  << &gLinearMemoryInfo.growFunctionAddress << std::dec << std::endl;
-
-        std::cout << std::hex << "machineCodeAddress: content=0x" << gRuntimeInfo.machineCodeAddress << " location=0x"
-                  << &gRuntimeInfo.machineCodeAddress << std::dec << std::endl;
-
-        std::cout << std::hex << "globalsMemoryAddress: content=0x" << gRuntimeInfo.globalsMemoryAddress << " location=0x"
-                  << &gRuntimeInfo.globalsMemoryAddress << std::dec << std::endl;
-
-        std::cout << std::hex << "linearMemorySizeBytes: content=0x" << gLinearMemoryInfo.sizeBytes << " location=0x" << &gLinearMemoryInfo.sizeBytes
-                  << std::dec << std::endl;
-
-        if (wasmModule->getMemory()) {
-          std::cout << std::hex << "linearMemoryAddress: content=0x" << gLinearMemoryInfo.address << " location=0x" << &gLinearMemoryInfo.address
-                    << std::dec << " size=" << wasmModule->getMemory()->initialSize * wasm::LINEAR_MEMORY_PAGE_SIZE << std::endl;
-        }
-
-        auto res = wasmFunction.call(1);
-        std::cout << std::hex << res << " ";
-      } catch (const std::exception &e) {
-        std::cerr << RED << "Execution failed: " << e.what() << RESET << std::endl;
-        return EXIT_FAILURE;
-      }
-    } else {
-      std::cout << "  Dry run mode, skipping execution... ";
-    }
-
-    std::cout << GREEN "done" << RESET << std::endl << std::endl;
   }
+
+  std::cout << std::endl << "Preparing execution of '" << functionName << "()' " << std::endl;
+
+  tiny::ModuleInstance instance(*wasmModule);
+  auto wasmFunction = instance.getFunction<wasm::wasm_i32_t>(functionName);
+
+  std::cout << "  " << std::hex << "objectPointer: content=0x" << gRuntimeInfo.objectPointer << " location=0x" << &gRuntimeInfo.objectPointer
+            << " wasmFunction=0x" << &wasmFunction << std::dec << std::endl;
+
+  std::cout << "  " << std::hex << "linearMemoryGrowAddress: content=0x" << gLinearMemoryInfo.growFunctionAddress << " location=0x"
+            << &gLinearMemoryInfo.growFunctionAddress << std::dec << std::endl;
+
+  std::cout << "  " << std::hex << "machineCodeAddress: content=0x" << gRuntimeInfo.machineCodeAddress << " location=0x"
+            << &gRuntimeInfo.machineCodeAddress << std::dec << std::endl;
+
+  std::cout << "  " << std::hex << "globalsMemoryAddress: content=0x" << gRuntimeInfo.globalsMemoryAddress << " location=0x"
+            << &gRuntimeInfo.globalsMemoryAddress << std::dec << std::endl;
+
+  std::cout << "  " << std::hex << "linearMemorySizeBytes: content=0x" << gLinearMemoryInfo.sizeBytes << " location=0x"
+            << &gLinearMemoryInfo.sizeBytes << std::dec << std::endl;
+
+  std::cout << "  " << std::hex << "linearMemoryAddress: content=0x" << gLinearMemoryInfo.address << " location=0x" << &gLinearMemoryInfo.address
+            << std::dec << " size=" << wasmModule->getMemory()->initialSize * wasm::LINEAR_MEMORY_PAGE_SIZE << std::endl;
+
+  try {
+    auto res = wasmFunction();
+    std::cout << "result: " << std::hex << res << " " << std::endl;
+  } catch (const std::exception &e) {
+    std::cerr << RED << "Execution failed: " << e.what() << RESET << std::endl;
+    return EXIT_FAILURE;
+  }
+
+  std::cout << GREEN "done" << RESET << std::endl << std::endl;
 
   return EXIT_SUCCESS;
 }

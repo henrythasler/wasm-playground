@@ -75,6 +75,7 @@ ModuleInstance::ModuleInstance(WasmModule &module) : module_(module) {
 
   // allocate JIT code memory
   machineCode_ = std::make_unique<CustomMemory>(module.getMachinecode(), PROT_READ | PROT_EXEC);
+  gRuntimeInfo.machineCodeAddress = reinterpret_cast<uint64_t>(machineCode_->getAddress());
 
   // allocate globals if needed
   if (module.getGlobals()) {
