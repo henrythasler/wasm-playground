@@ -7,7 +7,7 @@ namespace wasm {
 
 constexpr int32_t LINEAR_MEMORY_MAX_PAGES = 1024;
 constexpr int32_t LINEAR_MEMORY_PAGE_SIZE = 0x10000; // 64 KiB
-constexpr int32_t STACK_MAX_SIZE = 0x10000;          // 64 KiB
+constexpr int32_t STACK_MAX_SIZE = 64 * 0x10000;     // 4 MiB
 
 using wasm_i32_t = int32_t;
 using wasm_i64_t = int64_t;

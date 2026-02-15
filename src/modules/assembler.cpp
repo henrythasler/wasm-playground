@@ -72,7 +72,7 @@ void loadResult(const std::vector<webassembly_t::val_types_t> &results, const st
   machinecode.push_back(arm64::encode_mov_register(targetReg, sourceReg, registerSize));
 }
 
-uint32_t createPreamble(uint32_t stackSize, std::vector<uint32_t> &machinecode) {
+uint32_t createPreamble(uint32_t stackSize, const std::map<wasm::trap_code_t, int32_t> &trapHandler, std::vector<uint32_t> &machinecode) {
   // Prologue: create a new stack frame (stp fp, lr, [sp, #-16]!)
   machinecode.push_back(
       arm64::encode_stp(arm64::FP, arm64::LR, arm64::SP, -0x10, arm64::addressing_mode_t::PRE_INDEX, arm64::reg_size_t::SIZE_64BIT));
@@ -92,6 +92,10 @@ uint32_t createPreamble(uint32_t stackSize, std::vector<uint32_t> &machinecode) 
       arm64::encode_sub_extended_register(arm64::X19, arm64::SP, arm64::X19, arm64::extend_type_t::EXTEND_UXTX, 0, arm64::reg_size_t::SIZE_64BIT));
   arm64::emit_mov_large_immediate(arm64::X20, wasm::STACK_MAX_SIZE, arm64::reg_size_t::SIZE_64BIT, machinecode);
   machinecode.push_back(arm64::encode_cmp_shifted_register(arm64::X19, arm64::X20, arm64::reg_shift_t::SHIFT_LSL, 0, arm64::reg_size_t::SIZE_64BIT));
+
+  // if stackBaseAddress - stackPointer < STACK_MAX_SIZE: trap()
+  machinecode.push_back(
+      arm64::encode_branch_cond(arm64::branch_condition_t::LT, getTraphandlerOffset(wasm::trap_code_t::StackOverflow, trapHandler, machinecode)));
 
   // Allocate stack
   if (stackSize > 0) {

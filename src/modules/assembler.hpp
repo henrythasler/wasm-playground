@@ -190,7 +190,7 @@ uint32_t initLocals(const std::map<webassembly_t::val_types_t, uint32_t> &locals
                     std::vector<uint32_t> &machinecode);
 void loadResult(const std::vector<webassembly_t::val_types_t> &results, const std::vector<arm64::reg_t> &wasmStack,
                 std::vector<uint32_t> &machinecode);
-uint32_t createPreamble(uint32_t stackSize, std::vector<uint32_t> &machinecode);
+uint32_t createPreamble(uint32_t stackSize, const std::map<wasm::trap_code_t, int32_t> &trapHandler, std::vector<uint32_t> &machinecode);
 void createEpilogue(const uint32_t stackSize, std::vector<uint32_t> &machinecode);
 std::map<wasm::trap_code_t, int32_t> createTrapHandler(const std::vector<wasm::trap_code_t> trapCodes, std::vector<uint32_t> &machinecode);
 

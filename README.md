@@ -18,7 +18,7 @@ Progress:
 - Chapter09: ✅
 - Chapter10: ✅
 - Chapter11: ✅
-- Chapter12: 0%
+- Chapter12: 90%
 - Chapter13: 0%
 
 ## Feature Highlights
@@ -118,6 +118,10 @@ Set breakpoint in source code. Start Debugging (F5).
 - All globals (const and mut) are stored as 64-bit values in memory
 - Constant globals are inlined using mov/movk instructions
 - Mutable globals are accessed using a pointer to the memory location of the globals calculated from a base address and the index of the global
+
+### Stack Overflow Checks
+
+A global variable is used to store the stack base address obtained via pthread_attr_getstack(). The current SP is compared to this value at runtime and when exceeding a threshold, the trap-handler is called.
 
 ## Tutorial Remarks
 
