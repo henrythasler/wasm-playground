@@ -74,9 +74,24 @@ void loadResult(const std::vector<webassembly_t::val_types_t> &results, const st
 
 uint32_t createPreamble(uint32_t stackSize, std::vector<uint32_t> &machinecode) {
   // Prologue: create a new stack frame (stp fp, lr, [sp, #-16]!)
-  machinecode.push_back(arm64::encode_stp(arm64::FP, arm64::LR, arm64::SP, -16, arm64::addressing_mode_t::PRE_INDEX, arm64::reg_size_t::SIZE_64BIT));
+  machinecode.push_back(
+      arm64::encode_stp(arm64::FP, arm64::LR, arm64::SP, -0x10, arm64::addressing_mode_t::PRE_INDEX, arm64::reg_size_t::SIZE_64BIT));
   // mov fp, sp
   machinecode.push_back(arm64::encode_mov_sp(arm64::FP, arm64::SP, arm64::reg_size_t::SIZE_64BIT));
+
+  // store callee-saved registers (stp x19, x20, [sp, #-16]!)
+  machinecode.push_back(
+      arm64::encode_stp(arm64::X19, arm64::X20, arm64::SP, -0x10, arm64::addressing_mode_t::PRE_INDEX, arm64::reg_size_t::SIZE_64BIT));
+
+  // explicit stack overflow check: compare current sp with stack limit, and branch to trap handler if sp is below the limit
+  auto address = reinterpret_cast<std::uintptr_t>(gRuntimeInfo.stackBaseAddressPtr);
+  arm64::emit_mov_large_immediate(arm64::X19, uint64_t(address), arm64::reg_size_t::SIZE_64BIT, machinecode);
+  machinecode.push_back(arm64::encode_ldr_register(arm64::X19, arm64::X19, arm64::reg_t::XZR, arm64::index_extend_type_t::INDEX_LSL, 0,
+                                                   arm64::mem_size_t::MEM_64BIT, arm64::reg_size_t::SIZE_64BIT));
+  machinecode.push_back(
+      arm64::encode_sub_extended_register(arm64::X19, arm64::SP, arm64::X19, arm64::extend_type_t::EXTEND_UXTX, 0, arm64::reg_size_t::SIZE_64BIT));
+  arm64::emit_mov_large_immediate(arm64::X20, wasm::STACK_MAX_SIZE, arm64::reg_size_t::SIZE_64BIT, machinecode);
+  machinecode.push_back(arm64::encode_cmp_shifted_register(arm64::X19, arm64::X20, arm64::reg_shift_t::SHIFT_LSL, 0, arm64::reg_size_t::SIZE_64BIT));
 
   // Allocate stack
   if (stackSize > 0) {
@@ -93,8 +108,12 @@ void createEpilogue(const uint32_t stackSize, std::vector<uint32_t> &machinecode
     // deallocate stack memory (add sp, sp, #stackSize)
     machinecode.push_back(arm64::encode_add_immediate(arm64::SP, arm64::SP, uint16_t(stackSize), false, arm64::reg_size_t::SIZE_64BIT));
   }
+  // restore callee-saved registers (ldp x19, x20, [sp], #16)
+  machinecode.push_back(
+      arm64::encode_ldp(arm64::X19, arm64::X20, arm64::SP, 0x10, arm64::addressing_mode_t::POST_INDEX, arm64::reg_size_t::SIZE_64BIT));
   // Epilogue: destroy stack frame (ldp fp, lr, [sp], #16)
-  machinecode.push_back(arm64::encode_ldp(arm64::FP, arm64::LR, arm64::SP, 16, arm64::addressing_mode_t::POST_INDEX, arm64::reg_size_t::SIZE_64BIT));
+  machinecode.push_back(
+      arm64::encode_ldp(arm64::FP, arm64::LR, arm64::SP, 0x10, arm64::addressing_mode_t::POST_INDEX, arm64::reg_size_t::SIZE_64BIT));
   // return (RET)
   machinecode.push_back(arm64::encode_ret());
 }

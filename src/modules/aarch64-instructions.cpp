@@ -111,6 +111,29 @@ uint32_t encode_sub_register(reg_t rd, reg_t rn, reg_t rm, uint8_t imm6, reg_shi
 }
 
 /**
+ * This instruction subtracts a sign or zero-extended register value, followed by an optional left shift amount, from a register value, and writes the
+ * result to the destination register.
+ *
+ * `sub x19, sp, x19`
+ * @param rd destination register
+ * @param rn first source register
+ * @param rm second source register
+ * @param option extension to be applied to the second source operand
+ * @param imm3 the left shift amount to be applied after extension in the range 0..4
+ * @param size 32-bit or 64-bit variant
+ * @return the encoded instruction
+ */
+uint32_t encode_sub_extended_register(reg_t rd, reg_t rn, reg_t rm, extend_type_t option, uint8_t imm3, reg_size_t size) {
+  uint32_t instr = select_instruction(size, 0x4b200000, 0xcb200000, "encode_sub_extended_register");
+  instr |= (uint32_t(option) & 0x07) << 13; // extend type
+  instr |= (imm3 & 0x7) << 10;              // imm3 field
+  instr |= (rm & 0x1F) << 16;               // Rm (second source register)
+  instr |= (rn & 0x1F) << 5;                // Rn (source register)
+  instr |= (rd & 0x1F);                     // Rd (desination register)
+  return instr;
+}
+
+/**
  * This instruction subtracts an optionally-shifted register value from a register value, and writes the result to the destination register. It
  * updates the condition flags based on the result.
  *

@@ -64,7 +64,7 @@ Run unit-tests with: `npm test`
 
 LeakSanitizer is incompatible with emulator/debugging/tracing tools. Setting `detect_leaks=0` disables leak detection during execution.
 
-`ASAN_OPTIONS=detect_leaks=0 qemu-aarch64 -L /usr/aarch64-linux-gnu/ build/src/tiny-wasm tests/assets/empty-fn.wasm`
+`ASAN_OPTIONS=detect_leaks=0 qemu-aarch64 -L /usr/aarch64-linux-gnu/ build/src/tiny-wasm tests/assets/empty-fn.wasm foo`
 
 ### On arm64 Machine
 
@@ -86,7 +86,7 @@ To create unit-tests from spec-test files (`.wast`), the following workflow can 
 
 Start the executable:
 
-`ASAN_OPTIONS=detect_leaks=0 qemu-aarch64 -L /usr/aarch64-linux-gnu/ -g 1234 build/src/tiny-wasm tests/assets/empty-fn.wasm`
+`ASAN_OPTIONS=detect_leaks=0 qemu-aarch64 -L /usr/aarch64-linux-gnu/ -g 1234 build/src/tiny-wasm tests/assets/empty-fn.wasm foo`
 
 Set breakpoint in source code. Start Debugging (F5).
 
@@ -132,7 +132,7 @@ Set breakpoint in source code. Start Debugging (F5).
 - [Running Arm Binaries on x86 with QEMU-User](https://azeria-labs.com/arm-on-x86-qemu-user/)
 - [ARM GCC Inline Assembler Cookbook](http://www.ethernut.de/en/documents/arm-inline-asm.html)
 - [Mastering arm-linux-gnueabihf-gcc: A Comprehensive Guide ](https://linuxvox.com/blog/arm-linux-gnueabihf-gcc/)
-- [ARMv8 AArch64/ARM64 Full Beginner's Assembly Tutorial](https://mariokartwii.com/armv8/)
+- [ARMv8 AArch64/ARM64 Full Beginner's Assembly Tutorial](https://mariokartwii.com/arm64/)
 - [Getting Started with Arm Assembly Language](https://developer.arm.com/documentation/107829/0201)
 - [Procedure Call Standard for the Arm® 64-bit Architecture (AArch64) - Parameter passing](https://github.com/ARM-software/abi-aa/blob/main/aapcs64/aapcs64.rst#68parameter-passing)
 - [arm64-book - A Book that explains in Detail ARM64 Assembly](https://github.com/maxvdec/arm64-book)

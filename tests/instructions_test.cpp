@@ -171,6 +171,11 @@ TEST(instruction, subs) {
   EXPECT_EQ_HEX(encode_sub_register(X10, X10, X11, 8, reg_shift_t::SHIFT_LSL, reg_size_t::SIZE_32BIT), 0x4B0B214A);
   EXPECT_THROW(encode_sub_register(X10, X10, X11, 8, reg_shift_t::SHIFT_LSL, reg_size_t::SIZE_8BIT), std::runtime_error);
 
+  // sub x19, sp, x19
+  EXPECT_EQ_HEX(encode_sub_extended_register(X19, SP, X19, extend_type_t::EXTEND_UXTX, 0, reg_size_t::SIZE_64BIT), 0xCB3363F3);
+  // sub x0, sp, x0
+  EXPECT_EQ_HEX(encode_sub_extended_register(X0, SP, X0, extend_type_t::EXTEND_UXTX, 0, reg_size_t::SIZE_64BIT), 0xCB2063E0);
+
   // SUBS X0, X1, W2, UXTW
   EXPECT_EQ_HEX(encode_subs_extended_register(X0, X1, W2, extend_type_t::EXTEND_UXTW, 0, reg_size_t::SIZE_64BIT), 0xEB224020);
   // SUBS X5, X6, W7, SXTW #2
@@ -230,11 +235,11 @@ TEST(instruction, branch) {
   EXPECT_THROW(encode_cbnz(W7, 0x10, reg_size_t::SIZE_8BIT), std::runtime_error);
 }
 
-TEST(instruction, clz) { 
+TEST(instruction, clz) {
   // clz x0, x0
   EXPECT_EQ_HEX(encode_clz(X0, X0, reg_size_t::SIZE_64BIT), 0xDAC01000);
   // clz w10, w6
-  EXPECT_EQ_HEX(encode_clz(W10, W6, reg_size_t::SIZE_32BIT), 0x5AC010CA); 
+  EXPECT_EQ_HEX(encode_clz(W10, W6, reg_size_t::SIZE_32BIT), 0x5AC010CA);
 }
 
 TEST(instruction, ret) {

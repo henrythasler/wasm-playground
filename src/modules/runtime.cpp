@@ -69,6 +69,17 @@ void CustomMemory::grow(size_t newSize) {
   }
 }
 
+void *ModuleInstance::getStackBaseAddress() {
+  pthread_attr_t attr;
+  void *stack_addr;
+  size_t stack_size;
+  // Get current thread's stack attributes
+  pthread_getattr_np(pthread_self(), &attr);
+  pthread_attr_getstack(&attr, &stack_addr, &stack_size);
+  pthread_attr_destroy(&attr);
+  return stack_addr;
+}
+
 ModuleInstance::ModuleInstance(WasmModule &module) : module_(module) {
   // copy a reference of itself to global record for access from within the JIT code
   gRuntimeInfo.objectPointer = reinterpret_cast<uintptr_t>(this);
@@ -98,6 +109,8 @@ ModuleInstance::ModuleInstance(WasmModule &module) : module_(module) {
     gLinearMemoryInfo.sizePages = 0;
     gLinearMemoryInfo.sizeBytes = gLinearMemoryInfo.sizePages * wasm::LINEAR_MEMORY_PAGE_SIZE;
   }
+
+  gRuntimeInfo.stackBaseAddress = reinterpret_cast<uint64_t>(getStackBaseAddress());
 }
 
 int32_t ModuleInstance::linearMemoryGrow(int32_t pagesRequested) {

@@ -95,7 +95,7 @@ TEST(objdump, wasm) {
     writer.add_code(reinterpret_cast<const uint8_t *>(machinecode.data()), machinecode.size() * sizeof(uint32_t));
 
     for (auto builtin : wasmModule.getBuiltins()) {
-      writer.add_symbol(builtin->name, builtin->machinecodeOffset, builtin->machinecodeSize * sizeof(uint32_t), 1, STT_FUNC);
+      writer.add_symbol(builtin->name, builtin->machinecodeOffset * sizeof(uint32_t), builtin->machinecodeSize * sizeof(uint32_t), 1, STT_FUNC);
     }
 
     int functionIndex = 0;

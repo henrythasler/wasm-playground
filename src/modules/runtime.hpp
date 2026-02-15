@@ -279,6 +279,8 @@ public:
     return callable;
   }
 
+  void *getStackBaseAddress();
+
   // linear memory management
   int32_t linearMemoryGrow(int32_t pages);
   static int32_t linearMemoryGrow_trampoline(ModuleInstance *self, int32_t pages);

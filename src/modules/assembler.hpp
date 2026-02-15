@@ -30,9 +30,9 @@ struct RuntimeInfo {
   uint64_t globalsMemoryAddress = 0;
   uint64_t *globalsMemoryAddressPtr = nullptr;
 
-  // Variable to hold the size of the stack
-  uint64_t stackSize = 0;
-  uint64_t *stackSizePtr = nullptr;
+  // Stack base address for stack overflow checks
+  uint64_t stackBaseAddress = 0;
+  uint64_t *stackBaseAddressPtr = nullptr;
 
   // holds a reference to the runtime-object itself
   uintptr_t objectPointer = 0;
@@ -41,6 +41,7 @@ struct RuntimeInfo {
   RuntimeInfo() {
     machineCodeAddressPtr = &machineCodeAddress;
     globalsMemoryAddressPtr = &globalsMemoryAddress;
+    stackBaseAddressPtr = &stackBaseAddress;
     objectPointerPtr = &objectPointer;
   }
 };

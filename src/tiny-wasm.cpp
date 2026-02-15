@@ -92,6 +92,9 @@ int main(int argc, char const *argv[]) {
   std::cout << "  " << std::hex << "linearMemorySizeBytes: content=0x" << gLinearMemoryInfo.sizeBytes << " location=0x"
             << &gLinearMemoryInfo.sizeBytes << std::dec << std::endl;
 
+  std::cout << "  " << std::hex << "stackBaseAddress: content=0x" << gRuntimeInfo.stackBaseAddress << " location=0x" << &gRuntimeInfo.stackBaseAddress
+            << std::dec << std::endl;
+
   if (wasmModule->getMemory()) {
     std::cout << "  " << std::hex << "linearMemoryAddress: content=0x" << gLinearMemoryInfo.address << " location=0x" << &gLinearMemoryInfo.address
               << std::dec << " size=" << wasmModule->getMemory()->initialSize * wasm::LINEAR_MEMORY_PAGE_SIZE << std::endl;
