@@ -18,7 +18,7 @@ Progress:
 - Chapter09: ✅
 - Chapter10: ✅
 - Chapter11: ✅
-- Chapter12: 90%
+- Chapter12: ✅
 - Chapter13: 0%
 
 ## Feature Highlights
@@ -122,6 +122,10 @@ Set breakpoint in source code. Start Debugging (F5).
 ### Stack Overflow Checks
 
 A global variable is used to store the stack base address obtained via pthread_attr_getstack(). The current SP is compared to this value at runtime and when exceeding a threshold, the trap-handler is called.
+
+## Improvements
+
+- Use a custom memory region for the jit-stack to improve control over stack limits (Chapter 12).
 
 ## Tutorial Remarks
 
