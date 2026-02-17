@@ -89,7 +89,8 @@ foreach(SRC_FILE ${SRC_FILES})
   if(NOT EXISTS ${WASM_FILE} OR ${SRC_FILE} IS_NEWER_THAN ${WASM_FILE})
     add_custom_command(
       OUTPUT ${WASM_FILE}
-      COMMAND /opt/wasi-sdk/bin/clang -fdata-sections -ffunction-sections -mcpu=mvp -mmutable-globals -Wl,--allow-undefined,--export-table,--gc-sections,--no-entry,--export=_start -lstdc++ -z stack-size=8192 -nostartfiles -o ${WASM_FILE} ${SRC_FILE}
+      COMMAND clang --target=wasm32 -nostdlib -Wl,--allow-undefined,--export-table,--gc-sections,--no-entry,--export=_start -o ${WASM_FILE} ${SRC_FILE}
+      # COMMAND /opt/wasi-sdk/bin/clang -fdata-sections -ffunction-sections -mcpu=mvp -mmutable-globals -Wl,--allow-undefined,--export-table,--gc-sections,--no-entry,--export=_start -lstdc++ -z stack-size=8192 -nostartfiles -o ${WASM_FILE} ${SRC_FILE}
       DEPENDS ${SRC_FILE}
       COMMENT "Compiling ${SRC_FILE}"
       VERBATIM
