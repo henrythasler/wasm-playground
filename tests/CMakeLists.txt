@@ -59,7 +59,7 @@ else()
   message(STATUS "Found wast2json: ${WAST2JSON_EXECUTABLE}")
 endif()
 
-# compile all wat-files in wasm-folder to wasm using wat2wasm if not already done
+# compile all wat-files in assets-folder to wasm using wat2wasm if not already done
 file(GLOB WAST_FILES "${CMAKE_CURRENT_SOURCE_DIR}/assets/*.wast")
 foreach(WAST_FILE ${WAST_FILES})
   get_filename_component(WAST_FILENAME ${WAST_FILE} NAME_WE)
@@ -79,6 +79,28 @@ endforeach()
 if(GENERATED_WAST_FILES)
   add_custom_target(compile_wast_files ALL DEPENDS ${GENERATED_WAST_FILES})
   message(STATUS "Added custom target to compile wast files: ${GENERATED_WAST_FILES}")
+endif()
+
+# compile all c-files in assets-folder to wasm using wasi-sdk if not already done
+file(GLOB SRC_FILES "${CMAKE_CURRENT_SOURCE_DIR}/assets/*.c")
+foreach(SRC_FILE ${SRC_FILES})
+  get_filename_component(SRC_FILENAME ${SRC_FILE} NAME_WE)
+  set(WASM_FILE "${CMAKE_CURRENT_SOURCE_DIR}/assets/${SRC_FILENAME}.wasm")
+  if(NOT EXISTS ${WASM_FILE} OR ${SRC_FILE} IS_NEWER_THAN ${WASM_FILE})
+    add_custom_command(
+      OUTPUT ${WASM_FILE}
+      COMMAND /opt/wasi-sdk/bin/clang -fdata-sections -ffunction-sections -mcpu=mvp -mmutable-globals -Wl,--allow-undefined,--export-table,--gc-sections,--no-entry,--export=_start -lstdc++ -z stack-size=8192 -nostartfiles -o ${WASM_FILE} ${SRC_FILE}
+      DEPENDS ${SRC_FILE}
+      COMMENT "Compiling ${SRC_FILE}"
+      VERBATIM
+    )
+    list(APPEND GENERATED_C_FILES ${WASM_FILE})
+  endif()
+endforeach()
+
+if(GENERATED_C_FILES)
+  add_custom_target(compile_c_files ALL DEPENDS ${GENERATED_C_FILES})
+  message(STATUS "Added custom target to compile c files: ${GENERATED_C_FILES}")
 endif()
 
 add_executable(all_tests
@@ -117,6 +139,7 @@ add_executable(all_tests
   functions_test.cpp
   globals_extended_test.cpp
   memory_extended_test.cpp
+  extern_test.cpp
 )
 
 # GoogleTest requires at least C++17
