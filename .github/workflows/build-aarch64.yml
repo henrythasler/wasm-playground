@@ -34,7 +34,9 @@ jobs:
       - name: checkout submodules
         run: git submodule update --init --recursive
       - name: Install dependencies
-        run: sudo apt-get install -y build-essential cmake wabt lcov wasi-sdk
+        run: sudo apt-get install -y build-essential cmake wabt lcov
+      - name: Search available wasi packages
+        run: apt-cache search wasi
       - name: Configure CMake
         run: cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=cmake/aarch64-toolchain.cmake -DENABLE_ARM64_CROSSCOMPILE=OFF -DENABLE_COVERAGE=ON
       - name: Build the project
