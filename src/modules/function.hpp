@@ -13,8 +13,6 @@ namespace tiny {
 
 class WasmFunction {
 private:
-  // std::vector<uint8_t> bytecode;
-  // std::vector<uint32_t> machinecode;
   size_t machinecodeOffset = 0;
   size_t machinecodeSize = 0;
   std::string name;

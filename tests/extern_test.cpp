@@ -6,10 +6,10 @@
 namespace {
 
 TEST(Spectest, imports) {
-  // auto wasmModule = helper::loadModule("extern.wasm");
-  // auto instance = tiny::ModuleInstance(wasmModule);
+  auto wasmModule = helper::loadModule("extern.wasm");
+  auto instance = tiny::ModuleInstance(wasmModule);
   
-  // auto _start = instance.getFunction<wasm::wasm_i32_t>("_start");
+  auto _start = instance.getFunction<wasm::wasm_i32_t>("_start");
   // EXPECT_EQ(_start(), 1);
 }
 } // namespace

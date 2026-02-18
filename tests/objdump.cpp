@@ -60,7 +60,7 @@ TEST(objdump, wasm) {
       "globals-extended",
       "memory",
       "memory-grow",
-      // "extern"
+      "extern",
       // tutorial chapters (in sequence)
       "empty-fn",
       "local.0",

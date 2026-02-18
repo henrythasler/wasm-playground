@@ -74,6 +74,7 @@ void WasmModule::compileModule() {
   auto global_section = getSectionContent<webassembly_t::global_section_t>(*(wasm->sections()), webassembly_t::SECTION_ID_GLOBAL_SECTION);
   auto memory_section = getSectionContent<webassembly_t::memory_section_t>(*(wasm->sections()), webassembly_t::SECTION_ID_MEMORY_SECTION);
   auto data_section = getSectionContent<webassembly_t::data_section_t>(*(wasm->sections()), webassembly_t::SECTION_ID_DATA_SECTION);
+  auto import_section = getSectionContent<webassembly_t::import_section_t>(*(wasm->sections()), webassembly_t::SECTION_ID_IMPORT_SECTION);
 
   asserte(code_section != nullptr, "WasmModule: Invalid Code Section");
   asserte(code_section->entries() != nullptr, "WasmModule: Code section is empty");
@@ -118,6 +119,18 @@ void WasmModule::compileModule() {
     linearMemory->parseMemorySection(memory_section, data_section);
   }
 
+  if (import_section != nullptr) {
+    auto imports = import_section->imports();
+    for (const auto &import : *imports) {
+      if (import->import_type() == webassembly_t::import_types_t::IMPORT_TYPES_FUNC_TYPE) {
+        auto wasmFunction = new WasmFunction();
+        wasmFunction->setName(import->name()->value());
+        // FIXME: link to actual API function
+        wasmFunctions.push_back(wasmFunction);
+      }
+    }
+  }
+
   // Compile each function in the code section
   for (size_t j = 0; j < code_section->entries()->size(); ++j) {
     const auto &code = code_section->entries()->at(j);
@@ -132,7 +145,9 @@ void WasmModule::compileModule() {
   auto export_section = getSectionContent<webassembly_t::export_section_t>(*(wasm->sections()), webassembly_t::SECTION_ID_EXPORT_SECTION);
   for (size_t j = 0; j < export_section->exports()->size(); ++j) {
     const auto &item = export_section->exports()->at(j);
-    wasmFunctions.at(static_cast<size_t>(item->idx()->value()))->setName(item->name()->value());
+    if (item->exportdesc() == webassembly_t::export_types_t::EXPORT_TYPES_FUNC_TYPE) {
+      wasmFunctions.at(static_cast<size_t>(item->idx()->value()))->setName(item->name()->value());
+    }
   }
 }
 
