@@ -125,9 +125,10 @@ void WasmModule::compileModule() {
     for (const auto &import : *imports) {
       if (import->import_type() == webassembly_t::import_types_t::IMPORT_TYPES_FUNC_TYPE) {
         auto wasmFunction = new WasmFunction();
+        const auto &funcType = type_section->functypes()->at(index);
         wasmFunction->isImported = true;
         wasmFunctions.push_back(wasmFunction);
-        importedFunctions.emplace(index, api::ImportedFunction(index, import->module()->value(), import->name()->value(),
+        importedFunctions.emplace(index, api::ImportedFunction(index, import->module()->value(), import->name()->value(), funcType,
                                                                api::getApiFunction(import->module()->value(), import->name()->value())));
         index++;
       }

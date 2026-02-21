@@ -835,10 +835,18 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
       /** call */
       {
         auto funcidx = uint32_t(decoder::LEB128Decoder::decodeUnsigned(stream, streamEnd));
+        auto isImported = importedFunctions.find(funcidx) != importedFunctions.end();
 
-        const auto &func = function_section->typeidx()->at(funcidx);
-        const auto &funcType = type_section->functypes()->at(static_cast<size_t>(func->value()));
-        auto parameterTypes = *funcType->parameters()->valtype();
+        auto parameterTypes = std::vector<webassembly_t::val_types_t>{};
+        if (isImported) {
+          auto fn = importedFunctions.at(funcidx);
+          parameterTypes = fn.getParameters();
+        } else {
+          const auto &func = function_section->typeidx()->at(funcidx);
+          const auto &funcType = type_section->functypes()->at(static_cast<size_t>(func->value()));
+          parameterTypes = *funcType->parameters()->valtype();
+        }
+
         asserte(parameterTypes.size() <= 8, "function calls with more than 8 parameters are not supported");
         asserte(stack.size() >= parameterTypes.size(), "insufficient operands on stack for function call");
 
@@ -857,7 +865,7 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
         }
 
         saveRegisters(registerPool, machinecode);
-        if (importedFunctions.find(funcidx) != importedFunctions.end()) {
+        if (isImported) {
           // for imported functions, we can directly emit a branch link to the function pointer in the function table; no need for patching
           auto importFuncAddress = importedFunctions.at(funcidx).getAddress();
           auto addressReg = registerPool.allocateRegister();
@@ -880,6 +888,7 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
         restoreRegisters(registerPool, machinecode);
 
         // get return value
+        // FIXME: consider void functions
         auto reg = registerPool.allocateRegister();
         stack.emplace_back(reg);
         machinecode.push_back(arm64::encode_mov_register(reg, arm64::X0, arm64::reg_size_t::SIZE_64BIT));

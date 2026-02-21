@@ -10,6 +10,6 @@ TEST(extern_extended, imports) {
   auto instance = tiny::ModuleInstance(wasmModule);
   
   auto _start = instance.getFunction<wasm::wasm_i32_t>("_start");
-  // EXPECT_EQ(_start(), 1);
+  EXPECT_EQ(_start(), 1);
 }
 } // namespace
