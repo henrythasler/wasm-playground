@@ -66,8 +66,14 @@ size_t WasmFunction::compile(const webassembly_t::func_t *func, const std::uniqu
     auto it = expr.cbegin();
     auto result_type = (results.size() > 0) ? results.back() : webassembly_t::val_types_t(0);
     controlStack.push_back(assembler::ControlBlock{assembler::ControlBlock::Type::FUNCTION, {}, registerPool, wasmStack, result_type});
-    assembler::assembleExpression(it, expr.end(), variables, registerPool, controlStack, wasmStack, trapHandler, functionCallPatches,
-                                  loadAddressPatches, type_section, function_section, globals, functionTable, importedFunctions, machinecode);
+    try {
+      assembler::assembleExpression(it, expr.end(), variables, registerPool, controlStack, wasmStack, trapHandler, functionCallPatches,
+                                    loadAddressPatches, type_section, function_section, globals, functionTable, importedFunctions, machinecode);
+    } catch (const std::exception &e) {
+      std::cerr << "WasmFunction::compile(): assembleExpression() failed: " << e.what() << std::endl;
+      exit(1);
+    }
+
     asserte(controlStack.size() == 0, "control stack should be empty but has: " + std::to_string(controlStack.size()));
   }
 

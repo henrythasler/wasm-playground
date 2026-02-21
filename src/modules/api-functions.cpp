@@ -5,6 +5,11 @@ int32_t inc(int32_t num) {
   std::cout << "env.inc called with argument: " << num << std::endl;
   return num + 1;
 }
+
+int myPrintf(const char *msg, ...) {
+  std::cout << "env.myPrintf called with argument: " << msg << std::endl;
+  return 0;
+}
 } // namespace env
 
 namespace api {
@@ -12,6 +17,8 @@ std::uintptr_t getApiFunction(const std::string &moduleName, const std::string &
   if (moduleName == "env") {
     if (functionName == "inc") {
       return reinterpret_cast<std::uintptr_t>(&env::inc);
+    } else if (functionName == "myPrintf") {
+      return reinterpret_cast<std::uintptr_t>(&env::myPrintf);
     }
   }
   asserte(false, "getApiFunction(): no API function found for module '" + moduleName + "' and function '" + functionName + "'");

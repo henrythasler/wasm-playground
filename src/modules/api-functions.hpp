@@ -1,4 +1,5 @@
 #pragma once
+#include <cstdint>
 #include <iostream>
 #include <vector>
 
@@ -7,7 +8,8 @@
 
 namespace env {
 int32_t inc(int32_t num);
-}
+int myPrintf(const char *msg, ...);
+} // namespace env
 
 namespace api {
 class ImportedFunction {

@@ -4,7 +4,13 @@ namespace tiny {
 
 WasmModule::WasmModule(const std::vector<uint8_t> &bytecode) {
   loadModule(bytecode);
-  compileModule();
+  try {
+    compileModule();
+  } catch (const std::exception &e) {
+    std::cerr << "WasmModule: compileModule() failed: " << e.what() << std::endl;
+    exit(1);
+  }
+
   linkModule();
 }
 
@@ -142,8 +148,14 @@ void WasmModule::compileModule() {
     const auto &funcType = type_section->functypes()->at(static_cast<size_t>(func->value()));
 
     auto wasmFunction = new WasmFunction();
-    wasmFunction->compile(code->func(), funcType, type_section, function_section, globals, trapHandler, functionTable, importedFunctions,
-                          machinecode);
+    try {
+      wasmFunction->compile(code->func(), funcType, type_section, function_section, globals, trapHandler, functionTable, importedFunctions,
+                            machinecode);
+    } catch (const std::exception &e) {
+      std::cerr << "compileModule(): wasmFunction->compile failed: " << e.what() << std::endl;
+      exit(1);
+    }
+
     wasmFunctions.push_back(wasmFunction);
   }
 
