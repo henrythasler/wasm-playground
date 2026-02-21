@@ -1,10 +1,5 @@
 #include "assembler.hpp"
 
-jmp_buf g_jmpbuf;
-
-RuntimeInfo gRuntimeInfo;
-LinearMemoryInfo gLinearMemoryInfo;
-
 extern "C" void wasmTrapHandler(int error_code) {
   longjmp(g_jmpbuf, error_code);
 }
@@ -835,14 +830,16 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
       /** call */
       {
         auto funcidx = uint32_t(decoder::LEB128Decoder::decodeUnsigned(stream, streamEnd));
+        // std::cout << "\nEmitting call to function index " << funcidx << std::endl;
         auto isImported = importedFunctions.find(funcidx) != importedFunctions.end();
 
         auto parameterTypes = std::vector<webassembly_t::val_types_t>{};
         if (isImported) {
+          // std::cout << "Function index " << funcidx << " is an imported function." << std::endl;
           auto fn = importedFunctions.at(funcidx);
           parameterTypes = fn.getParameters();
         } else {
-          const auto &func = function_section->typeidx()->at(funcidx);
+          const auto &func = function_section->typeidx()->at(funcidx - importedFunctions.size());
           const auto &funcType = type_section->functypes()->at(static_cast<size_t>(func->value()));
           parameterTypes = *funcType->parameters()->valtype();
         }
@@ -850,7 +847,7 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
         asserte(parameterTypes.size() <= 8, "function calls with more than 8 parameters are not supported");
         asserte(stack.size() >= parameterTypes.size(), "insufficient operands on stack for function call");
 
-        std::cout << "Emitting call to function index " << funcidx << " with parameter types: " << wasm::joinValTypes(parameterTypes) << std::endl;
+        // std::cout << "Emitting call to function index " << funcidx << " with parameter types: " << wasm::joinValTypes(parameterTypes) << std::endl;
 
         // move parameters from stack in reverse order into argument registers
         auto targetRegisterNum = parameterTypes.size() - 1;

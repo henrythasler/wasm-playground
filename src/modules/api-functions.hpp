@@ -1,14 +1,17 @@
 #pragma once
+#include <cstdarg>
 #include <cstdint>
 #include <iostream>
 #include <vector>
 
+#include "globals.hpp"
 #include "helper.hpp"
 #include "webassembly.h"
 
 namespace env {
 int32_t inc(int32_t num);
-int myPrintf(const char *msg, ...);
+// int myPrintf(uintptr_t msgPtr, int32_t msgLength);
+int myPrintf(const char *msgPtr, void *args_offset);
 } // namespace env
 
 namespace api {
