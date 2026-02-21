@@ -19,7 +19,7 @@ Progress:
 - Chapter10: ✅
 - Chapter11: ✅
 - Chapter12: ✅
-- Chapter13: 0%
+- Chapter13: 30%
 
 ## Feature Highlights
 
@@ -32,6 +32,7 @@ Progress:
 - Wasm-Stack can not exceed 7 items as the current design stores all stack elements in registers (X9-X15).
 - Machinecode can not exceed 64KiB
 - Entries in the type section are not canonicalization and different entries with the same structure/meaning are treated as different.
+- Function call parameters are limited to 8 as only X0..X7 are used for parameter passing.
 
 ## Prerequisites
 

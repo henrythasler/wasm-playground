@@ -2,6 +2,9 @@
 
 #include <cstdint>
 #include <iostream>
+#include <vector>
+
+#include "webassembly.h"
 
 namespace wasm {
 
@@ -77,5 +80,6 @@ public:
 
 const TrapCategory &trap_category();
 std::error_code make_trap_error(trap_code_t code);
+std::string joinValTypes(const std::vector<webassembly_t::val_types_t> &valTypes);
 
 } // namespace wasm

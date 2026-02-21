@@ -6,6 +6,7 @@
 #include <iostream>
 #include <vector>
 
+#include "api-functions.hpp"
 #include "assembler.hpp"
 #include "builtin.hpp"
 #include "function.hpp"
@@ -20,6 +21,7 @@ private:
   webassembly_t *wasm = nullptr;
   std::vector<Builtin *> builtins;
   std::vector<WasmFunction *> wasmFunctions;
+  std::map<int32_t, api::ImportedFunction> importedFunctions;
   std::vector<uint32_t> machinecode;
   std::vector<uint32_t> linkedMachinecode;
   std::unique_ptr<assembler::FunctionTable> functionTable;

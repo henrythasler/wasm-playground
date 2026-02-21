@@ -5,7 +5,7 @@
 #include "helper.hpp"
 namespace {
 
-TEST(Spectest, imports) {
+TEST(extern_extended, imports) {
   auto wasmModule = helper::loadModule("extern.wasm");
   auto instance = tiny::ModuleInstance(wasmModule);
   

@@ -5,8 +5,10 @@
 #include <iostream>
 #include <vector>
 
+#include "api-functions.hpp"
 #include "assembler.hpp"
 #include "helper.hpp"
+#include "wasm.hpp"
 #include "webassembly.h"
 
 namespace tiny {
@@ -22,16 +24,17 @@ private:
   std::vector<assembler::FunctionCallPatchLocation> functionCallPatches;
   std::vector<assembler::LoadAddressPatchLocation> loadAddressPatches;
 
-  std::string joinValTypes(const std::vector<webassembly_t::val_types_t> &valTypes);
-
 public:
   WasmFunction() = default;
   ~WasmFunction() = default;
 
+  bool isImported = false;
+
   size_t compile(const webassembly_t::func_t *func, const std::unique_ptr<webassembly_t::functype_t> &funcType,
                  webassembly_t::type_section_t *type_section, webassembly_t::function_section_t *function_section,
                  std::unique_ptr<assembler::Globals> &globals, const std::map<wasm::trap_code_t, int32_t> &trapHandler,
-                 std::unique_ptr<assembler::FunctionTable> &functionTable, std::vector<uint32_t> &machinecode);
+                 std::unique_ptr<assembler::FunctionTable> &functionTable, const std::map<int32_t, api::ImportedFunction> &importedFunctions,
+                 std::vector<uint32_t> &machinecode);
 
   std::string getName() const {
     return name;
@@ -42,11 +45,11 @@ public:
   };
 
   std::string getResultString() {
-    return joinValTypes(results);
+    return wasm::joinValTypes(results);
   }
 
   std::string getParameterString() {
-    return joinValTypes(parameters);
+    return wasm::joinValTypes(parameters);
   }
 
   const std::vector<webassembly_t::val_types_t> &getParameters() {

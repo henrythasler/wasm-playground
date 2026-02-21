@@ -212,7 +212,8 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
                         const std::map<wasm::trap_code_t, int32_t> &trapHandler, std::vector<FunctionCallPatchLocation> &functionCallPatchLocations,
                         std::vector<LoadAddressPatchLocation> &loadAddressPatches, webassembly_t::type_section_t *type_section,
                         webassembly_t::function_section_t *function_section, std::unique_ptr<assembler::Globals> &globals,
-                        std::unique_ptr<assembler::FunctionTable> &functionTable, std::vector<uint32_t> &machinecode) {
+                        std::unique_ptr<assembler::FunctionTable> &functionTable, const std::map<int32_t, api::ImportedFunction> &importedFunctions,
+                        std::vector<uint32_t> &machinecode) {
   while (stream != streamEnd) {
     switch (*stream++) {
     case 0x20:
@@ -841,6 +842,8 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
         asserte(parameterTypes.size() <= 8, "function calls with more than 8 parameters are not supported");
         asserte(stack.size() >= parameterTypes.size(), "insufficient operands on stack for function call");
 
+        std::cout << "Emitting call to function index " << funcidx << " with parameter types: " << wasm::joinValTypes(parameterTypes) << std::endl;
+
         // move parameters from stack in reverse order into argument registers
         auto targetRegisterNum = parameterTypes.size() - 1;
         for (auto valtype : parameterTypes) {
@@ -854,11 +857,26 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
         }
 
         saveRegisters(registerPool, machinecode);
-        // emit placeholder for call instruction; needs to be patched later
-        functionCallPatchLocations.push_back(FunctionCallPatchLocation{machinecode.size(), funcidx});
-        // for now, just emit a branch link to the trap handler for address patch errors; will be patched later
-        machinecode.push_back(
-            arm64::encode_branch_link(getTraphandlerOffset(wasm::trap_code_t::AssemblerAddressPatchError, trapHandler, machinecode)));
+        if (importedFunctions.find(funcidx) != importedFunctions.end()) {
+          // for imported functions, we can directly emit a branch link to the function pointer in the function table; no need for patching
+          auto importFuncAddress = importedFunctions.at(funcidx).getAddress();
+          auto addressReg = registerPool.allocateRegister();
+          machinecode.push_back(arm64::encode_mov_immediate(addressReg, uint16_t(importFuncAddress & 0xFFFF), 0, arm64::reg_size_t::SIZE_64BIT));
+          machinecode.push_back(
+              arm64::encode_movk(addressReg, uint16_t((importFuncAddress >> (1 << 4)) & 0xFFFF), 1 << 4, arm64::reg_size_t::SIZE_64BIT));
+          machinecode.push_back(
+              arm64::encode_movk(addressReg, uint16_t((importFuncAddress >> (2 << 4)) & 0xFFFF), 2 << 4, arm64::reg_size_t::SIZE_64BIT));
+          machinecode.push_back(
+              arm64::encode_movk(addressReg, uint16_t((importFuncAddress >> (3 << 4)) & 0xFFFF), 3 << 4, arm64::reg_size_t::SIZE_64BIT));
+          machinecode.push_back(arm64::encode_branch_link_register(addressReg));
+          registerPool.freeRegister(addressReg);
+        } else {
+          // emit placeholder for call instruction; needs to be patched later
+          functionCallPatchLocations.push_back(FunctionCallPatchLocation{machinecode.size(), funcidx});
+          // for now, just emit a branch link to the trap handler for address patch errors; will be patched later
+          machinecode.push_back(
+              arm64::encode_branch_link(getTraphandlerOffset(wasm::trap_code_t::AssemblerAddressPatchError, trapHandler, machinecode)));
+        }
         restoreRegisters(registerPool, machinecode);
 
         // get return value

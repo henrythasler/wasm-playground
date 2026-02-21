@@ -10,6 +10,7 @@
 #include "aarch64-instructions-branch.hpp"
 #include "aarch64-instructions-mem.hpp"
 #include "aarch64-instructions.hpp"
+#include "api-functions.hpp"
 #include "assembler-globals.hpp"
 #include "assembler-memory.hpp"
 #include "assembler-tables.hpp"
@@ -202,5 +203,6 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
                         const std::map<wasm::trap_code_t, int32_t> &trapHandler, std::vector<FunctionCallPatchLocation> &functionCallPatchLocations,
                         std::vector<LoadAddressPatchLocation> &loadAddressPatches, webassembly_t::type_section_t *type_section,
                         webassembly_t::function_section_t *function_section, std::unique_ptr<assembler::Globals> &globals,
-                        std::unique_ptr<assembler::FunctionTable> &functionTable, std::vector<uint32_t> &machinecode);
+                        std::unique_ptr<assembler::FunctionTable> &functionTable, const std::map<int32_t, api::ImportedFunction> &importedFunctions,
+                        std::vector<uint32_t> &machinecode);
 } // namespace assembler

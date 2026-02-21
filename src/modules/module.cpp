@@ -121,12 +121,15 @@ void WasmModule::compileModule() {
 
   if (import_section != nullptr) {
     auto imports = import_section->imports();
+    int index = 0;
     for (const auto &import : *imports) {
       if (import->import_type() == webassembly_t::import_types_t::IMPORT_TYPES_FUNC_TYPE) {
         auto wasmFunction = new WasmFunction();
-        wasmFunction->setName(import->name()->value());
-        // FIXME: link to actual API function
+        wasmFunction->isImported = true;
         wasmFunctions.push_back(wasmFunction);
+        importedFunctions.emplace(index, api::ImportedFunction(index, import->module()->value(), import->name()->value(),
+                                                               api::getApiFunction(import->module()->value(), import->name()->value())));
+        index++;
       }
     }
   }
@@ -138,7 +141,8 @@ void WasmModule::compileModule() {
     const auto &funcType = type_section->functypes()->at(static_cast<size_t>(func->value()));
 
     auto wasmFunction = new WasmFunction();
-    wasmFunction->compile(code->func(), funcType, type_section, function_section, globals, trapHandler, functionTable, machinecode);
+    wasmFunction->compile(code->func(), funcType, type_section, function_section, globals, trapHandler, functionTable, importedFunctions,
+                          machinecode);
     wasmFunctions.push_back(wasmFunction);
   }
 

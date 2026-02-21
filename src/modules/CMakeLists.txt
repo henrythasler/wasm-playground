@@ -10,6 +10,7 @@ add_library(tiny_modules STATIC
     assembler-globals.cpp
     assembler-memory.cpp
     builtin.cpp
+    api-functions.cpp
     function.cpp
     runtime.cpp
     leb128.cpp
