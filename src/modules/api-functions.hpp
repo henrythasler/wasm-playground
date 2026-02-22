@@ -1,6 +1,7 @@
 #pragma once
 #include <cstdarg>
 #include <cstdint>
+#include <cstring>
 #include <iostream>
 #include <vector>
 
@@ -11,10 +12,50 @@
 namespace env {
 int32_t inc(int32_t num);
 // int myPrintf(uintptr_t msgPtr, int32_t msgLength);
-int myPrintf(const char *msgPtr, void *args_offset);
+int myPrintf(const char *format, const void *args_buffer);
 } // namespace env
 
 namespace api {
+
+class NaturalAlignedArgReader {
+private:
+  const uint8_t *buffer;
+  size_t offset;
+
+  // Align offset to specified boundary
+  void align(size_t alignment) {
+    offset = (offset + alignment - 1) & ~(alignment - 1);
+  }
+
+public:
+  NaturalAlignedArgReader(const void *buf) : buffer(static_cast<const uint8_t *>(buf)), offset(0) {
+  }
+
+  int32_t read_int32() {
+    align(4); // Natural alignment for int32_t
+    int32_t value;
+    memcpy(&value, buffer + offset, sizeof(value));
+    offset += sizeof(value);
+    return value;
+  }
+
+  int64_t read_int64() {
+    align(8); // Natural alignment for int64_t
+    int64_t value;
+    memcpy(&value, buffer + offset, sizeof(value));
+    offset += sizeof(value);
+    return value;
+  }
+
+  uint64_t read_uint64() {
+    align(8); // Natural alignment for uint64_t
+    uint64_t value;
+    memcpy(&value, buffer + offset, sizeof(value));
+    offset += sizeof(value);
+    return value;
+  }
+};
+
 class ImportedFunction {
 private:
   int32_t index_;

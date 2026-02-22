@@ -10,8 +10,8 @@ TEST(extern_extended, myPrint) {
   auto instance = tiny::ModuleInstance(wasmModule);
   
   auto _start = instance.getFunction<wasm::wasm_i32_t>("_start");
-  // len("[mixed] 1 2 9223372036854775807 48879 3 4\n")
-  // EXPECT_EQ(_start(), 42);
+  // len("[mixed] 1 2 9223372036854775807 48879 3 4\n") == 42
+  EXPECT_EQ(_start(), 42);
 }
 
 TEST(extern, myPrint) {
