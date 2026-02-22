@@ -81,28 +81,28 @@ if(GENERATED_WAST_FILES)
   message(STATUS "Added custom target to compile wast files: ${GENERATED_WAST_FILES}")
 endif()
 
-# compile all c-files in assets-folder to wasm using wasi-sdk if not already done
-file(GLOB SRC_FILES "${CMAKE_CURRENT_SOURCE_DIR}/assets/*.c")
-foreach(SRC_FILE ${SRC_FILES})
-  get_filename_component(SRC_FILENAME ${SRC_FILE} NAME_WE)
-  set(WASM_FILE "${CMAKE_CURRENT_SOURCE_DIR}/assets/${SRC_FILENAME}.wasm")
-  if(NOT EXISTS ${WASM_FILE} OR ${SRC_FILE} IS_NEWER_THAN ${WASM_FILE})
-    add_custom_command(
-      OUTPUT ${WASM_FILE}
-      COMMAND clang --target=wasm32 -nostdlib -Wl,--allow-undefined,--export-table,--gc-sections,--no-entry,--export=_start -o ${WASM_FILE} ${SRC_FILE}
-      # COMMAND /opt/wasi-sdk/bin/clang -fdata-sections -ffunction-sections -mcpu=mvp -mmutable-globals -Wl,--allow-undefined,--export-table,--gc-sections,--no-entry,--export=_start -lstdc++ -z stack-size=8192 -nostartfiles -o ${WASM_FILE} ${SRC_FILE}
-      DEPENDS ${SRC_FILE}
-      COMMENT "Compiling ${SRC_FILE}"
-      VERBATIM
-    )
-    list(APPEND GENERATED_C_FILES ${WASM_FILE})
-  endif()
-endforeach()
+# # compile all c-files in assets-folder to wasm using wasi-sdk if not already done
+# file(GLOB SRC_FILES "${CMAKE_CURRENT_SOURCE_DIR}/assets/*.c")
+# foreach(SRC_FILE ${SRC_FILES})
+#   get_filename_component(SRC_FILENAME ${SRC_FILE} NAME_WE)
+#   set(WASM_FILE "${CMAKE_CURRENT_SOURCE_DIR}/assets/${SRC_FILENAME}.wasm")
+#   if(NOT EXISTS ${WASM_FILE} OR ${SRC_FILE} IS_NEWER_THAN ${WASM_FILE})
+#     add_custom_command(
+#       OUTPUT ${WASM_FILE}
+#       COMMAND clang --target=wasm32 -nostdlib -Wl,--allow-undefined,--export-table,--gc-sections,--no-entry,--export=_start -o ${WASM_FILE} ${SRC_FILE}
+#       # COMMAND /opt/wasi-sdk/bin/clang -fdata-sections -ffunction-sections -mcpu=mvp -mmutable-globals -Wl,--allow-undefined,--export-table,--gc-sections,--no-entry,--export=_start -lstdc++ -z stack-size=8192 -nostartfiles -o ${WASM_FILE} ${SRC_FILE}
+#       DEPENDS ${SRC_FILE}
+#       COMMENT "Compiling ${SRC_FILE}"
+#       VERBATIM
+#     )
+#     list(APPEND GENERATED_C_FILES ${WASM_FILE})
+#   endif()
+# endforeach()
 
-if(GENERATED_C_FILES)
-  add_custom_target(compile_c_files ALL DEPENDS ${GENERATED_C_FILES})
-  message(STATUS "Added custom target to compile c files: ${GENERATED_C_FILES}")
-endif()
+# if(GENERATED_C_FILES)
+#   add_custom_target(compile_c_files ALL DEPENDS ${GENERATED_C_FILES})
+#   message(STATUS "Added custom target to compile c files: ${GENERATED_C_FILES}")
+# endif()
 
 add_executable(all_tests
   # test helper

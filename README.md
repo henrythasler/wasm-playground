@@ -19,7 +19,7 @@ Progress:
 - Chapter10: ✅
 - Chapter11: ✅
 - Chapter12: ✅
-- Chapter13: 80%
+- Chapter13: 90%
 
 ## Feature Highlights
 
@@ -133,6 +133,7 @@ A global variable is used to store the stack base address obtained via pthread_a
 - The chapter description should state which new wasm-instructions need to be implemented. Alternatively, all instructions that are required in a later chapter should be implemented during the initial chapter (e.g. `i32.ge_u​` is first required in chapter 11 but could be implemented as part of chapter 4)
 - Function calls do not depend on each other until chapter 11 and people can get away to create a new runtime instance for each function-call in the spec-tests. It should be required sooner (maybe as a new chapter) to create a runtime that can manage multiple function calls.
 - Chapter 11 uncovered several bugs from previous chapters (br_if, if-else). The test coverage in the chapters should be increased to identify such bugs earlier.
+- Wasi-SDK has no pre-build binaries that can be installed in the CI (using `ubuntu-24.04-arm`).
 
 ## Common Pitfalls
 

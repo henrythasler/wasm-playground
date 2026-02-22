@@ -12,11 +12,11 @@ int myPrintf(const char *format, const void *args_buffer) {
   api::NaturalAlignedArgReader reader(actualArgsBuffer);
 
   // debug: print raw arguments from buffer
-  for (auto i = 0; i < 8; i++) {
-    std::cout << std::hex << "arg[" << i << "]: "
-              << *(reinterpret_cast<uint32_t *>(reinterpret_cast<uintptr_t>(actualArgsBuffer) + reinterpret_cast<uintptr_t>(i * sizeof(uint32_t))))
-              << std::dec << std::endl;
-  }
+  // for (auto i = 0; i < 8; i++) {
+  //   std::cout << std::hex << "arg[" << i << "]: "
+  //             << *(reinterpret_cast<uint32_t *>(reinterpret_cast<uintptr_t>(actualArgsBuffer) + reinterpret_cast<uintptr_t>(i * sizeof(uint32_t))))
+  //             << std::dec << std::endl;
+  // }
 
   const char *p = format + gLinearMemoryInfo.address;
   char output[4096];

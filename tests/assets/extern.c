@@ -1,8 +1,17 @@
 extern int inc(int number);
 extern int myPrintf(const char *msg, ...);
 
+int increment(int number) {
+  return inc(number);
+}
+
 int simplePrint() {
   return myPrintf("%d %d %llu\n", 1, 2, (unsigned long long)0x7fffffffffffffff);
+}
+
+int mixedPrint() {
+  myPrintf("[i64] %llx %llx %llx\n", (unsigned long long)0xdead, (unsigned long long)0xbeef, (unsigned long long)0x1234);
+  return myPrintf("[mixed] %d %d %llu %llu %i %i\n", 1, 2, (unsigned long long)0x7fffffffffffffff, (unsigned long long)0xbeef, -3, -4);
 }
 
 int complexPrint() {
@@ -15,7 +24,8 @@ int complexPrint() {
 }
 
 int _start() {
-  inc(0);
-  simplePrint();
-  return complexPrint();
+  // return inc(0);
+  // return simplePrint();
+  return mixedPrint();
+  // return complexPrint();
 }

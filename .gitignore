@@ -17,3 +17,7 @@ tests/machinecode/
 tests/assets/*.json
 tests/assets/*.wasm
 *.bkp
+
+# Add files compiled with wasi-sdk
+!tests/assets/myPrint.wasm
+!tests/assets/extern.wasm
