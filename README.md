@@ -19,7 +19,7 @@ Progress:
 - Chapter10: ✅
 - Chapter11: ✅
 - Chapter12: ✅
-- Chapter13: 90%
+- Chapter13: ✅
 
 ## Feature Highlights
 
@@ -188,6 +188,7 @@ A global variable is used to store the stack base address obtained via pthread_a
 ### Programming
 
 - [Linux System Calls](https://syscall.sh/)
+- [C/C++ open-source libraries with minimal dependencies](https://github.com/r-lyeh/single_file_libs)
 
 ### Build Pipeline
 
