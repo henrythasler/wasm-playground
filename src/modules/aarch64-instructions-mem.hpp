@@ -4,7 +4,7 @@
 #include <stdint.h>
 
 #include "aarch64-instructions.hpp"
-#include "helper.hpp"
+#include "debug.hpp"
 
 namespace arm64 {
 

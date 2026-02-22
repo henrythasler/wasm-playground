@@ -14,8 +14,8 @@
 #include "assembler-globals.hpp"
 #include "assembler-memory.hpp"
 #include "assembler-tables.hpp"
+#include "debug.hpp"
 #include "globals.hpp"
-#include "helper.hpp"
 #include "leb128.hpp"
 #include "wasm.hpp"
 #include "webassembly.h"
@@ -72,6 +72,11 @@ public:
   }
 
   webassembly_t::val_types_t getType(uint32_t id) {
+    if (id >= valTypes.size()) {
+      std::cerr << "Error: trying to get type of variable at index " << id << " but only " << valTypes.size() << " variables are defined."
+                << std::endl;
+      std::abort();
+    }
     return (valTypes.at(id));
   }
 

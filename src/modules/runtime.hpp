@@ -9,7 +9,7 @@
 #include <vector>
 
 #include "assembler.hpp"
-#include "helper.hpp"
+#include "debug.hpp"
 #include "module.hpp"
 #include "wasm.hpp"
 

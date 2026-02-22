@@ -1,4 +1,4 @@
-#include "helper.hpp"
+#include "debug.hpp"
 #include "wasm.hpp"
 #include "webassembly.h"
 

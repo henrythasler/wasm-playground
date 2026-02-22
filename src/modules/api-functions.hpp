@@ -4,8 +4,8 @@
 #include <iostream>
 #include <vector>
 
+#include "debug.hpp"
 #include "globals.hpp"
-#include "helper.hpp"
 #include "webassembly.h"
 
 namespace env {

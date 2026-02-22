@@ -4,6 +4,7 @@ cmake_minimum_required(VERSION 3.20)
 add_library(tiny_modules STATIC
     loader.cpp
     module.cpp
+    debug.cpp
     wasm.cpp
     assembler.cpp
     assembler-tables.cpp

@@ -3,7 +3,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "helper.hpp"
+#include "debug.hpp"
 
 namespace arm64 {
 #define AARCH64_INT32_SIZE 4

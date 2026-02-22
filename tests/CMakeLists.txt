@@ -131,6 +131,7 @@ add_executable(all_tests
   stack_overflow_test.cpp
   # additional test cases
   echo_test.cpp
+  local_extended_test.cpp
   compare_test.cpp
   division_test.cpp
   branch_test.cpp

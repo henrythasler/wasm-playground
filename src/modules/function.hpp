@@ -7,7 +7,7 @@
 
 #include "api-functions.hpp"
 #include "assembler.hpp"
-#include "helper.hpp"
+#include "debug.hpp"
 #include "wasm.hpp"
 #include "webassembly.h"
 

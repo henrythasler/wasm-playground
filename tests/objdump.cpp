@@ -48,6 +48,7 @@ void writer_test() {
 TEST(objdump, wasm) {
   std::vector<std::string> wasmFiles = {
       // extended tests
+      "local-extended",
       "abs",
       "bit",
       "block-extended",

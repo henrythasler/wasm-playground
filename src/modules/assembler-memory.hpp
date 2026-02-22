@@ -1,7 +1,7 @@
 #include <algorithm>
 #include <iomanip>
 
-#include "helper.hpp"
+#include "debug.hpp"
 #include "leb128.hpp"
 #include "wasm.hpp"
 #include "webassembly.h"

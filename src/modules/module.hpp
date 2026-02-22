@@ -9,8 +9,8 @@
 #include "api-functions.hpp"
 #include "assembler.hpp"
 #include "builtin.hpp"
+#include "debug.hpp"
 #include "function.hpp"
-#include "helper.hpp"
 #include "module.hpp"
 #include "webassembly.h"
 

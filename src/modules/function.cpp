@@ -36,7 +36,8 @@ size_t WasmFunction::compile(const webassembly_t::func_t *func, const std::uniqu
 
   // reserve additional space for local variables on the stack
   for (auto &local : *func->locals()) {
-    locals[local->valtype()] = uint32_t(local->num_valtype()->value());
+    // std::cout << local->num_valtype()->value() << " local(s) of type " << local->valtype() << std::endl;
+    locals[local->valtype()] += uint32_t(local->num_valtype()->value());
     stackSize += assembler::mapWasmValTypeToArm64Size(local->valtype()) * uint32_t(local->num_valtype()->value());
   }
 
@@ -71,6 +72,7 @@ size_t WasmFunction::compile(const webassembly_t::func_t *func, const std::uniqu
                                     loadAddressPatches, type_section, function_section, globals, functionTable, importedFunctions, machinecode);
     } catch (const std::exception &e) {
       std::cerr << "WasmFunction::compile(): assembleExpression() failed: " << e.what() << std::endl;
+      print_backtrace();
       exit(1);
     }
 
