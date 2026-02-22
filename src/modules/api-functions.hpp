@@ -39,6 +39,14 @@ public:
     return value;
   }
 
+  uint32_t read_uint32() {
+    align(4); // Natural alignment for uint32_t
+    uint32_t value;
+    memcpy(&value, buffer + offset, sizeof(value));
+    offset += sizeof(value);
+    return value;
+  }
+
   int64_t read_int64() {
     align(8); // Natural alignment for int64_t
     int64_t value;

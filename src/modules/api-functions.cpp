@@ -11,11 +11,12 @@ int myPrintf(const char *format, const void *args_buffer) {
       reinterpret_cast<const char *>(reinterpret_cast<uintptr_t>(args_buffer) + static_cast<uintptr_t>(gLinearMemoryInfo.address));
   api::NaturalAlignedArgReader reader(actualArgsBuffer);
 
-  // for (auto i = 0; i < 8; i++) {
-  //   std::cout << std::hex << "arg[" << i << "]: "
-  //             << *(reinterpret_cast<uint32_t *>(reinterpret_cast<uintptr_t>(actualArgsBuffer) + reinterpret_cast<uintptr_t>(i * sizeof(uint32_t))))
-  //             << std::dec << std::endl;
-  // }
+  // debug: print raw arguments from buffer
+  for (auto i = 0; i < 8; i++) {
+    std::cout << std::hex << "arg[" << i << "]: "
+              << *(reinterpret_cast<uint32_t *>(reinterpret_cast<uintptr_t>(actualArgsBuffer) + reinterpret_cast<uintptr_t>(i * sizeof(uint32_t))))
+              << std::dec << std::endl;
+  }
 
   const char *p = format + gLinearMemoryInfo.address;
   char output[4096];
@@ -26,13 +27,42 @@ int myPrintf(const char *format, const void *args_buffer) {
     if (*p == '%' && *(p + 1)) {
       p++;
       switch (*p) {
+      case 'p': {
+        int32_t val = reader.read_int32();
+        out += sprintf(out, "%p", reinterpret_cast<void *>(val + gLinearMemoryInfo.address));
+        break;
+      }
+      case 's': {
+        int32_t val = reader.read_int32();
+        out += sprintf(out, "%s", reinterpret_cast<const char *>(val + gLinearMemoryInfo.address));
+        break;
+      }
+      case 'c': {
+        int32_t val = reader.read_int32();
+        out += sprintf(out, "%c", val);
+        break;
+      }
+      case 'i': {
+        int32_t val = reader.read_int32();
+        out += sprintf(out, "%i", val);
+        break;
+      }
       case 'd': {
         int32_t val = reader.read_int32();
         out += sprintf(out, "%d", val);
         break;
       }
+      case 'u': {
+        uint32_t val = reader.read_uint32();
+        out += sprintf(out, "%u", val);
+        break;
+      }
       case 'l': {
-        if (*(p + 1) == 'd' || *(p + 1) == 'l') {
+        if (*(p + 1) == 'u') {
+          p++;
+          uint64_t val = reader.read_uint64();
+          out += sprintf(out, "%lu", val);
+        } else if (*(p + 1) == 'd' || *(p + 1) == 'l') {
           p++;
           if (*p == 'l' && *(p + 1) == 'd') {
             p++;
