@@ -101,6 +101,7 @@ if __name__ == "__main__":
         sys.exit(1)
 
     allow_list = [
+        "local.json",
         "loop.json",
         "div.json",
         "linear-memory-data.json",

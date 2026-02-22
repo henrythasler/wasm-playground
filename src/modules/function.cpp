@@ -10,7 +10,7 @@ size_t WasmFunction::compile(const webassembly_t::func_t *func, const std::uniqu
   // stack size allocated for this function; value may change during compilation
   uint32_t stackSize = 0;
   // set of local variables
-  assembler::Variables variables;
+  assembler::Variables localVariables;
   // available registers to hold wasmStack values; can be extended with spilling to memory
   assembler::RegisterPool registerPool;
   // WebAssembly stack; currently only registers are used to hold values
@@ -36,9 +36,10 @@ size_t WasmFunction::compile(const webassembly_t::func_t *func, const std::uniqu
 
   // reserve additional space for local variables on the stack
   for (auto &local : *func->locals()) {
-    // std::cout << local->num_valtype()->value() << " local(s) of type " << local->valtype() << std::endl;
-    locals[local->valtype()] += uint32_t(local->num_valtype()->value());
-    stackSize += assembler::mapWasmValTypeToArm64Size(local->valtype()) * uint32_t(local->num_valtype()->value());
+    for (int i = 0; i < local->num_valtype()->value(); i++) {
+      locals.emplace_back(local->valtype());
+      stackSize += assembler::mapWasmValTypeToArm64Size(local->valtype());
+    }
   }
 
   machinecodeOffset = machinecode.size();
@@ -52,13 +53,16 @@ size_t WasmFunction::compile(const webassembly_t::func_t *func, const std::uniqu
   // save parameters to stack
   if (parameters.size() > 0) {
     // all parameters are the first n locals
-    stackPosition = assembler::saveParametersToStack(parameters, stackPosition, variables, machinecode);
+    stackPosition = assembler::saveParametersToStack(parameters, stackPosition, localVariables, machinecode);
   }
 
   // initialize locals on stack
   if (locals.size() > 0) {
-    stackPosition = assembler::initLocals(locals, stackPosition, variables, machinecode);
+    stackPosition = assembler::initLocals(locals, stackPosition, localVariables, machinecode);
   }
+
+  // dump localVariables info
+  // localVariables.dump();
 
   // Business logic
   if (func->expr().size() > 0) {
@@ -68,7 +72,7 @@ size_t WasmFunction::compile(const webassembly_t::func_t *func, const std::uniqu
     auto result_type = (results.size() > 0) ? results.back() : webassembly_t::val_types_t(0);
     controlStack.push_back(assembler::ControlBlock{assembler::ControlBlock::Type::FUNCTION, {}, registerPool, wasmStack, result_type});
     try {
-      assembler::assembleExpression(it, expr.end(), variables, registerPool, controlStack, wasmStack, trapHandler, functionCallPatches,
+      assembler::assembleExpression(it, expr.end(), localVariables, registerPool, controlStack, wasmStack, trapHandler, functionCallPatches,
                                     loadAddressPatches, type_section, function_section, globals, functionTable, importedFunctions, machinecode);
     } catch (const std::exception &e) {
       std::cerr << "WasmFunction::compile(): assembleExpression() failed: " << e.what() << std::endl;

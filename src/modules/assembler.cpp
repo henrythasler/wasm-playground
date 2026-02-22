@@ -44,16 +44,14 @@ uint32_t saveParametersToStack(const std::vector<webassembly_t::val_types_t> &pa
   return offset;
 }
 
-uint32_t initLocals(const std::map<webassembly_t::val_types_t, uint32_t> &locals, uint32_t offset, assembler::Variables &variables,
+uint32_t initLocals(const std::vector<webassembly_t::val_types_t> &locals, uint32_t offset, assembler::Variables &variables,
                     std::vector<uint32_t> &machinecode) {
   for (auto local : locals) {
-    auto registerSize = map_valtype_to_regsize(local.first);
-    for (uint32_t i = 0; i < local.second; i++) {
-      auto sourceReg = (registerSize == arm64::reg_size_t::SIZE_32BIT) ? arm64::reg_t::WZR : arm64::reg_t::XZR;
-      machinecode.push_back(arm64::encode_str_unsigned_offset(sourceReg, arm64::SP, uint16_t(offset), registerSize));
-      variables.append(offset, local.first);
-      offset -= mapWasmValTypeToArm64Size(local.first);
-    }
+    auto registerSize = map_valtype_to_regsize(local);
+    auto sourceReg = (registerSize == arm64::reg_size_t::SIZE_32BIT) ? arm64::reg_t::WZR : arm64::reg_t::XZR;
+    machinecode.push_back(arm64::encode_str_unsigned_offset(sourceReg, arm64::SP, uint16_t(offset), registerSize));
+    variables.append(offset, local);
+    offset -= mapWasmValTypeToArm64Size(local);
   }
   return offset;
 }

@@ -80,6 +80,13 @@ public:
     return (valTypes.at(id));
   }
 
+  void dump() {
+    std::cout << "Variables dump (offset: " << offset_ << "):" << std::endl;
+    for (size_t i = 0; i < addresses.size(); i++) {
+      std::cout << "  id: " << i << ", address: " << addresses[i] << ", type: " << valTypes[i] << std::endl;
+    }
+  }
+
   void set(uint32_t id, uint32_t address, webassembly_t::val_types_t valType) {
     addresses[id] = address;
     valTypes[id] = valType;
@@ -139,7 +146,7 @@ arm64::reg_size_t map_valtype_to_regsize(const webassembly_t::val_types_t type);
 uint32_t mapWasmValTypeToArm64Size(webassembly_t::val_types_t valType);
 uint32_t saveParametersToStack(const std::vector<webassembly_t::val_types_t> &parameters, uint32_t offset, assembler::Variables &variables,
                                std::vector<uint32_t> &machinecode);
-uint32_t initLocals(const std::map<webassembly_t::val_types_t, uint32_t> &locals, uint32_t offset, assembler::Variables &variables,
+uint32_t initLocals(const std::vector<webassembly_t::val_types_t> &locals, uint32_t offset, assembler::Variables &variables,
                     std::vector<uint32_t> &machinecode);
 void loadResult(const std::vector<webassembly_t::val_types_t> &results, const std::vector<arm64::reg_t> &wasmStack,
                 std::vector<uint32_t> &machinecode);

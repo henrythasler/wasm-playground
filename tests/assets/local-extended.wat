@@ -1,5 +1,19 @@
 (module
+  (export "store_i64" (func $store_i64))
+  (export "store_i64_const" (func $store_i64_const))
   (export "many_locals" (func $many_locals))
+  (func $store_i64 (param $value i64) (result i64)
+    (local $var0 i32) (local $var1 i64) (local $var2 i32)
+    local.get $value
+    local.set $var1
+    local.get $var1
+  )
+  (func $store_i64_const (result i64)
+    (local $var0 i32) (local $var1 i64) (local $var2 i32)
+    i64.const 9223372036854775807
+    local.set $var1
+    local.get $var1
+  )  
   (func $many_locals (param $value i32) (result i32)
     (local $var0 i32) (local $var1 i32) (local $var2 i32) (local $var3 i32) (local $var4 i32) (local $var5 i32) (local $var6 i32) (local $var7 i32) (local $var8 i32) (local $var9 i32) (local $var10 i32) (local $var11 i32) (local $var12 i64) (local $var13 i64) (local $var14 i64) (local $var15 i32) (local $var16 i32) (local $var17 i32) (local $var18 i32) (local $var19 i32) (local $var20 i32) (local $var21 i32)
     local.get $value

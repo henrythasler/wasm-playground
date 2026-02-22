@@ -134,6 +134,10 @@ A global variable is used to store the stack base address obtained via pthread_a
 - Function calls do not depend on each other until chapter 11 and people can get away to create a new runtime instance for each function-call in the spec-tests. It should be required sooner (maybe as a new chapter) to create a runtime that can manage multiple function calls.
 - Chapter 11 uncovered several bugs from previous chapters (br_if, if-else). The test coverage in the chapters should be increased to identify such bugs earlier.
 
+## Common Pitfalls
+
+- Emitting an instruction with the wrong register size (W8 instead of X8). This error is only noticeable when the value actually exceeds the 32-bit range. This error can be avoided by a careful unit-test design that covers a wide variety of value ranges.
+
 ## References
 
 ### ARM64 Introduction

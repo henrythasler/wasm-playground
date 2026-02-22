@@ -19,7 +19,7 @@ private:
   size_t machinecodeSize = 0;
   std::string name;
   std::vector<webassembly_t::val_types_t> parameters;
-  std::map<webassembly_t::val_types_t, uint32_t> locals;
+  std::vector<webassembly_t::val_types_t> locals;
   std::vector<webassembly_t::val_types_t> results;
   std::vector<assembler::FunctionCallPatchLocation> functionCallPatches;
   std::vector<assembler::LoadAddressPatchLocation> loadAddressPatches;
