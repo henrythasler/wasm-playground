@@ -21,9 +21,7 @@ int myPrintf(const char *msgPtr, void *args_offset) {
               << std::dec << std::endl;
   }
 
-  int result = vprintf(actualMsgPtr, args);
-  return result;
-  return 0;
+  return vfprintf(stdout, actualMsgPtr, args);
 }
 } // namespace env
 

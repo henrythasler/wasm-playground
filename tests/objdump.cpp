@@ -87,7 +87,7 @@ TEST(objdump, wasm) {
       "linear-memory-grow.3",
       "linear-memory-grow.4",
       "stack_overflow.0",
-      // "myPrint",
+      "myPrint",
   };
 
   for (const auto &wasmFile : wasmFiles) {

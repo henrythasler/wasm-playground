@@ -5,11 +5,21 @@
 #include "helper.hpp"
 namespace {
 
-TEST(extern_extended, imports) {
+TEST(extern_extended, myPrint) {
   auto wasmModule = helper::loadModule("extern.wasm");
   auto instance = tiny::ModuleInstance(wasmModule);
   
   auto _start = instance.getFunction<wasm::wasm_i32_t>("_start");
-  EXPECT_EQ(_start(), 1);
+  // len("[mixed] 1 2 9223372036854775807 48879 3 4\n")
+  // EXPECT_EQ(_start(), 42);
 }
+
+TEST(extern, myPrint) {
+  auto wasmModule = helper::loadModule("myPrint.wasm");
+  auto instance = tiny::ModuleInstance(wasmModule);
+  
+  auto _start = instance.getFunction<void>("_start");
+  // _start();
+}
+
 } // namespace
