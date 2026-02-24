@@ -264,6 +264,13 @@ TEST(instruction, bitshift) {
   EXPECT_EQ_HEX(encode_lsr_immediate(W3, W7, 3, reg_size_t::SIZE_32BIT), 0x53037CE3);
 }
 
+TEST(instruction, bitops) {
+  // and w13,w14,w15, LSL #16
+  EXPECT_EQ_HEX(encode_and(W13, W14, W15, reg_shift_t::SHIFT_LSL, 16, reg_size_t::SIZE_32BIT), 0x0A0F41CD);
+  // AND X2, X0, X1
+  EXPECT_EQ_HEX(encode_and(X2, X0, X1, reg_shift_t::SHIFT_LSL, 0, reg_size_t::SIZE_64BIT), 0x8A010002);
+}
+
 TEST(instruction, misc) {
   // nop
   EXPECT_EQ_HEX(encode_nop(), 0xD503201F);

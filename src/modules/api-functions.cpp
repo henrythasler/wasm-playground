@@ -1,9 +1,38 @@
+#define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "api-functions.hpp"
+#include "stb_image_write.h"
 
 namespace env {
 int32_t inc(int32_t num) {
   std::cout << "env.inc called with argument: " << num << std::endl;
   return num + 1;
+}
+
+/**
+ * Writes an image to a file in PNG format.
+ *
+ * @param filename: The name of the file to write the image to.
+ * @param w: The width of the image in pixels.
+ * @param h: The height of the image in pixels.
+ * @param comp: The number of color components per pixel (e.g., 3 for RGB, 4 for RGBA).
+ * @param data: A pointer to the image data in memory. The data should be in row-major order, with each pixel's color components stored
+ * sequentiallyly.
+ * @param stride_in_bytes: The number of bytes between the start of one row of pixels and the start of the next row. This allows for padding at the
+ * end of rows if necessary.
+ * @returns A non-zero value on success, or 0 on failure. Note: The image data should be in the format expected by the
+ * stbi_write_png function, which is typically an array of unsigned char values representing the color components of each pixel. The function will
+ * write the image data to the specified file in PNG format, using the provided width, height, and number of color components to correctly interpret
+ * the data.
+ */
+int32_t write_png(const char *filename, int w, int h, int comp, const void *dataPtr, int stride_in_bytes) {
+  const char *actualFilename =
+      reinterpret_cast<const char *>(reinterpret_cast<uintptr_t>(filename) + static_cast<uintptr_t>(gLinearMemoryInfo.address));
+  const void *actualData = reinterpret_cast<const void *>(reinterpret_cast<uintptr_t>(dataPtr) + static_cast<uintptr_t>(gLinearMemoryInfo.address));
+
+  std::cout << "env.write_png called with filename: " << actualFilename << ", width: " << w << ", height: " << h << ", components: " << comp
+            << ", stride_in_bytes: " << stride_in_bytes << ", data: " << std::hex << actualData << std::dec << std::endl;
+
+  return stbi_write_png(actualFilename, w, h, comp, actualData, stride_in_bytes);
 }
 
 int myPrintf(const char *format, const void *args_buffer) {
@@ -102,6 +131,8 @@ std::uintptr_t getApiFunction(const std::string &moduleName, const std::string &
       return reinterpret_cast<std::uintptr_t>(&env::inc);
     } else if (functionName == "myPrintf") {
       return reinterpret_cast<std::uintptr_t>(&env::myPrintf);
+    } else if (functionName == "write_png") {
+      return reinterpret_cast<std::uintptr_t>(&env::write_png);
     }
   }
   asserte(false, "getApiFunction(): no API function found for module '" + moduleName + "' and function '" + functionName + "'");

@@ -370,6 +370,21 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
         registerPool.freeRegister(reg2);
         break;
       }
+    case 0x71:
+    case 0x83:
+      /** (i32|i64).bitwise_and */
+      {
+        asserte(stack.size() >= 2, "insufficient operands on stack for bitwise and");
+        auto reg2 = stack.at(stack.size() - 1);
+        auto reg1 = stack.at(stack.size() - 2);
+
+        auto registerSize = (*(stream - 1) == 0x71) ? arm64::reg_size_t::SIZE_32BIT : arm64::reg_size_t::SIZE_64BIT;
+        machinecode.push_back(arm64::encode_and(reg1, reg1, reg2, arm64::reg_shift_t::SHIFT_LSL, 0, registerSize));
+
+        stack.pop_back();
+        registerPool.freeRegister(reg2);
+        break;
+      }
     case 0x6d:
     case 0x6e:
     case 0x7f:

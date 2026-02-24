@@ -12,6 +12,8 @@ namespace arm64 {
 uint32_t encode_clz(reg_t rd, reg_t rn, reg_size_t size);
 uint32_t encode_rbit(reg_t rd, reg_t rn, reg_size_t size);
 
+uint32_t encode_and(reg_t rd, reg_t rn, reg_t rm, reg_shift_t shift, uint8_t shift_amount, reg_size_t size);
+
 /* bit shift and move */
 uint32_t encode_ubfm(reg_t rd, reg_t rn, uint8_t immr6, uint8_t imms6, reg_size_t size);
 uint32_t encode_lsr_immediate(reg_t rd, reg_t rn, uint8_t shift, reg_size_t size);
