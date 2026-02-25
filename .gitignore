@@ -22,4 +22,3 @@ tests/assets/*.wasm
 !tests/assets/myPrint.wasm
 !tests/assets/extern.wasm
 !tests/assets/fractal.wasm
-test.png

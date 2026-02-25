@@ -200,4 +200,12 @@ TEST(memory_extended_grow, memory_size) {
   }
 }
 
+TEST(memory_extended, loop) {
+  auto wasmModule = helper::loadModule("memory.wasm");
+  auto instance = tiny::ModuleInstance(wasmModule);
+
+  auto loop = instance.getFunction<wasm::wasm_i32_t>("loop");
+  EXPECT_EQ(loop(), 0);
+}
+
 } // namespace

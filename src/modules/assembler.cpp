@@ -668,7 +668,7 @@ void assembleExpression(std::vector<uint8_t>::const_iterator &stream, std::vecto
         }
 
         if (controlBlock.type == ControlBlock::LOOP) {
-          int32_t offset = (int32_t(controlBlock.patchLocations.back().offset) - int32_t(machinecode.size()) + 1) << 2;
+          int32_t offset = (int32_t(controlBlock.patchLocations.back().offset) - int32_t(machinecode.size())) << 2;
           machinecode.push_back(arm64::encode_branch(offset));
         } else if (controlBlock.type == ControlBlock::BLOCK) {
           controlBlock.patchLocations.push_back({machinecode.size(), stack.size()});
