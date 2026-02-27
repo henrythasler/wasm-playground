@@ -32,7 +32,7 @@ As a bonus I implemented another import function to write a PNG file to disk (`w
 ## Feature Highlights
 
 - Uses own [Kaitai Struct](https://github.com/henrythasler/wasm-kaitai-struct) to parse wasm-files
-- Custom ELF writer to save generated machinecode to object files that can be disassembled with aarch64-linux-gnu-objdump
+- Custom ELF writer to save generated machinecode to object files that can be [disassembled with aarch64-linux-gnu-objdump](tests/machinecode/empty-fn.asm).
 - gtest is fetched on demand by cmake (no local installation required)
 
 ## Limitations and Known Issues

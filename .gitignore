@@ -10,8 +10,8 @@ arm64/*
 build/
 coverage/
 
-# machinecode dumps
-tests/machinecode/
+# machinecode dumps but allow disassembly
+tests/machinecode/*.o
 
 # ignore compiled files
 tests/assets/*.json
