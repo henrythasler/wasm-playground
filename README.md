@@ -23,7 +23,7 @@ Progress:
 
 ### Bonus Chapter
 
-As a bonus I implemented another import function to write a PNG file to disk (`write_png()`). The only additional instruction that is needed is `i32.and`. As a showcase, I created a small c program that is capable of generating a [Sierpiński carpet](https://en.wikipedia.org/wiki/Sierpi%C5%84ski_carpet). The program is compiled to webassembly and executed in the custom runtime to generate the following image:
+As a bonus I implemented another import function to write a PNG file to disk (`write_png()` using [stb](https://github.com/nothings/stb)). The only additional instruction that is needed is `i32.and`. As a showcase, I created a small c program that is capable of generating a [Sierpiński carpet](https://en.wikipedia.org/wiki/Sierpi%C5%84ski_carpet). The program is compiled to webassembly and executed in the custom runtime to generate the following image:
 
 ![Sierpiński carpet](fractal.png)
 
@@ -34,6 +34,7 @@ As a bonus I implemented another import function to write a PNG file to disk (`w
 - Uses own [Kaitai Struct](https://github.com/henrythasler/wasm-kaitai-struct) to parse wasm-files
 - Custom ELF writer to save generated machinecode to object files that can be [disassembled with aarch64-linux-gnu-objdump](tests/machinecode/empty-fn.asm).
 - gtest is fetched on demand by cmake (no local installation required)
+- [gtest-generator](test-generator/generate.py) for [wasm-spec-tests](tests/assets) using python and [Jinja](https://jinja.palletsprojects.com/en/stable/) template engine.
 
 ## Limitations and Known Issues
 
@@ -123,6 +124,29 @@ Set breakpoint in source code. Start Debugging (F5).
 
 ## Design Documentation
 
+### Trap Handler
+
+The following trap-codes (based on wasi-libc) are used:
+
+```cpp
+enum class trap_code_t {
+  None = 0,
+  UnreachableCodeReached,
+  MemoryOutOfBounds,
+  TableOutOfBounds,
+  IndirectCallToNull,
+  IntegerDivisionByZero,
+  IntegerOverflow,
+  BadConversionToInteger,
+  StackOverflow,
+  BadSignature,
+  OutOfFuel,
+  GrowthOperationLimited,
+  AssemblerAddressPatchError = 255, // used as the default jump target when emitting forward jumps to unknown labels; traps when address patching does
+                                    // not update the jump target
+};
+```
+
 ### Globals
 
 - Globals are stored in a separate dynamically allocated memory region at runtime. 
@@ -132,7 +156,7 @@ Set breakpoint in source code. Start Debugging (F5).
 
 ### Stack Overflow Checks
 
-A global variable is used to store the stack base address obtained via pthread_attr_getstack(). The current SP is compared to this value at runtime and when exceeding a threshold, the trap-handler is called.
+A global variable is used to store the stack base address obtained via `pthread_attr_getstack()`. The current SP is compared to this value at runtime. When exceeding a threshold (currently 4MiB), the trap-handler is called.
 
 ## Improvements
 
@@ -191,6 +215,7 @@ A global variable is used to store the stack base address obtained via pthread_a
 ### WebAssembly Online Tools
 
 - [WebAssembly Code Explorer](https://wasdk.github.io/wasmcodeexplorer/)
+- [LEB128 Encoder and Decoder](https://www.dcode.fr/leb128-encoding)
 
 ### WebAssembly Runtimes
 
