@@ -23,13 +23,13 @@ Progress:
 
 ### Bonus Chapter
 
-As a bonus I implemented another import function to write a PNG file to disk (`write_png()`). As a showcase, I created a small c program that is capable of generating a [Sierpiński carpet](https://en.wikipedia.org/wiki/Sierpi%C5%84ski_carpet). The program is compiled to webassembly and executed in my custom runtime to generate the following image:
+As a bonus I implemented another import function to write a PNG file to disk (`write_png()`). As a showcase, I created a small c program that is capable of generating a [Sierpiński carpet](https://en.wikipedia.org/wiki/Sierpi%C5%84ski_carpet). The program is compiled to webassembly and executed in the custom runtime to generate the following image:
 
 ![Sierpiński carpet](fractal.png)
 
 ## Feature Highlights
 
-- Uses Kaitai Struct to parse wasm-files
+- Uses own [Kaitai Struct](https://github.com/henrythasler/wasm-kaitai-struct) to parse wasm-files
 - Custom ELF writer to save generated machinecode to object files that can be disassembled with aarch64-linux-gnu-objdump
 - gtest is fetched on demand by cmake (no local installation required)
 

@@ -4,8 +4,7 @@ extern int write_png(const char *filename, int w, int h, int comp, const void *d
 #define RGB 3
 #define RGBA 4
 
-// #define WIDTH 243
-#define WIDTH 729
+#define WIDTH 243
 #define HEIGHT WIDTH
 #define COLOR_DEPTH RGB
 

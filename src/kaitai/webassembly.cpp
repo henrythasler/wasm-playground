@@ -191,13 +191,14 @@ webassembly_t::data_segment_t::data_segment_t(kaitai::kstream* p__io, webassembl
     m__parent = p__parent;
     m__root = p__root;
     m_data_memidx = nullptr;
+    m_offset_expr = nullptr;
     m_num_init = nullptr;
     _read();
 }
 
 void webassembly_t::data_segment_t::_read() {
     m_data_memidx = std::unique_ptr<vlq_base128_le_t>(new vlq_base128_le_t(m__io));
-    m_offset_expr = m__io->read_bytes_term(11, false, true, true);
+    m_offset_expr = std::unique_ptr<expression_t>(new expression_t(m__io, this, m__root));
     m_num_init = std::unique_ptr<vlq_base128_le_t>(new vlq_base128_le_t(m__io));
     m_init_vec = m__io->read_bytes(num_init()->value());
 }
@@ -213,6 +214,7 @@ webassembly_t::element_t::element_t(kaitai::kstream* p__io, webassembly_t::eleme
     m__parent = p__parent;
     m__root = p__root;
     m_tableidx = nullptr;
+    m_offset_expr = nullptr;
     m_num_init = nullptr;
     m_init_vec = nullptr;
     _read();
@@ -220,7 +222,7 @@ webassembly_t::element_t::element_t(kaitai::kstream* p__io, webassembly_t::eleme
 
 void webassembly_t::element_t::_read() {
     m_tableidx = std::unique_ptr<vlq_base128_le_t>(new vlq_base128_le_t(m__io));
-    m_offset_expr = m__io->read_bytes_term(11, false, true, true);
+    m_offset_expr = std::unique_ptr<expression_t>(new expression_t(m__io, this, m__root));
     m_num_init = std::unique_ptr<vlq_base128_le_t>(new vlq_base128_le_t(m__io));
     m_init_vec = std::unique_ptr<std::vector<std::unique_ptr<vlq_base128_le_t>>>(new std::vector<std::unique_ptr<vlq_base128_le_t>>());
     const int l_init_vec = num_init()->value();
@@ -311,6 +313,33 @@ webassembly_t::export_section_t::~export_section_t() {
 void webassembly_t::export_section_t::_clean_up() {
 }
 
+webassembly_t::expression_t::expression_t(kaitai::kstream* p__io, kaitai::kstruct* p__parent, webassembly_t* p__root) : kaitai::kstruct(p__io) {
+    m__parent = p__parent;
+    m__root = p__root;
+    m_bytes = nullptr;
+    _read();
+}
+
+void webassembly_t::expression_t::_read() {
+    m_bytes = std::unique_ptr<std::vector<uint8_t>>(new std::vector<uint8_t>());
+    {
+        int i = 0;
+        uint8_t _;
+        do {
+            _ = m__io->read_u1();
+            m_bytes->push_back(_);
+            i++;
+        } while (!( ((bytes()->at(bytes()->size() - 1) == 11) && ( ((bytes()->size() == 1) || (bytes()->at(bytes()->size() - 2) < 128)) )) ));
+    }
+}
+
+webassembly_t::expression_t::~expression_t() {
+    _clean_up();
+}
+
+void webassembly_t::expression_t::_clean_up() {
+}
+
 webassembly_t::func_t::func_t(kaitai::kstream* p__io, webassembly_t::code_t* p__parent, webassembly_t* p__root) : kaitai::kstruct(p__io) {
     m__parent = p__parent;
     m__root = p__root;
@@ -390,6 +419,7 @@ void webassembly_t::functype_t::_clean_up() {
 webassembly_t::global_t::global_t(kaitai::kstream* p__io, webassembly_t::global_section_t* p__parent, webassembly_t* p__root) : kaitai::kstruct(p__io) {
     m__parent = p__parent;
     m__root = p__root;
+    m_init_expr = nullptr;
     _read();
 }
 
@@ -399,7 +429,7 @@ void webassembly_t::global_t::_read() {
     if (!( ((m_mutability == webassembly_t::MUTABILITY_TYPES_CONST) || (m_mutability == webassembly_t::MUTABILITY_TYPES_VAR)) )) {
         throw kaitai::validation_not_any_of_error<webassembly_t::mutability_types_t>(m_mutability, m__io, std::string("/types/global/seq/1"));
     }
-    m_init_expr = m__io->read_bytes_term(11, false, true, true);
+    m_init_expr = std::unique_ptr<expression_t>(new expression_t(m__io, this, m__root));
 }
 
 webassembly_t::global_t::~global_t() {

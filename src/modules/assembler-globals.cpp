@@ -17,9 +17,8 @@ void parseGlobalsSection(Globals &globals, webassembly_t::global_section_t &glob
   auto &wasm_globals = *global_section.globals();
 
   for (const auto &global : wasm_globals) {
-    asserte(global->init_expr().size() > 0, "Found empty initExpr for global");
-    auto rawInitExpr = global->init_expr();
-    std::vector<uint8_t> initExpr(rawInitExpr.begin(), rawInitExpr.end());
+    asserte(global->init_expr()->bytes()->size() > 0, "Found empty initExpr for global");
+    auto initExpr = *global->init_expr()->bytes();
     globals.entries.push_back(GlobalVariable{static_cast<bool>(global->mutability()), global->valtype(), parseInitExpr(initExpr)});
   }
 }
