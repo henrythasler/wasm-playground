@@ -23,9 +23,11 @@ Progress:
 
 ### Bonus Chapter
 
-As a bonus I implemented another import function to write a PNG file to disk (`write_png()`). As a showcase, I created a small c program that is capable of generating a [Sierpiński carpet](https://en.wikipedia.org/wiki/Sierpi%C5%84ski_carpet). The program is compiled to webassembly and executed in the custom runtime to generate the following image:
+As a bonus I implemented another import function to write a PNG file to disk (`write_png()`). The only additional instruction that is needed is `i32.and`. As a showcase, I created a small c program that is capable of generating a [Sierpiński carpet](https://en.wikipedia.org/wiki/Sierpi%C5%84ski_carpet). The program is compiled to webassembly and executed in the custom runtime to generate the following image:
 
 ![Sierpiński carpet](fractal.png)
+
+> execute locally with `ASAN_OPTIONS=detect_leaks=0 qemu-aarch64 -L /usr/aarch64-linux-gnu/ build/src/tiny-wasm tests/assets/fractal.wasm _start`
 
 ## Feature Highlights
 
