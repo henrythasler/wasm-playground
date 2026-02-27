@@ -38,11 +38,11 @@ int main(int argc, char const *argv[]) {
   // Get loaded bytecode
   std::vector<uint8_t> bytecode = loader.getBytecode();
   std::cout << "Bytecode size: " << bytecode.size() << " bytes" << std::endl;
-  std::cout << "Bytecode (hex): ";
-  for (uint8_t byte : bytecode) {
-    std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(byte) << " ";
-  }
-  std::cout << std::dec << std::endl << std::endl;
+  // std::cout << "Bytecode (hex): ";
+  // for (uint8_t byte : bytecode) {
+  //   std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(byte) << " ";
+  // }
+  // std::cout << std::dec << std::endl << std::endl;
 
   try {
     tiny::Dissector::dissect(bytecode);
@@ -75,7 +75,7 @@ int main(int argc, char const *argv[]) {
   std::cout << std::endl << "Preparing execution of '" << functionName << "()' " << std::endl;
 
   tiny::ModuleInstance instance(*wasmModule);
-  auto wasmFunction = instance.getFunction<wasm::wasm_i32_t>(functionName);
+  auto wasmFunction = instance.getFunction<wasm::wasm_i64_t, wasm::wasm_i64_t, wasm::wasm_i64_t>(functionName);
 
   std::cout << "  " << std::hex << "objectPointer: content=0x" << gRuntimeInfo.objectPointer << " location=0x" << &gRuntimeInfo.objectPointer
             << " wasmFunction=0x" << &wasmFunction << std::dec << std::endl;
@@ -101,7 +101,7 @@ int main(int argc, char const *argv[]) {
   }
 
   try {
-    auto res = wasmFunction();
+    auto res = wasmFunction(0x123456789ABCDEF0LLU, 0x0000FFFF00000000LLU);
     std::cout << "result: " << std::hex << res << " " << std::endl;
   } catch (const std::exception &e) {
     std::cerr << RED << "Execution failed: " << e.what() << RESET << std::endl;

@@ -21,9 +21,17 @@ Progress:
 - Chapter12: ✅
 - Chapter13: ✅
 
+### Bonus Chapter
+
+As a bonus I implemented another import function to write a PNG file to disk (`write_png()`). The only additional instruction that is needed is `i32.and`. As a showcase, I created a small c program that is capable of generating a [Sierpiński carpet](https://en.wikipedia.org/wiki/Sierpi%C5%84ski_carpet). The program is compiled to webassembly and executed in the custom runtime to generate the following image:
+
+![Sierpiński carpet](fractal.png)
+
+> execute locally with `ASAN_OPTIONS=detect_leaks=0 qemu-aarch64 -L /usr/aarch64-linux-gnu/ build/src/tiny-wasm tests/assets/fractal.wasm _start`
+
 ## Feature Highlights
 
-- Uses Kaitai Struct to parse wasm-files
+- Uses own [Kaitai Struct](https://github.com/henrythasler/wasm-kaitai-struct) to parse wasm-files
 - Custom ELF writer to save generated machinecode to object files that can be disassembled with aarch64-linux-gnu-objdump
 - gtest is fetched on demand by cmake (no local installation required)
 
@@ -94,12 +102,14 @@ Set breakpoint in source code. Start Debugging (F5).
 ## gdb cheat sheet
 
 - run debugger: `gdb-multiarch -q --nh -ex 'set architecture aarch64' -ex 'file build/src/tiny-wasm' -ex 'target remote localhost:1234' -ex 'layout split' -ex 'layout regs'`
+- add breakpoint at current instruction: `b`
 - add breakpoint at function: `b <fn_name>`
 - add breakpoint at line in current file: `b <#line>`
 - continue to next breakpoint: `c`
 - step to next machinecode instruction: `stepi`
 - show variable information: `info address <var>`
 - show memory content (4 hex uint32_t) : `x/4xw <addr>`
+- finish current function (stack frame) and return: `finish`
 
 ## Code Quality Tools
 
@@ -134,6 +144,7 @@ A global variable is used to store the stack base address obtained via pthread_a
 - Function calls do not depend on each other until chapter 11 and people can get away to create a new runtime instance for each function-call in the spec-tests. It should be required sooner (maybe as a new chapter) to create a runtime that can manage multiple function calls.
 - Chapter 11 uncovered several bugs from previous chapters (br_if, if-else). The test coverage in the chapters should be increased to identify such bugs earlier.
 - Wasi-SDK has no pre-build binaries that can be installed in the CI (using `ubuntu-24.04-arm`).
+- Loop chapter does not check for correct branch target location.
 
 ## Common Pitfalls
 

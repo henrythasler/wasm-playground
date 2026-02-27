@@ -11,7 +11,7 @@
 
 namespace env {
 int32_t inc(int32_t num);
-// int myPrintf(uintptr_t msgPtr, int32_t msgLength);
+int32_t write_png(const char *filename, int w, int h, int comp, const void *data, int stride_in_bytes);
 int myPrintf(const char *format, const void *args_buffer);
 } // namespace env
 

@@ -3,6 +3,8 @@
   (global $const1 i64 (i64.const -5))
   (global $mut0 (mut i32) (i32.const -12))
   (global $mut1 (mut i64) (i64.const 100))
+  ;; this is a special case where the LEB128 encoded number has 0x0B as it's last byte which collides with the init_exp terminator
+  (global $mut3 (mut i32) (i32.const 186384))
   (export "get_const0" (func $get_const0))
   (export "get_const1" (func $get_const1))
   (export "get_mut0" (func $get_mut0))

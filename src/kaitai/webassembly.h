@@ -41,6 +41,7 @@ public:
     class element_section_t;
     class export_t;
     class export_section_t;
+    class expression_t;
     class func_t;
     class function_section_t;
     class functype_t;
@@ -294,7 +295,7 @@ public:
 
     private:
         std::unique_ptr<vlq_base128_le_t> m_data_memidx;
-        std::string m_offset_expr;
+        std::unique_ptr<expression_t> m_offset_expr;
         std::unique_ptr<vlq_base128_le_t> m_num_init;
         std::string m_init_vec;
         webassembly_t* m__root;
@@ -307,7 +308,7 @@ public:
          * The offset is given by a constant expression that DOES NOT include an end marker
          * \sa https://www.w3.org/TR/wasm-core-1/#valid-constant Source
          */
-        std::string offset_expr() const { return m_offset_expr; }
+        expression_t* offset_expr() const { return m_offset_expr.get(); }
         vlq_base128_le_t* num_init() const { return m_num_init.get(); }
         std::string init_vec() const { return m_init_vec; }
         webassembly_t* _root() const { return m__root; }
@@ -329,7 +330,7 @@ public:
 
     private:
         std::unique_ptr<vlq_base128_le_t> m_tableidx;
-        std::string m_offset_expr;
+        std::unique_ptr<expression_t> m_offset_expr;
         std::unique_ptr<vlq_base128_le_t> m_num_init;
         std::unique_ptr<std::vector<std::unique_ptr<vlq_base128_le_t>>> m_init_vec;
         webassembly_t* m__root;
@@ -342,7 +343,7 @@ public:
          * The offset is given by a constant expression that DOES NOT include an end marker
          * \sa https://www.w3.org/TR/wasm-core-1/#valid-constant Source
          */
-        std::string offset_expr() const { return m_offset_expr; }
+        expression_t* offset_expr() const { return m_offset_expr.get(); }
         vlq_base128_le_t* num_init() const { return m_num_init.get(); }
         std::vector<std::unique_ptr<vlq_base128_le_t>>* init_vec() const { return m_init_vec.get(); }
         webassembly_t* _root() const { return m__root; }
@@ -437,6 +438,30 @@ public:
         std::vector<std::unique_ptr<export_t>>* exports() const { return m_exports.get(); }
         webassembly_t* _root() const { return m__root; }
         webassembly_t::section_t* _parent() const { return m__parent; }
+    };
+
+    class expression_t : public kaitai::kstruct {
+
+    public:
+
+        expression_t(kaitai::kstream* p__io, kaitai::kstruct* p__parent = nullptr, webassembly_t* p__root = nullptr);
+
+    private:
+        void _read();
+        void _clean_up();
+
+    public:
+        ~expression_t();
+
+    private:
+        std::unique_ptr<std::vector<uint8_t>> m_bytes;
+        webassembly_t* m__root;
+        kaitai::kstruct* m__parent;
+
+    public:
+        std::vector<uint8_t>* bytes() const { return m_bytes.get(); }
+        webassembly_t* _root() const { return m__root; }
+        kaitai::kstruct* _parent() const { return m__parent; }
     };
 
     class func_t : public kaitai::kstruct {
@@ -547,14 +572,14 @@ public:
     private:
         val_types_t m_valtype;
         mutability_types_t m_mutability;
-        std::string m_init_expr;
+        std::unique_ptr<expression_t> m_init_expr;
         webassembly_t* m__root;
         webassembly_t::global_section_t* m__parent;
 
     public:
         val_types_t valtype() const { return m_valtype; }
         mutability_types_t mutability() const { return m_mutability; }
-        std::string init_expr() const { return m_init_expr; }
+        expression_t* init_expr() const { return m_init_expr.get(); }
         webassembly_t* _root() const { return m__root; }
         webassembly_t::global_section_t* _parent() const { return m__parent; }
     };

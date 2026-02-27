@@ -22,8 +22,7 @@ void LinearMemory::parseMemorySection(webassembly_t::memory_section_t *memory_se
 
     if (data->num_init()->value() > 0) {
       // parse offset value
-      auto rawExpr = data->offset_expr();
-      std::vector<uint8_t> expression(rawExpr.begin(), rawExpr.end());
+      std::vector<uint8_t> expression = *data->offset_expr()->bytes();
       this->init.offset = parseInitExpr(expression);
 
       auto init_vec = data->init_vec();

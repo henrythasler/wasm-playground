@@ -16,4 +16,14 @@ TEST(loop_extended, loop_n) {
   EXPECT_EQ(loop_n(0, 10), 10);
 }
 
+TEST(loop_extended, loop_n2) {
+  auto wasmModule = helper::loadModule("loop-extended.wasm");
+  auto instance = tiny::ModuleInstance(wasmModule);
+
+  auto loop_n2 = instance.getFunction<wasm::wasm_i32_t, wasm::wasm_i32_t, wasm::wasm_i32_t>("loop_n2");
+  EXPECT_EQ(loop_n2(0, 10), 10);
+  EXPECT_EQ(loop_n2(10, 20), 20);
+  EXPECT_EQ(loop_n2(-10, 10), 10);
+}
+
 } // namespace testing

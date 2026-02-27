@@ -29,6 +29,7 @@ add_library(tiny_modules STATIC
 
 target_include_directories(tiny_modules PUBLIC 
     ../kaitai
+    ../../extern/stb
 )
 
 target_link_libraries(tiny_modules PRIVATE kaitai)

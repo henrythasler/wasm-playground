@@ -38,4 +38,12 @@ TEST(extern, myPrint) {
   EXPECT_NO_THROW(_start());
 }
 
+TEST(extern, fractal) {
+  auto wasmModule = helper::loadModule("fractal.wasm");
+  auto instance = tiny::ModuleInstance(wasmModule);
+  
+  auto _start = instance.getFunction<void>("_start");
+  EXPECT_NO_THROW(_start());
+}
+
 } // namespace

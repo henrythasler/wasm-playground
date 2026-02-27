@@ -62,6 +62,7 @@ TEST(objdump, wasm) {
       "memory",
       "memory-grow",
       "extern",
+      "fractal",
       // tutorial chapters (in sequence)
       "empty-fn",
       "local.0",
