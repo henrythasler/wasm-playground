@@ -21,6 +21,12 @@ Progress:
 - Chapter12: ✅
 - Chapter13: ✅
 
+### Bonus Chapter
+
+As a bonus I implemented another import function to write a PNG file to disk (`write_png()`). As a showcase, I created a small c program that is capable of generating a [Sierpiński carpet](https://en.wikipedia.org/wiki/Sierpi%C5%84ski_carpet). The program is compiled to webassembly and executed in my custom runtime to generate the following image:
+
+![Sierpiński carpet](fractal.png)
+
 ## Feature Highlights
 
 - Uses Kaitai Struct to parse wasm-files

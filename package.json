@@ -26,5 +26,8 @@
   "bugs": {
     "url": "https://github.com/henrythasler/wasm-playground/issues"
   },
-  "homepage": "https://github.com/henrythasler/wasm-playground#readme"
+  "homepage": "https://github.com/henrythasler/wasm-playground#readme",
+  "dependencies": {
+    "pngjs": "^7.0.0"
+  }
 }
