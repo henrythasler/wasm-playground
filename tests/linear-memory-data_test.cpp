@@ -11,24 +11,24 @@ TEST(Spectest, linear_memory_data_0_wasm) {
   
   auto wasm_read_byte = instance.getFunction<wasm::wasm_i32_t, wasm::wasm_i32_t>("read_byte");
 
-  EXPECT_EQ(wasm_read_byte(static_cast<int32_t>(0ULL)), (static_cast<int32_t>(72ULL)));
-  EXPECT_EQ(wasm_read_byte(static_cast<int32_t>(1ULL)), (static_cast<int32_t>(101ULL)));
-  EXPECT_EQ(wasm_read_byte(static_cast<int32_t>(2ULL)), (static_cast<int32_t>(108ULL)));
-  EXPECT_EQ(wasm_read_byte(static_cast<int32_t>(3ULL)), (static_cast<int32_t>(108ULL)));
-  EXPECT_EQ(wasm_read_byte(static_cast<int32_t>(4ULL)), (static_cast<int32_t>(111ULL)));
-  EXPECT_EQ(wasm_read_byte(static_cast<int32_t>(5ULL)), (static_cast<int32_t>(44ULL)));
-  EXPECT_EQ(wasm_read_byte(static_cast<int32_t>(6ULL)), (static_cast<int32_t>(32ULL)));
-  EXPECT_EQ(wasm_read_byte(static_cast<int32_t>(7ULL)), (static_cast<int32_t>(87ULL)));
-  EXPECT_EQ(wasm_read_byte(static_cast<int32_t>(8ULL)), (static_cast<int32_t>(101ULL)));
-  EXPECT_EQ(wasm_read_byte(static_cast<int32_t>(9ULL)), (static_cast<int32_t>(98ULL)));
-  EXPECT_EQ(wasm_read_byte(static_cast<int32_t>(10ULL)), (static_cast<int32_t>(65ULL)));
-  EXPECT_EQ(wasm_read_byte(static_cast<int32_t>(11ULL)), (static_cast<int32_t>(115ULL)));
-  EXPECT_EQ(wasm_read_byte(static_cast<int32_t>(12ULL)), (static_cast<int32_t>(115ULL)));
-  EXPECT_EQ(wasm_read_byte(static_cast<int32_t>(13ULL)), (static_cast<int32_t>(101ULL)));
-  EXPECT_EQ(wasm_read_byte(static_cast<int32_t>(14ULL)), (static_cast<int32_t>(109ULL)));
-  EXPECT_EQ(wasm_read_byte(static_cast<int32_t>(15ULL)), (static_cast<int32_t>(98ULL)));
-  EXPECT_EQ(wasm_read_byte(static_cast<int32_t>(16ULL)), (static_cast<int32_t>(108ULL)));
-  EXPECT_EQ(wasm_read_byte(static_cast<int32_t>(17ULL)), (static_cast<int32_t>(121ULL)));
-  EXPECT_EQ(wasm_read_byte(static_cast<int32_t>(18ULL)), (static_cast<int32_t>(33ULL)));
+  EXPECT_EQ(wasm_read_byte(static_cast<int32_t>(0x00ULL)), (static_cast<int32_t>(0x48ULL)));
+  EXPECT_EQ(wasm_read_byte(static_cast<int32_t>(0x01ULL)), (static_cast<int32_t>(0x65ULL)));
+  EXPECT_EQ(wasm_read_byte(static_cast<int32_t>(0x02ULL)), (static_cast<int32_t>(0x6cULL)));
+  EXPECT_EQ(wasm_read_byte(static_cast<int32_t>(0x03ULL)), (static_cast<int32_t>(0x6cULL)));
+  EXPECT_EQ(wasm_read_byte(static_cast<int32_t>(0x04ULL)), (static_cast<int32_t>(0x6fULL)));
+  EXPECT_EQ(wasm_read_byte(static_cast<int32_t>(0x05ULL)), (static_cast<int32_t>(0x2cULL)));
+  EXPECT_EQ(wasm_read_byte(static_cast<int32_t>(0x06ULL)), (static_cast<int32_t>(0x20ULL)));
+  EXPECT_EQ(wasm_read_byte(static_cast<int32_t>(0x07ULL)), (static_cast<int32_t>(0x57ULL)));
+  EXPECT_EQ(wasm_read_byte(static_cast<int32_t>(0x08ULL)), (static_cast<int32_t>(0x65ULL)));
+  EXPECT_EQ(wasm_read_byte(static_cast<int32_t>(0x09ULL)), (static_cast<int32_t>(0x62ULL)));
+  EXPECT_EQ(wasm_read_byte(static_cast<int32_t>(0x0aULL)), (static_cast<int32_t>(0x41ULL)));
+  EXPECT_EQ(wasm_read_byte(static_cast<int32_t>(0x0bULL)), (static_cast<int32_t>(0x73ULL)));
+  EXPECT_EQ(wasm_read_byte(static_cast<int32_t>(0x0cULL)), (static_cast<int32_t>(0x73ULL)));
+  EXPECT_EQ(wasm_read_byte(static_cast<int32_t>(0x0dULL)), (static_cast<int32_t>(0x65ULL)));
+  EXPECT_EQ(wasm_read_byte(static_cast<int32_t>(0x0eULL)), (static_cast<int32_t>(0x6dULL)));
+  EXPECT_EQ(wasm_read_byte(static_cast<int32_t>(0x0fULL)), (static_cast<int32_t>(0x62ULL)));
+  EXPECT_EQ(wasm_read_byte(static_cast<int32_t>(0x10ULL)), (static_cast<int32_t>(0x6cULL)));
+  EXPECT_EQ(wasm_read_byte(static_cast<int32_t>(0x11ULL)), (static_cast<int32_t>(0x79ULL)));
+  EXPECT_EQ(wasm_read_byte(static_cast<int32_t>(0x12ULL)), (static_cast<int32_t>(0x21ULL)));
 }
 } // namespace

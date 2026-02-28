@@ -17,22 +17,22 @@ TEST(Spectest, loop_0_wasm) {
   auto wasm_while = instance.getFunction<wasm::wasm_i64_t, wasm::wasm_i64_t>("while");
   auto wasm_for = instance.getFunction<wasm::wasm_i64_t, wasm::wasm_i64_t>("for");
 
-  EXPECT_EQ(wasm_as_if_then(), (static_cast<int32_t>(1ULL)));
-  EXPECT_EQ(wasm_as_if_else(), (static_cast<int32_t>(2ULL)));
-  EXPECT_EQ(wasm_as_br_if_first(), (static_cast<int32_t>(1ULL)));
-  EXPECT_EQ(wasm_as_br_if_last(), (static_cast<int32_t>(2ULL)));
-  EXPECT_EQ(wasm_effects(), (static_cast<int32_t>(1ULL)));
-  EXPECT_EQ(wasm_while(static_cast<int64_t>(0ULL)), (static_cast<int64_t>(1ULL)));
-  EXPECT_EQ(wasm_while(static_cast<int64_t>(1ULL)), (static_cast<int64_t>(1ULL)));
-  EXPECT_EQ(wasm_while(static_cast<int64_t>(2ULL)), (static_cast<int64_t>(2ULL)));
-  EXPECT_EQ(wasm_while(static_cast<int64_t>(3ULL)), (static_cast<int64_t>(6ULL)));
-  EXPECT_EQ(wasm_while(static_cast<int64_t>(5ULL)), (static_cast<int64_t>(120ULL)));
-  EXPECT_EQ(wasm_while(static_cast<int64_t>(20ULL)), (static_cast<int64_t>(2432902008176640000ULL)));
-  EXPECT_EQ(wasm_for(static_cast<int64_t>(0ULL)), (static_cast<int64_t>(1ULL)));
-  EXPECT_EQ(wasm_for(static_cast<int64_t>(1ULL)), (static_cast<int64_t>(1ULL)));
-  EXPECT_EQ(wasm_for(static_cast<int64_t>(2ULL)), (static_cast<int64_t>(2ULL)));
-  EXPECT_EQ(wasm_for(static_cast<int64_t>(3ULL)), (static_cast<int64_t>(6ULL)));
-  EXPECT_EQ(wasm_for(static_cast<int64_t>(5ULL)), (static_cast<int64_t>(120ULL)));
-  EXPECT_EQ(wasm_for(static_cast<int64_t>(20ULL)), (static_cast<int64_t>(2432902008176640000ULL)));
+  EXPECT_EQ(wasm_as_if_then(), (static_cast<int32_t>(0x01ULL)));
+  EXPECT_EQ(wasm_as_if_else(), (static_cast<int32_t>(0x02ULL)));
+  EXPECT_EQ(wasm_as_br_if_first(), (static_cast<int32_t>(0x01ULL)));
+  EXPECT_EQ(wasm_as_br_if_last(), (static_cast<int32_t>(0x02ULL)));
+  EXPECT_EQ(wasm_effects(), (static_cast<int32_t>(0x01ULL)));
+  EXPECT_EQ(wasm_while(static_cast<int64_t>(0x00ULL)), (static_cast<int64_t>(0x01ULL)));
+  EXPECT_EQ(wasm_while(static_cast<int64_t>(0x01ULL)), (static_cast<int64_t>(0x01ULL)));
+  EXPECT_EQ(wasm_while(static_cast<int64_t>(0x02ULL)), (static_cast<int64_t>(0x02ULL)));
+  EXPECT_EQ(wasm_while(static_cast<int64_t>(0x03ULL)), (static_cast<int64_t>(0x06ULL)));
+  EXPECT_EQ(wasm_while(static_cast<int64_t>(0x05ULL)), (static_cast<int64_t>(0x78ULL)));
+  EXPECT_EQ(wasm_while(static_cast<int64_t>(0x14ULL)), (static_cast<int64_t>(0x21c3677c82b40000ULL)));
+  EXPECT_EQ(wasm_for(static_cast<int64_t>(0x00ULL)), (static_cast<int64_t>(0x01ULL)));
+  EXPECT_EQ(wasm_for(static_cast<int64_t>(0x01ULL)), (static_cast<int64_t>(0x01ULL)));
+  EXPECT_EQ(wasm_for(static_cast<int64_t>(0x02ULL)), (static_cast<int64_t>(0x02ULL)));
+  EXPECT_EQ(wasm_for(static_cast<int64_t>(0x03ULL)), (static_cast<int64_t>(0x06ULL)));
+  EXPECT_EQ(wasm_for(static_cast<int64_t>(0x05ULL)), (static_cast<int64_t>(0x78ULL)));
+  EXPECT_EQ(wasm_for(static_cast<int64_t>(0x14ULL)), (static_cast<int64_t>(0x21c3677c82b40000ULL)));
 }
 } // namespace

@@ -83,10 +83,10 @@ def load_spectest(input_file: Path) -> dict[str, Module] | None:
                 expected = ""
                 for item in command["action"]["args"]:
                     if "value" in item:
-                        parameter.append("static_cast<{}>({}ULL)".format(types_map[item["type"]], item["value"]))
+                        parameter.append("static_cast<{}>(0x{:02x}ULL)".format(types_map[item["type"]], int(item["value"])))
                 for item in command["expected"]:
                     if "value" in item:
-                        expected = "static_cast<{}>({}ULL)".format(types_map[item["type"]], item["value"])
+                        expected = "static_cast<{}>(0x{:02x}ULL)".format(types_map[item["type"]], int(item["value"]))
                 spec_test[active_module].asserts.append(Assert(function=function_name, type=command["type"].split('_')[1], args=parameter, expected=expected))
 
         # pprint(spec_test)
@@ -101,6 +101,8 @@ if __name__ == "__main__":
         sys.exit(1)
 
     allow_list = [
+        # "arithmetic.json",  # Chapter 3
+        # "conditionals.json",  # Chapter 4
         "local.json",
         "loop.json",
         "div.json",

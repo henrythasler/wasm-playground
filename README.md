@@ -171,7 +171,7 @@ To access host resources (e.g trap handler, linear memory), some global variable
 
 The Runtime provides a set of global variables that contain the address of host resources (memory, function). The assembler emits specific code to read from this global variable and use its content either to access the memory region or jump directly to this address to call a host function. Here is a commented example when loading a 32-bit value from linear memory:
 
-```asm
+```armasm
 // load from address of global variable that contains the start address of linear memory
 mov	x9, #0xa360
 movk	x9, #0xb6, lsl #16

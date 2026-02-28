@@ -27,7 +27,7 @@ TEST(Spectest, linear_memory_store_0_wasm) {
   wasm_as_return_value();
   wasm_as_if_then();
   wasm_as_if_else();
-  EXPECT_THROW(wasm_address_as_param(static_cast<int32_t>(16777215ULL), static_cast<int32_t>(0ULL)), std::runtime_error);
-  EXPECT_THROW(wasm_address_as_param(static_cast<int32_t>(65534ULL), static_cast<int32_t>(0ULL)), std::runtime_error);
+  EXPECT_THROW(wasm_address_as_param(static_cast<int32_t>(0xffffffULL), static_cast<int32_t>(0x00ULL)), std::runtime_error);
+  EXPECT_THROW(wasm_address_as_param(static_cast<int32_t>(0xfffeULL), static_cast<int32_t>(0x00ULL)), std::runtime_error);
 }
 } // namespace
