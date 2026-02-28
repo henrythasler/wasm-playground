@@ -23,7 +23,7 @@ Progress:
 
 ### Bonus Chapter
 
-As a bonus I implemented another import function to write a PNG file to disk (`write_png()` using [stb](https://github.com/nothings/stb)). The only additional instruction that is needed is `i32.and`. As a showcase, I created a small c program that is capable of generating a [Sierpiński carpet](https://en.wikipedia.org/wiki/Sierpi%C5%84ski_carpet). The program is compiled to webassembly and executed in the custom runtime to generate the following image:
+As a bonus I implemented another import function to write a PNG file to disk (`write_png()` using [stb](https://github.com/nothings/stb)). The only additional instruction that is needed is `i32.and`. As a showcase, I created a small c program ([fractal.c](tests/assets/fractal.c)) that is capable of generating a [Sierpiński carpet](https://en.wikipedia.org/wiki/Sierpi%C5%84ski_carpet). The program is compiled to webassembly and executed in the custom runtime to generate the following image:
 
 ![Sierpiński carpet](fractal.png)
 
@@ -120,7 +120,7 @@ Set breakpoint in source code. Start Debugging (F5).
 
 ## Kaitai Struct
 
-`kaitai-struct-compiler --target cpp_stl webassembly.ksy`
+`npm run kaitai` or `kaitai-struct-compiler --target cpp_stl --cpp-standard 11 --outdir src/kaitai src/kaitai/webassembly.ksy`
 
 ## Design Documentation
 
@@ -146,15 +146,30 @@ function body | variable | JIT code of the function business logic itself
 load result | variable | load return value into X0
 epilogue | 24 Bytes | deallocate stack memory, restore callee-saved registers and return (`ret`)
 
+### The Assembler
+
+The assembler ([assembler.cpp](src/modules/assembler.cpp#L212)) is basically a huge switch-case structure where one wasm-opcode and it's specific immediate arguments are transformed to one or more machinecode instructions. The assembler usually follows these steps per wasm-opcode:
+
+1. assert some conditions that are needed to emit machinecode for that specific the wasm-opcode (e.g. number of operands on wasm-stack)
+2. determine required register size based on the opcode (`i32.const` vs `i64.const`)
+3. read immediate arguments (e.g. value for `i32.const`)
+4. allocate required wasm-stack resources (register from `registerPool`)
+5. emit opcode-specific machinecode instructions
+6. add or remove wasm-stack elements
+
+In case of branch-instructions, addresses that need backpatching later, are collected in a dedicated structure (`patchLocations`).
+
+The machinecode itself is stored in a `std::vector<uint32_t>`.
+
 ### JIT-Runtime
 
 One the JIT-code is assembled and address-patched, we need to load the JIT-code into a memory section with executable permissions. This is done by `class ModuleInstance` in [runtime.hpp](src/modules/runtime.hpp#L270) where in instance of `CustomMemory` is created that allocates the required memory, copies the code into that memory region and sets the execution permissions of said region.
 
 To access host resources (e.g trap handler, linear memory), some global variables (`gLinearMemoryInfo` and `gRuntimeInfo`) are updated during that step.
 
-### Accessing Host Ressources
+### Accessing Host Resources
 
-The Runtime provides a set of global variables that contain the address of host ressources (memory, function). The assembler emits specific code to read from this global variable and use its content either to access the memory region or jump directly to this address to call a host function. Here is a commented example when loading a 32-bit value from linear memory:
+The Runtime provides a set of global variables that contain the address of host resources (memory, function). The assembler emits specific code to read from this global variable and use its content either to access the memory region or jump directly to this address to call a host function. Here is a commented example when loading a 32-bit value from linear memory:
 
 ```asm
 // load from address of global variable that contains the start address of linear memory
