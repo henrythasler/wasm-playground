@@ -124,9 +124,74 @@ Set breakpoint in source code. Start Debugging (F5).
 
 ## Design Documentation
 
+### JIT structure
+
+The JIT-code on module-level is structured as follows:
+
+Content | Size | Description
+---|---|---
+trap_handler | ~96 Bytes | loads the trap-code as argument into X0 and calls the trap-handler host function
+function_table | n x 8 Bytes | an array of n tuples (`uint32_t offset`, `uint32_t typeidx`) where offset is the offset of that function and typeidx is the item in the type-section for that function.
+globals | n x 8 Bytes | an array of all n globals as uint64_t
+functions | variable | JIT code for each function of the module serialized back-to-back without padding/alignment
+
+Each function follows this pattern:
+
+Content | Size | Description
+---|---|---
+preamble | variable | create stack frame, store callee-saved registers, stack overflow check, allocate additional stack memory for parameters and locals
+store parameters | variable | move parameters from registers (X0-X7) to stack memory
+init locals | variable | initialize local variables on stack with zero (`str	wzr, [...]`)
+function body | variable | JIT code of the function business logic itself
+load result | variable | load return value into X0
+epilogue | 24 Bytes | deallocate stack memory, restore callee-saved registers and return (`ret`)
+
+### JIT-Runtime
+
+One the JIT-code is assembled and address-patched, we need to load the JIT-code into a memory section with executable permissions. This is done by `class ModuleInstance` in [runtime.hpp](src/modules/runtime.hpp#L270) where in instance of `CustomMemory` is created that allocates the required memory, copies the code into that memory region and sets the execution permissions of said region.
+
+To access host resources (e.g trap handler, linear memory), some global variables (`gLinearMemoryInfo` and `gRuntimeInfo`) are updated during that step.
+
+### Accessing Host Ressources
+
+The Runtime provides a set of global variables that contain the address of host ressources (memory, function). The assembler emits specific code to read from this global variable and use its content either to access the memory region or jump directly to this address to call a host function. Here is a commented example when loading a 32-bit value from linear memory:
+
+```asm
+// load from address of global variable that contains the start address of linear memory
+mov	x9, #0xa360
+movk	x9, #0xb6, lsl #16
+movk	x9, #0x55, lsl #32
+ldr	x9, [x9, xzr]
+
+// trap (MemoryOutOfBounds) if the linear memory address is invalid (nullptr)
+cbz	x9, 38 <trap_handler+0x38>
+
+// load the current size of the linear memory region from a global variable
+mov	x10, #0xa380
+movk	x10, #0xb6, lsl #16
+movk	x10, #0x55, lsl #32
+ldr	w10, [x10, xzr]
+
+// since we want to access a 4-byte value, the maximum allowed offset is 4 bytes smaller than the overall linear memory size
+sub	w10, w10, #0x4
+// compare the offset with the (corrected) linear memory size
+cmp	w8, w10
+// trap (MemoryOutOfBounds) if offset exceeds linear memory size
+b.hi	38 <trap_handler+0x38>
+
+// all check have passed and we can load the i32 from linear memory
+ldrsw	x9, [x9, x8]
+```
+
+### Linear Memory
+
+Linear memory is managed by the runtime that allocates the initial size in a dedicated memory region. It also provides a host function address via a global variable to grow the linear memory region.
+
 ### Trap Handler
 
-The following trap-codes (based on wasi-libc) are used:
+A trap-handler is always insterted at the beginning of the JIT-code. It allows for setting a specific trap-code and call a runtime host function that will evaluate the trap-code and throw an exception [runtime.hpp](src/modules/runtime.hpp#L252). 
+
+The following trap-codes (based on wasi-libc) are defined:
 
 ```cpp
 enum class trap_code_t {
@@ -142,10 +207,13 @@ enum class trap_code_t {
   BadSignature,
   OutOfFuel,
   GrowthOperationLimited,
-  AssemblerAddressPatchError = 255, // used as the default jump target when emitting forward jumps to unknown labels; traps when address patching does
-                                    // not update the jump target
+  AssemblerAddressPatchError = 255,
 };
 ```
+
+Only a subset is currently in use. The available trap-codes are defined during module compilation in [module.cpp](src/modules/module.cpp#L93).
+
+The trap-handler includes on special trap-code `AssemblerAddressPatchError` (0xFF) which is used by the compiler for jump/branch instructions that need to be patched later when the jump target location is known. This helps identify when address patching operations are incomplete.
 
 ### Globals
 
@@ -156,7 +224,7 @@ enum class trap_code_t {
 
 ### Stack Overflow Checks
 
-A global variable is used to store the stack base address obtained via `pthread_attr_getstack()`. The current SP is compared to this value at runtime. When exceeding a threshold (currently 4MiB), the trap-handler is called.
+A global variable is used to store the stack base address obtained via `pthread_attr_getstack()`. Before emitting the preamble for each function, the assembler calculates the required stack from the number of parameters and local variables. When emitting the preamble, the current stack pointer `SP` is checked against to the stack base address (global variable). When exceeding a threshold (currently 4MiB), the trap-handler is called.
 
 ## Improvements
 
@@ -169,6 +237,10 @@ A global variable is used to store the stack base address obtained via `pthread_
 - Chapter 11 uncovered several bugs from previous chapters (br_if, if-else). The test coverage in the chapters should be increased to identify such bugs earlier.
 - Wasi-SDK has no pre-build binaries that can be installed in the CI (using `ubuntu-24.04-arm`).
 - Loop chapter does not check for correct branch target location.
+
+### Unanswered Questions
+
+1. Why does the trap-handling mechanism need `_setjmp` and `jmp_buf` where normal host functions can use other methods (e.g. global address)?
 
 ## Common Pitfalls
 
