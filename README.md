@@ -29,6 +29,10 @@ As a bonus I implemented another import function to write a PNG file to disk (`w
 
 > execute locally with `ASAN_OPTIONS=detect_leaks=0 qemu-aarch64 -L /usr/aarch64-linux-gnu/ build/src/tiny-wasm tests/assets/fractal.wasm _start`
 
+### Next Steps
+
+See [rust-tiny-wasm](https://github.com/henrythasler/rust-tiny-wasm) for a follow-up learning project on wasm compilers written in [Rust](https://rust-lang.org/).
+
 ## Feature Highlights
 
 - Uses own [Kaitai Struct](https://github.com/henrythasler/wasm-kaitai-struct) to parse wasm-files
